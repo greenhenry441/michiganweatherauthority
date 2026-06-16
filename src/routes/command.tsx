@@ -1,17 +1,23 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { Radio, Send, Trash2, Lock, AlertTriangle, ArrowLeft } from "lucide-react";
+import { useServerFn } from "@tanstack/react-start";
+import { Radio, Send, Trash2, Lock, AlertTriangle, ArrowLeft, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { NWS_ALERT_TYPES, getAlertType } from "@/lib/nws-alert-types";
-import { addAlert, removeAlert, useManualAlerts } from "@/lib/alerts-store";
+import {
+  Tabs, TabsContent, TabsList, TabsTrigger,
+} from "@/components/ui/tabs";
+import { NWS_ALERT_TYPES, getAlertType, type AlertCategory, type AlertSeverity } from "@/lib/nws-alert-types";
+import { useSharedAlerts } from "@/lib/alerts-store";
 import { MICHIGAN_CITIES } from "@/lib/michigan-cities";
+import { issueAlert, cancelAlert } from "@/lib/admin-alerts.functions";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
@@ -26,7 +32,7 @@ export const Route = createFileRoute("/command")({
   component: CommandPage,
 });
 
-const ACCESS_CODE = "mwa-admin"; // simple gate; replace with auth if needed
+const ACCESS_CODE = "mwa-admin";
 
 function CommandPage() {
   const [unlocked, setUnlocked] = useState(false);
@@ -73,45 +79,92 @@ function CommandPage() {
     );
   }
 
-  return <CommandConsole />;
+  return <CommandConsole code={code} />;
 }
 
-function CommandConsole() {
-  const alerts = useManualAlerts();
-  const [typeId, setTypeId] = useState(NWS_ALERT_TYPES[0].id);
+function CommandConsole({ code }: { code: string }) {
+  const { alerts } = useSharedAlerts();
+  const issueFn = useServerFn(issueAlert);
+  const cancelFn = useServerFn(cancelAlert);
+
+  // shared
+  const [mode, setMode] = useState<"template" | "custom">("template");
   const [headline, setHeadline] = useState("");
   const [areas, setAreas] = useState("Statewide");
   const [description, setDescription] = useState("");
   const [instruction, setInstruction] = useState("");
-  const [duration, setDuration] = useState(60); // minutes
+  const [duration, setDuration] = useState(60);
   const [issuer, setIssuer] = useState("MWA Operations");
+  const [submitting, setSubmitting] = useState(false);
 
-  const selected = getAlertType(typeId);
+  // template fields
+  const [typeId, setTypeId] = useState(NWS_ALERT_TYPES[0].id);
 
-  const issue = (e: React.FormEvent) => {
+  // custom fields
+  const [customName, setCustomName] = useState("");
+  const [customCategory, setCustomCategory] = useState<AlertCategory>("statement");
+  const [customSeverity, setCustomSeverity] = useState<AlertSeverity>("moderate");
+
+  const selectedTemplate = getAlertType(typeId);
+
+  const issue = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!headline.trim() || !description.trim()) {
       toast.error("Headline and description are required");
       return;
     }
-    const areaList = areas
-      .split(",")
-      .map((a) => a.trim())
-      .filter(Boolean);
+    if (mode === "custom" && !customName.trim()) {
+      toast.error("Custom alert name is required");
+      return;
+    }
+    const areaList = areas.split(",").map((a) => a.trim()).filter(Boolean);
+    setSubmitting(true);
+    try {
+      const payload =
+        mode === "template"
+          ? {
+              code,
+              typeId,
+              customName: null,
+              category: (selectedTemplate?.category ?? "statement") as AlertCategory,
+              severity: (selectedTemplate?.severity ?? "minor") as AlertSeverity,
+            }
+          : {
+              code,
+              typeId: null,
+              customName: customName.trim(),
+              category: customCategory,
+              severity: customSeverity,
+            };
+      await issueFn({
+        data: {
+          ...payload,
+          headline: headline.trim(),
+          description: description.trim(),
+          instruction: instruction.trim() || null,
+          areas: areaList,
+          issuer: issuer.trim() || "MWA",
+          durationMinutes: Number(duration),
+        },
+      });
+      toast.success(`Alert broadcast to all visitors`);
+      setHeadline("");
+      setDescription("");
+      setInstruction("");
+    } catch (err) {
+      toast.error((err as Error).message || "Failed to issue alert");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
-    addAlert({
-      typeId,
-      headline: headline.trim(),
-      areas: areaList.length ? areaList : ["Statewide"],
-      description: description.trim(),
-      instruction: instruction.trim() || undefined,
-      expiresAt: new Date(Date.now() + duration * 60_000).toISOString(),
-      issuer: issuer.trim() || "MWA",
-    });
-    toast.success(`${selected?.name} issued for ${areaList.join(", ") || "Statewide"}`);
-    setHeadline("");
-    setDescription("");
-    setInstruction("");
+  const remove = async (id: string) => {
+    try {
+      await cancelFn({ data: { code, id } });
+      toast.message("Alert cancelled");
+    } catch (err) {
+      toast.error((err as Error).message);
+    }
   };
 
   return (
@@ -142,41 +195,96 @@ function CommandConsole() {
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-amber-alert" />
             <h2 className="font-display text-xl tracking-wider">Issue Weather Alert</h2>
+            <Badge variant="outline" className="ml-auto text-[10px] font-mono">
+              Broadcasts live to all visitors
+            </Badge>
           </div>
+
+          <Tabs value={mode} onValueChange={(v) => setMode(v as "template" | "custom")}>
+            <TabsList className="grid grid-cols-2 w-full">
+              <TabsTrigger value="template">NWS Template</TabsTrigger>
+              <TabsTrigger value="custom" className="gap-1.5">
+                <Sparkles className="h-3.5 w-3.5" /> Custom Alert
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="template" className="space-y-4 pt-4">
+              <div className="space-y-1.5">
+                <Label>Alert Product</Label>
+                <Select value={typeId} onValueChange={setTypeId}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent className="max-h-[320px]">
+                    {NWS_ALERT_TYPES.map((t) => (
+                      <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {selectedTemplate && (
+                  <div className="flex items-center gap-2 pt-1">
+                    <Badge variant="outline" className="capitalize">{selectedTemplate.category}</Badge>
+                    <Badge variant="outline" className="capitalize">{selectedTemplate.severity}</Badge>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="custom" className="space-y-4 pt-4">
+              <div className="space-y-1.5">
+                <Label>Custom Alert Name</Label>
+                <Input
+                  value={customName}
+                  onChange={(e) => setCustomName(e.target.value)}
+                  placeholder="e.g. Sudden Lake Effect Whiteout"
+                  maxLength={80}
+                />
+                <p className="text-[10px] text-muted-foreground">
+                  Use when no NWS template fits. This name shows as the alert headline product.
+                </p>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label>Category</Label>
+                  <Select value={customCategory} onValueChange={(v) => setCustomCategory(v as AlertCategory)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="warning">Warning</SelectItem>
+                      <SelectItem value="watch">Watch</SelectItem>
+                      <SelectItem value="advisory">Advisory</SelectItem>
+                      <SelectItem value="statement">Statement</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Severity</Label>
+                  <Select value={customSeverity} onValueChange={(v) => setCustomSeverity(v as AlertSeverity)}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="extreme">Extreme</SelectItem>
+                      <SelectItem value="severe">Severe</SelectItem>
+                      <SelectItem value="moderate">Moderate</SelectItem>
+                      <SelectItem value="minor">Minor</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
 
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label>Alert Product</Label>
-              <Select value={typeId} onValueChange={setTypeId}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent className="max-h-[320px]">
-                  {NWS_ALERT_TYPES.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>
-                      {t.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {selected && (
-                <div className="flex items-center gap-2 pt-1">
-                  <Badge variant="outline" className="capitalize">{selected.category}</Badge>
-                  <Badge variant="outline" className="capitalize">{selected.severity}</Badge>
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-1.5">
               <Label>Duration (minutes)</Label>
               <Input
-                type="number"
-                min={5}
-                max={1440}
+                type="number" min={5} max={2880}
                 value={duration}
                 onChange={(e) => setDuration(Number(e.target.value))}
               />
               <p className="text-[10px] text-muted-foreground">
                 Expires {new Date(Date.now() + duration * 60_000).toLocaleString()}
               </p>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Issued by</Label>
+              <Input value={issuer} onChange={(e) => setIssuer(e.target.value)} />
             </div>
           </div>
 
@@ -191,15 +299,11 @@ function CommandConsole() {
               Comma-separate city or county names. Use "Statewide" for all of Michigan.
             </p>
             <div className="flex flex-wrap gap-1 pt-1">
-              {["Statewide", "Detroit", "Grand Rapids", "Lansing", "Wayne", "Oakland", "Marquette"].map((q) => (
+              {["Statewide", "Detroit", "Grand Rapids", "Lansing", "Wayne", "Oakland", "Marquette", "Traverse City"].map((q) => (
                 <button
-                  key={q}
-                  type="button"
-                  onClick={() => setAreas(q)}
+                  key={q} type="button" onClick={() => setAreas(q)}
                   className="text-[10px] px-2 py-0.5 rounded border border-border hover:border-accent hover:text-accent font-mono"
-                >
-                  {q}
-                </button>
+                >{q}</button>
               ))}
             </div>
           </div>
@@ -210,39 +314,32 @@ function CommandConsole() {
               value={headline}
               onChange={(e) => setHeadline(e.target.value)}
               placeholder="e.g. Tornado spotted near Pontiac, take shelter immediately"
-              maxLength={140}
+              maxLength={200}
             />
           </div>
 
           <div className="space-y-1.5">
             <Label>Description</Label>
             <Textarea
-              rows={5}
-              value={description}
+              rows={5} value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="At 4:32 PM EDT, a severe thunderstorm capable of producing a tornado was located 5 miles west of..."
-              maxLength={2000}
+              placeholder="At 4:32 PM EDT, a severe thunderstorm capable of producing a tornado was located..."
+              maxLength={4000}
             />
           </div>
 
           <div className="space-y-1.5">
             <Label>Instruction (optional)</Label>
             <Textarea
-              rows={3}
-              value={instruction}
+              rows={3} value={instruction}
               onChange={(e) => setInstruction(e.target.value)}
               placeholder="TAKE COVER NOW! Move to an interior room on the lowest floor..."
-              maxLength={1000}
+              maxLength={2000}
             />
           </div>
 
-          <div className="space-y-1.5">
-            <Label>Issued by</Label>
-            <Input value={issuer} onChange={(e) => setIssuer(e.target.value)} />
-          </div>
-
-          <Button type="submit" size="lg" className="w-full font-display tracking-wider">
-            <Send className="h-4 w-4 mr-2" /> Broadcast Alert
+          <Button type="submit" size="lg" disabled={submitting} className="w-full font-display tracking-wider">
+            <Send className="h-4 w-4 mr-2" /> {submitting ? "Broadcasting…" : "Broadcast Alert"}
           </Button>
         </form>
 
@@ -256,29 +353,26 @@ function CommandConsole() {
                 No manual alerts active.
               </p>
             ) : (
-              <div className="space-y-2 max-h-[480px] overflow-y-auto pr-1">
+              <div className="space-y-2 max-h-[520px] overflow-y-auto pr-1">
                 {alerts.map((a) => {
-                  const t = getAlertType(a.typeId);
+                  const t = a.type_id ? getAlertType(a.type_id) : undefined;
                   return (
                     <div
                       key={a.id}
                       className={cn(
                         "rounded-md border p-3 text-xs space-y-1",
-                        t?.category === "warning" && "border-warning/60 bg-warning/10",
-                        t?.category === "watch" && "border-watch/60 bg-watch/10",
-                        t?.category === "advisory" && "border-advisory/40 bg-advisory/5",
-                        t?.category === "statement" && "border-statement/40 bg-statement/10",
+                        a.category === "warning" && "border-warning/60 bg-warning/10",
+                        a.category === "watch" && "border-watch/60 bg-watch/10",
+                        a.category === "advisory" && "border-advisory/40 bg-advisory/5",
+                        a.category === "statement" && "border-statement/40 bg-statement/10",
                       )}
                     >
                       <div className="flex items-start justify-between gap-2">
                         <span className="font-display font-bold uppercase tracking-wider">
-                          {t?.name}
+                          {t?.name ?? a.custom_name ?? "Alert"}
                         </span>
                         <button
-                          onClick={() => {
-                            removeAlert(a.id);
-                            toast.message("Alert cancelled");
-                          }}
+                          onClick={() => remove(a.id)}
                           className="text-muted-foreground hover:text-destructive"
                           aria-label="Cancel alert"
                         >
@@ -289,7 +383,7 @@ function CommandConsole() {
                       <p className="text-muted-foreground line-clamp-2">{a.description}</p>
                       <div className="flex items-center justify-between pt-1 font-mono text-[10px] text-muted-foreground">
                         <span>{a.areas.join(", ")}</span>
-                        <span>exp {new Date(a.expiresAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
+                        <span>exp {new Date(a.expires_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
                       </div>
                     </div>
                   );
@@ -300,9 +394,9 @@ function CommandConsole() {
 
           <div className="rounded-xl border border-border bg-card p-4 text-xs text-muted-foreground space-y-2">
             <p className="font-display uppercase tracking-wider text-accent">Notes</p>
-            <p>Cities in this directory: {MICHIGAN_CITIES.length}.</p>
-            <p>NWS alerts for Michigan are auto-polled every 2 minutes on the public site.</p>
-            <p>Manual alerts here are stored in this browser. Upgrade to Lovable Cloud for cross-visitor broadcasts.</p>
+            <p>Cities in directory: {MICHIGAN_CITIES.length}.</p>
+            <p>NWS alerts for Michigan auto-poll every 2 minutes.</p>
+            <p>Manual alerts here broadcast in real time to every visitor via Lovable Cloud.</p>
           </div>
         </aside>
       </main>
