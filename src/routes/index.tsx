@@ -3,15 +3,18 @@ import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import {
   AlertTriangle, MapPin, Radio, RefreshCw, Search, Wind, Droplets,
-  Thermometer, Sunrise, Eye, Gauge, Megaphone, ChevronRight,
+  Thermometer, Sunrise, Eye, Gauge, Megaphone, ChevronRight, ListOrdered, X,
 } from "lucide-react";
 import { MICHIGAN_CITIES, type MichiganCity } from "@/lib/michigan-cities";
 import { getCityWeather, getMichiganAlerts, type NWSAlert } from "@/lib/weather-api";
-import { useManualAlerts, type ManualAlert } from "@/lib/alerts-store";
+import { useSharedAlerts, type SharedAlert } from "@/lib/alerts-store";
 import { getAlertType } from "@/lib/nws-alert-types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
@@ -26,13 +29,33 @@ export const Route = createFileRoute("/")({
   component: HomePage,
 });
 
-function severityClass(event: string) {
+type AlertEntry =
+  | { kind: "shared"; alert: SharedAlert }
+  | { kind: "nws"; alert: NWSAlert };
+
+function severityFromEvent(event: string) {
   const e = event.toLowerCase();
   if (e.includes("tornado") || e.includes("flash flood") || e.includes("blizzard")) return "bg-severe text-white";
   if (e.includes("warning")) return "bg-warning text-black";
   if (e.includes("watch")) return "bg-watch text-black";
   if (e.includes("advisory")) return "bg-advisory text-black";
   return "bg-statement text-white";
+}
+
+function severityFromShared(a: SharedAlert) {
+  if (a.severity === "extreme") return "bg-severe text-white";
+  if (a.category === "warning") return "bg-warning text-black";
+  if (a.category === "watch") return "bg-watch text-black";
+  if (a.category === "advisory") return "bg-advisory text-black";
+  return "bg-statement text-white";
+}
+
+function alertTitle(entry: AlertEntry): string {
+  if (entry.kind === "shared") {
+    const t = entry.alert.type_id ? getAlertType(entry.alert.type_id) : undefined;
+    return t?.name ?? entry.alert.custom_name ?? "Weather Alert";
+  }
+  return entry.alert.properties.event;
 }
 
 function HomePage() {
@@ -61,15 +84,19 @@ function HomePage() {
     refetchInterval: 2 * 60 * 1000,
   });
 
-  const manual = useManualAlerts();
-  const allAlerts = [
-    ...manual.map((a) => ({ kind: "manual" as const, alert: a })),
-    ...(nwsAlerts.data ?? []).map((a) => ({ kind: "nws" as const, alert: a })),
-  ];
+  const { alerts: shared } = useSharedAlerts();
+
+  const allAlerts: AlertEntry[] = useMemo(
+    () => [
+      ...shared.map((a) => ({ kind: "shared" as const, alert: a })),
+      ...(nwsAlerts.data ?? []).map((a) => ({ kind: "nws" as const, alert: a })),
+    ],
+    [shared, nwsAlerts.data],
+  );
 
   const cityAlerts = useMemo(() => {
     return allAlerts.filter((a) => {
-      if (a.kind === "manual") {
+      if (a.kind === "shared") {
         return a.alert.areas.some(
           (x) =>
             x.toLowerCase() === "statewide" ||
@@ -87,7 +114,7 @@ function HomePage() {
 
   return (
     <div className="min-h-screen">
-      <TickerBar manual={manual} nws={nwsAlerts.data ?? []} />
+      <TickerBar entries={allAlerts} />
 
       {/* Header */}
       <header className="border-b border-border/60 backdrop-blur-md bg-storm-deep/70 sticky top-0 z-40">
@@ -122,12 +149,15 @@ function HomePage() {
             {cityAlerts.slice(0, 3).map((a, i) => (
               <AlertCard key={i} entry={a} />
             ))}
+            {cityAlerts.length > 3 && (
+              <AllAlertsDialog entries={allAlerts} label={`+${cityAlerts.length - 3} more for ${city.name}`} />
+            )}
           </div>
         </section>
       )}
 
       <main className="max-w-7xl mx-auto px-4 py-6 grid lg:grid-cols-[320px_1fr] gap-6">
-        {/* Sidebar: city picker */}
+        {/* Sidebar */}
         <aside className="space-y-3">
           <div className="rounded-lg border border-border bg-card p-4">
             <label className="text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
@@ -165,21 +195,22 @@ function HomePage() {
               ))}
               {filtered.length === 0 && (
                 <p className="text-xs text-muted-foreground px-3 py-4 text-center">
-                  No matches in our 44-city directory.
+                  No matches.
                 </p>
               )}
             </div>
           </div>
 
-          <div className="rounded-lg border border-border bg-card p-4 text-xs space-y-2">
+          <div className="rounded-lg border border-border bg-card p-4 text-xs space-y-3">
             <div className="flex items-center gap-2 text-accent">
               <Megaphone className="h-4 w-4" />
               <span className="font-mono uppercase tracking-wider">Active Alerts</span>
             </div>
             <div className="grid grid-cols-2 gap-2 text-center">
-              <Stat label="Statewide" value={(nwsAlerts.data?.length ?? 0) + manual.length} />
+              <Stat label="Statewide" value={allAlerts.length} />
               <Stat label="This City" value={cityAlerts.length} />
             </div>
+            <AllAlertsDialog entries={allAlerts} label="View All Alerts" full />
           </div>
         </aside>
 
@@ -218,7 +249,6 @@ function HomePage() {
 
           {current && today && weather.data && (
             <>
-              {/* Current conditions */}
               <div className="rounded-xl border border-border bg-card overflow-hidden">
                 <div className="relative p-6 md:p-8 grid md:grid-cols-[1fr_auto] gap-6 items-center">
                   <div className="absolute inset-0 opacity-30 pointer-events-none scan-line h-px top-auto bottom-0" />
@@ -233,33 +263,9 @@ function HomePage() {
                     <p className="text-sm text-muted-foreground mt-1">{today.detailedForecast}</p>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-5">
                       <Metric icon={Wind} label="Wind" value={`${current.windDirection} ${current.windSpeed}`} />
-                      <Metric
-                        icon={Droplets}
-                        label="Humidity"
-                        value={
-                          current.relativeHumidity?.value != null
-                            ? `${Math.round(current.relativeHumidity.value)}%`
-                            : "—"
-                        }
-                      />
-                      <Metric
-                        icon={Thermometer}
-                        label="Dew Point"
-                        value={
-                          current.dewpoint?.value != null
-                            ? `${Math.round((current.dewpoint.value * 9) / 5 + 32)}°F`
-                            : "—"
-                        }
-                      />
-                      <Metric
-                        icon={Gauge}
-                        label="Precip"
-                        value={
-                          current.probabilityOfPrecipitation?.value != null
-                            ? `${current.probabilityOfPrecipitation.value}%`
-                            : "0%"
-                        }
-                      />
+                      <Metric icon={Droplets} label="Humidity" value={current.relativeHumidity?.value != null ? `${Math.round(current.relativeHumidity.value)}%` : "—"} />
+                      <Metric icon={Thermometer} label="Dew Point" value={current.dewpoint?.value != null ? `${Math.round((current.dewpoint.value * 9) / 5 + 32)}°F` : "—"} />
+                      <Metric icon={Gauge} label="Precip" value={current.probabilityOfPrecipitation?.value != null ? `${current.probabilityOfPrecipitation.value}%` : "0%"} />
                     </div>
                   </div>
                   <img
@@ -270,7 +276,6 @@ function HomePage() {
                 </div>
               </div>
 
-              {/* Hourly strip */}
               <div className="rounded-xl border border-border bg-card p-4">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-display tracking-wider text-sm uppercase text-muted-foreground">
@@ -280,19 +285,14 @@ function HomePage() {
                 </div>
                 <div className="flex gap-2 overflow-x-auto pb-2">
                   {weather.data.hourly.properties.periods.slice(0, 24).map((p) => (
-                    <div
-                      key={p.number}
-                      className="flex-none w-20 text-center rounded-lg bg-storm/50 border border-border/40 p-2"
-                    >
+                    <div key={p.number} className="flex-none w-20 text-center rounded-lg bg-storm/50 border border-border/40 p-2">
                       <p className="text-[10px] font-mono text-muted-foreground">
                         {new Date(p.startTime).toLocaleTimeString([], { hour: "numeric" })}
                       </p>
                       <img src={p.icon} alt="" className="h-10 w-10 mx-auto my-1" />
                       <p className="font-display font-bold">{Math.round(p.temperature)}°</p>
                       {p.probabilityOfPrecipitation?.value ? (
-                        <p className="text-[10px] text-accent">
-                          {p.probabilityOfPrecipitation.value}%
-                        </p>
+                        <p className="text-[10px] text-accent">{p.probabilityOfPrecipitation.value}%</p>
                       ) : (
                         <p className="text-[10px] text-transparent">·</p>
                       )}
@@ -301,7 +301,6 @@ function HomePage() {
                 </div>
               </div>
 
-              {/* 7-day */}
               <div className="rounded-xl border border-border bg-card p-4">
                 <h3 className="font-display tracking-wider text-sm uppercase text-muted-foreground mb-3">
                   Extended Forecast
@@ -311,15 +310,8 @@ function HomePage() {
                     <div key={p.number} className="flex items-center gap-4 py-3">
                       <div className="w-24 text-sm font-medium">{p.name}</div>
                       <img src={p.icon} alt="" className="h-10 w-10" />
-                      <div className="flex-1 text-sm text-muted-foreground truncate">
-                        {p.shortForecast}
-                      </div>
-                      <div
-                        className={cn(
-                          "font-display text-xl font-bold",
-                          p.isDaytime ? "text-amber-alert" : "text-cyan-glow",
-                        )}
-                      >
+                      <div className="flex-1 text-sm text-muted-foreground truncate">{p.shortForecast}</div>
+                      <div className={cn("font-display text-xl font-bold", p.isDaytime ? "text-amber-alert" : "text-cyan-glow")}>
                         {Math.round(p.temperature)}°
                       </div>
                       <ChevronRight className="h-4 w-4 text-muted-foreground/40" />
@@ -340,7 +332,7 @@ function HomePage() {
 
       <footer className="border-t border-border/60 mt-12">
         <div className="max-w-7xl mx-auto px-4 py-6 text-xs text-muted-foreground flex flex-wrap items-center justify-between gap-3">
-          <span>© Michigan Weather Authority — Unofficial. Source: NWS.</span>
+          <span>© Michigan Weather Authority — Unofficial. Source: NWS + MWA.</span>
           <span className="font-mono">MWA · MI · v1.0</span>
         </div>
       </footer>
@@ -348,73 +340,207 @@ function HomePage() {
   );
 }
 
-function TickerBar({ manual, nws }: { manual: ManualAlert[]; nws: NWSAlert[] }) {
-  const items: string[] = [
-    ...manual.map((a) => `${getAlertType(a.typeId)?.name ?? "ALERT"} — ${a.headline}`),
-    ...nws.map((a) => `${a.properties.event.toUpperCase()} — ${a.properties.areaDesc}`),
-  ];
+function TickerBar({ entries }: { entries: AlertEntry[] }) {
+  const items: { title: string; tone: string; meta: string }[] = entries.map((e) => {
+    if (e.kind === "shared") {
+      return {
+        title: alertTitle(e),
+        tone: e.alert.severity === "extreme" ? "text-severe" : e.alert.category === "warning" ? "text-warning" : e.alert.category === "watch" ? "text-watch" : "text-amber-alert",
+        meta: `${e.alert.areas.join(", ")} • ${e.alert.headline}`,
+      };
+    }
+    return {
+      title: e.alert.properties.event,
+      tone: "text-amber-alert",
+      meta: e.alert.properties.areaDesc,
+    };
+  });
+
   const display = items.length
     ? items
-    : ["No active alerts at this time", "Conditions nominal across Michigan", "All clear"];
+    : [{ title: "ALL CLEAR", tone: "text-accent", meta: "No active alerts across Michigan" }];
   const doubled = [...display, ...display];
 
   return (
     <div className="bg-amber-alert/15 border-b border-amber-alert/40 overflow-hidden">
-      <div className="flex items-center gap-3 max-w-[100vw]">
-        <div className="flex-none bg-amber-alert text-black px-3 py-1.5 text-[11px] font-mono font-bold uppercase tracking-wider flex items-center gap-1.5">
-          <AlertTriangle className="h-3 w-3" /> Wire
+      <div className="flex items-stretch max-w-[100vw]">
+        <div className="flex-none bg-amber-alert text-black px-3 grid place-items-center text-[11px] font-mono font-bold uppercase tracking-wider gap-1.5">
+          <span className="flex items-center gap-1.5">
+            <AlertTriangle className="h-3 w-3" /> MWA Wire
+          </span>
         </div>
-        <div className="overflow-hidden flex-1">
-          <div className="ticker whitespace-nowrap flex gap-12 py-1.5">
+        <div className="overflow-hidden flex-1 group">
+          <div className="ticker whitespace-nowrap flex gap-10 py-2 group-hover:[animation-play-state:paused]">
             {doubled.map((t, i) => (
-              <span key={i} className="text-xs text-amber-alert/90 font-medium">
-                ⚡ {t}
+              <span
+                key={i}
+                className="text-xs font-display tracking-wider font-semibold uppercase flex items-center gap-2"
+              >
+                <span className={cn("font-bold", t.tone)}>⚡ {t.title}</span>
+                <span className="text-amber-alert/70 normal-case font-sans font-normal tracking-normal">
+                  — {t.meta}
+                </span>
               </span>
             ))}
           </div>
         </div>
+        <AllAlertsDialog
+          entries={entries}
+          label={`Read all (${entries.length})`}
+          tickerStyle
+        />
       </div>
     </div>
   );
 }
 
-function AlertCard({
-  entry,
+function AllAlertsDialog({
+  entries,
+  label,
+  tickerStyle,
+  full,
 }: {
-  entry: { kind: "manual"; alert: ManualAlert } | { kind: "nws"; alert: NWSAlert };
+  entries: AlertEntry[];
+  label: string;
+  tickerStyle?: boolean;
+  full?: boolean;
 }) {
-  if (entry.kind === "manual") {
-    const t = getAlertType(entry.alert.typeId);
+  const [open, setOpen] = useState(false);
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <button
+          className={cn(
+            "inline-flex items-center gap-1.5 font-mono uppercase tracking-wider transition-colors",
+            tickerStyle &&
+              "flex-none bg-storm-deep text-amber-alert hover:bg-storm border-l border-amber-alert/40 px-3 text-[11px] font-bold",
+            !tickerStyle && full && "w-full justify-center bg-accent/10 hover:bg-accent/20 text-accent border border-accent/30 rounded-md px-3 py-2 text-xs",
+            !tickerStyle && !full && "text-amber-alert hover:text-amber-alert/80 text-xs",
+          )}
+        >
+          <ListOrdered className="h-3.5 w-3.5" />
+          {label}
+        </button>
+      </DialogTrigger>
+      <DialogContent className="max-w-3xl bg-card border-border max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="font-display tracking-wider text-2xl flex items-center gap-2">
+            <Megaphone className="h-5 w-5 text-amber-alert" />
+            All Active Alerts ({entries.length})
+          </DialogTitle>
+        </DialogHeader>
+        {entries.length === 0 ? (
+          <p className="text-sm text-muted-foreground py-10 text-center">
+            No active alerts in Michigan right now.
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {entries.map((e, i) => (
+              <FullAlert key={i} entry={e} />
+            ))}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function FullAlert({ entry }: { entry: AlertEntry }) {
+  if (entry.kind === "shared") {
+    const a = entry.alert;
+    const t = a.type_id ? getAlertType(a.type_id) : undefined;
     return (
-      <div className={cn("rounded-md p-3 flex items-start gap-3", severityClass(t?.name ?? ""))}>
-        <AlertTriangle className="h-5 w-5 flex-none mt-0.5" />
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-display font-bold uppercase tracking-wider text-sm">
-              {t?.name ?? "Weather Alert"}
-            </span>
-            <Badge variant="outline" className="text-[10px] border-current/40">
+      <div className="rounded-lg border border-border bg-storm/60 overflow-hidden">
+        <div className={cn("px-4 py-2 flex items-center justify-between", severityFromShared(a))}>
+          <div className="flex items-center gap-2 font-display uppercase tracking-wider text-sm font-bold">
+            <AlertTriangle className="h-4 w-4" />
+            {t?.name ?? a.custom_name ?? "Weather Alert"}
+            <Badge variant="outline" className="border-current/40 text-[10px]">
               MWA Issued
             </Badge>
-            <span className="text-[10px] opacity-80 font-mono">
-              Until {new Date(entry.alert.expiresAt).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
-            </span>
           </div>
-          <p className="text-sm mt-1 font-medium">{entry.alert.headline}</p>
-          <p className="text-xs opacity-90 mt-1 line-clamp-2">{entry.alert.description}</p>
+          <span className="text-[10px] font-mono">
+            until {new Date(a.expires_at).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
+          </span>
+        </div>
+        <div className="p-4 space-y-2">
+          <p className="font-semibold">{a.headline}</p>
+          <p className="text-sm text-muted-foreground whitespace-pre-wrap">{a.description}</p>
+          {a.instruction && (
+            <div className="rounded border border-amber-alert/40 bg-amber-alert/10 p-3 text-sm">
+              <p className="text-[10px] font-mono uppercase tracking-wider text-amber-alert mb-1">
+                Precautionary / Preparedness Actions
+              </p>
+              <p className="whitespace-pre-wrap">{a.instruction}</p>
+            </div>
+          )}
+          <div className="flex flex-wrap items-center justify-between gap-2 text-[10px] font-mono text-muted-foreground pt-1">
+            <span>Areas: {a.areas.join(", ")}</span>
+            <span>Issued by {a.issuer} • {new Date(a.issued_at).toLocaleString()}</span>
+          </div>
         </div>
       </div>
     );
   }
   const p = entry.alert.properties;
   return (
-    <div className={cn("rounded-md p-3 flex items-start gap-3", severityClass(p.event))}>
+    <div className="rounded-lg border border-border bg-storm/60 overflow-hidden">
+      <div className={cn("px-4 py-2 flex items-center justify-between", severityFromEvent(p.event))}>
+        <div className="flex items-center gap-2 font-display uppercase tracking-wider text-sm font-bold">
+          <AlertTriangle className="h-4 w-4" />
+          {p.event}
+          <Badge variant="outline" className="border-current/40 text-[10px]">NWS</Badge>
+        </div>
+        <span className="text-[10px] font-mono">
+          until {new Date(p.expires).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
+        </span>
+      </div>
+      <div className="p-4 space-y-2">
+        <p className="font-semibold">{p.headline}</p>
+        <p className="text-sm text-muted-foreground whitespace-pre-wrap">{p.description}</p>
+        {p.instruction && (
+          <div className="rounded border border-amber-alert/40 bg-amber-alert/10 p-3 text-sm whitespace-pre-wrap">
+            {p.instruction}
+          </div>
+        )}
+        <div className="text-[10px] font-mono text-muted-foreground pt-1">
+          Areas: {p.areaDesc} • Issued by {p.senderName}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AlertCard({ entry }: { entry: AlertEntry }) {
+  if (entry.kind === "shared") {
+    const a = entry.alert;
+    const t = a.type_id ? getAlertType(a.type_id) : undefined;
+    return (
+      <div className={cn("rounded-md p-3 flex items-start gap-3", severityFromShared(a))}>
+        <AlertTriangle className="h-5 w-5 flex-none mt-0.5" />
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-display font-bold uppercase tracking-wider text-sm">
+              {t?.name ?? a.custom_name ?? "Weather Alert"}
+            </span>
+            <Badge variant="outline" className="text-[10px] border-current/40">MWA</Badge>
+            <span className="text-[10px] opacity-80 font-mono">
+              Until {new Date(a.expires_at).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
+            </span>
+          </div>
+          <p className="text-sm mt-1 font-medium">{a.headline}</p>
+          <p className="text-xs opacity-90 mt-1 line-clamp-2">{a.description}</p>
+        </div>
+      </div>
+    );
+  }
+  const p = entry.alert.properties;
+  return (
+    <div className={cn("rounded-md p-3 flex items-start gap-3", severityFromEvent(p.event))}>
       <AlertTriangle className="h-5 w-5 flex-none mt-0.5" />
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-display font-bold uppercase tracking-wider text-sm">
-            {p.event}
-          </span>
+          <span className="font-display font-bold uppercase tracking-wider text-sm">{p.event}</span>
           <Badge variant="outline" className="text-[10px] border-current/40">NWS</Badge>
           <span className="text-[10px] opacity-80 font-mono">
             Until {new Date(p.expires).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
