@@ -51,39 +51,39 @@
 }
 
 :root {
-  --radius: 0.5rem;
+  --radius: 0.75rem;
 
-  --background: oklch(0.13 0.025 250);
-  --foreground: oklch(0.97 0.01 240);
-  --card: oklch(0.18 0.035 248);
-  --card-foreground: oklch(0.97 0.01 240);
-  --popover: oklch(0.16 0.03 248);
-  --popover-foreground: oklch(0.97 0.01 240);
-  --primary: oklch(0.78 0.16 75);
-  --primary-foreground: oklch(0.15 0.03 250);
-  --secondary: oklch(0.25 0.04 245);
-  --secondary-foreground: oklch(0.97 0.01 240);
-  --muted: oklch(0.22 0.03 245);
-  --muted-foreground: oklch(0.68 0.02 245);
-  --accent: oklch(0.72 0.18 220);
-  --accent-foreground: oklch(0.13 0.025 250);
-  --destructive: oklch(0.62 0.24 25);
+  --background: oklch(0.14 0.02 255);
+  --foreground: oklch(0.97 0.005 240);
+  --card: oklch(0.18 0.025 255 / 0.7);
+  --card-foreground: oklch(0.97 0.005 240);
+  --popover: oklch(0.16 0.025 255);
+  --popover-foreground: oklch(0.97 0.005 240);
+  --primary: oklch(0.82 0.16 78);
+  --primary-foreground: oklch(0.15 0.02 255);
+  --secondary: oklch(0.24 0.03 255);
+  --secondary-foreground: oklch(0.97 0.005 240);
+  --muted: oklch(0.22 0.025 255);
+  --muted-foreground: oklch(0.70 0.015 245);
+  --accent: oklch(0.78 0.16 215);
+  --accent-foreground: oklch(0.13 0.02 255);
+  --destructive: oklch(0.64 0.24 25);
   --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.28 0.03 245);
-  --input: oklch(0.22 0.03 245);
-  --ring: oklch(0.72 0.18 220);
+  --border: oklch(0.30 0.025 250 / 0.6);
+  --input: oklch(0.22 0.025 255);
+  --ring: oklch(0.78 0.16 215);
 
-  --storm: oklch(0.20 0.04 248);
-  --storm-deep: oklch(0.10 0.03 250);
-  --amber-alert: oklch(0.78 0.18 70);
-  --cyan-glow: oklch(0.78 0.15 215);
+  --storm: oklch(0.20 0.03 255);
+  --storm-deep: oklch(0.09 0.02 258);
+  --amber-alert: oklch(0.82 0.17 72);
+  --cyan-glow: oklch(0.82 0.14 210);
 
   /* NWS-style alert severity colors */
-  --severe: oklch(0.55 0.25 20);       /* tornado/extreme red */
-  --watch: oklch(0.75 0.18 60);        /* watch amber */
-  --warning: oklch(0.65 0.22 35);      /* warning orange */
-  --advisory: oklch(0.72 0.16 95);     /* advisory yellow */
-  --statement: oklch(0.62 0.10 220);   /* statement blue */
+  --severe: oklch(0.58 0.25 22);
+  --watch: oklch(0.78 0.17 60);
+  --warning: oklch(0.68 0.22 38);
+  --advisory: oklch(0.78 0.16 95);
+  --statement: oklch(0.66 0.12 220);
 }
 
 @layer base {
@@ -93,19 +93,35 @@
     background: var(--storm-deep);
     color: var(--color-foreground);
     font-family: var(--font-sans);
+    font-feature-settings: "ss01", "cv11";
   }
 
   body {
     background-image:
-      radial-gradient(ellipse at top, oklch(0.22 0.06 230 / 0.5), transparent 60%),
-      radial-gradient(ellipse at bottom, oklch(0.18 0.05 280 / 0.4), transparent 70%),
+      radial-gradient(ellipse 80% 50% at 20% 0%, oklch(0.32 0.12 230 / 0.45), transparent 60%),
+      radial-gradient(ellipse 70% 50% at 85% 10%, oklch(0.28 0.14 290 / 0.35), transparent 60%),
+      radial-gradient(ellipse 90% 60% at 50% 100%, oklch(0.20 0.08 260 / 0.5), transparent 70%),
       var(--gradient-storm);
     min-height: 100vh;
   }
 
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(oklch(0.5 0.05 230 / 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, oklch(0.5 0.05 230 / 0.05) 1px, transparent 1px);
+    background-size: 64px 64px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
+    z-index: 0;
+  }
+
   h1, h2, h3, h4 {
     font-family: var(--font-display);
-    letter-spacing: 0.02em;
+    letter-spacing: -0.01em;
+    font-weight: 600;
   }
 }
 
@@ -124,7 +140,19 @@
 }
 
 @utility ticker {
-  animation: ticker 45s linear infinite;
+  animation: ticker 60s linear infinite;
+}
+
+@utility glass {
+  background: linear-gradient(180deg, oklch(0.20 0.03 255 / 0.55), oklch(0.14 0.02 255 / 0.65));
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid oklch(0.40 0.03 230 / 0.25);
+}
+
+@utility hairline {
+  background-image: linear-gradient(90deg, transparent, oklch(0.6 0.05 230 / 0.4), transparent);
+  height: 1px;
 }
 
 @keyframes alert-pulse {
