@@ -83,6 +83,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:description", content: "Live weather, forecasts, and alerts for every city in Michigan." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "Michigan Weather Authority" },
+      { name: "twitter:description", content: "Live weather, forecasts, and alerts for every city in Michigan." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/j6kBsgZTd4SRMVRd0xv14TBnIMI3/social-images/social-1781649286231-mwa.webp" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/j6kBsgZTd4SRMVRd0xv14TBnIMI3/social-images/social-1781649286231-mwa.webp" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
