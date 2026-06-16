@@ -175,21 +175,21 @@ function HomePage() {
             <div className="mt-3 max-h-[420px] overflow-y-auto pr-1 space-y-1">
               {filtered.map((c) => (
                 <button
-                  key={c.name + c.county}
+                  key={c.zip}
                   onClick={() => setCity(c)}
                   className={cn(
                     "w-full text-left px-3 py-2 rounded-md text-sm flex items-center justify-between group transition-colors",
-                    city.name === c.name && city.county === c.county
+                    city.zip === c.zip
                       ? "bg-accent/15 text-accent border border-accent/40"
                       : "hover:bg-secondary/60 border border-transparent",
                   )}
                 >
-                  <span className="flex items-center gap-2">
-                    <MapPin className="h-3.5 w-3.5 opacity-60" />
-                    {c.name}
+                  <span className="flex items-center gap-2 min-w-0">
+                    <MapPin className="h-3.5 w-3.5 opacity-60 shrink-0" />
+                    <span className="truncate">{c.name}</span>
                   </span>
-                  <span className="text-[10px] text-muted-foreground font-mono">
-                    {c.county}
+                  <span className="text-[10px] text-muted-foreground font-mono shrink-0 ml-2">
+                    {c.zip}
                   </span>
                 </button>
               ))}
