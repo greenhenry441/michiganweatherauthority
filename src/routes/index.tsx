@@ -65,8 +65,8 @@ function HomePage() {
   const filtered = useMemo(
     () =>
       MICHIGAN_CITIES.filter((c) =>
-        (c.name + " " + c.county).toLowerCase().includes(search.toLowerCase()),
-      ).slice(0, 12),
+        (c.name + " " + c.county + " " + c.zip).toLowerCase().includes(search.toLowerCase()),
+      ).slice(0, 40),
     [search],
   );
 
