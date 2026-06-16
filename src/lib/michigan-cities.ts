@@ -1,0 +1,53 @@
+export interface MichiganCity {
+  name: string;
+  county: string;
+  lat: number;
+  lon: number;
+}
+
+export const MICHIGAN_CITIES: MichiganCity[] = [
+  { name: "Detroit", county: "Wayne", lat: 42.3314, lon: -83.0458 },
+  { name: "Grand Rapids", county: "Kent", lat: 42.9634, lon: -85.6681 },
+  { name: "Warren", county: "Macomb", lat: 42.5145, lon: -83.0147 },
+  { name: "Sterling Heights", county: "Macomb", lat: 42.5803, lon: -83.0302 },
+  { name: "Ann Arbor", county: "Washtenaw", lat: 42.2808, lon: -83.7430 },
+  { name: "Lansing", county: "Ingham", lat: 42.7325, lon: -84.5555 },
+  { name: "Flint", county: "Genesee", lat: 43.0125, lon: -83.6875 },
+  { name: "Dearborn", county: "Wayne", lat: 42.3223, lon: -83.1763 },
+  { name: "Livonia", county: "Wayne", lat: 42.3684, lon: -83.3527 },
+  { name: "Troy", county: "Oakland", lat: 42.6064, lon: -83.1498 },
+  { name: "Westland", county: "Wayne", lat: 42.3242, lon: -83.4002 },
+  { name: "Farmington Hills", county: "Oakland", lat: 42.4989, lon: -83.3677 },
+  { name: "Kalamazoo", county: "Kalamazoo", lat: 42.2917, lon: -85.5872 },
+  { name: "Wyoming", county: "Kent", lat: 42.9133, lon: -85.7053 },
+  { name: "Southfield", county: "Oakland", lat: 42.4734, lon: -83.2219 },
+  { name: "Rochester Hills", county: "Oakland", lat: 42.6583, lon: -83.1499 },
+  { name: "Taylor", county: "Wayne", lat: 42.2409, lon: -83.2696 },
+  { name: "Pontiac", county: "Oakland", lat: 42.6389, lon: -83.2910 },
+  { name: "St. Clair Shores", county: "Macomb", lat: 42.4967, lon: -82.8888 },
+  { name: "Royal Oak", county: "Oakland", lat: 42.4895, lon: -83.1446 },
+  { name: "Novi", county: "Oakland", lat: 42.4806, lon: -83.4755 },
+  { name: "Dearborn Heights", county: "Wayne", lat: 42.3370, lon: -83.2730 },
+  { name: "Battle Creek", county: "Calhoun", lat: 42.3211, lon: -85.1797 },
+  { name: "Saginaw", county: "Saginaw", lat: 43.4195, lon: -83.9508 },
+  { name: "Kentwood", county: "Kent", lat: 42.8689, lon: -85.6447 },
+  { name: "East Lansing", county: "Ingham", lat: 42.7370, lon: -84.4839 },
+  { name: "Roseville", county: "Macomb", lat: 42.4973, lon: -82.9371 },
+  { name: "Portage", county: "Kalamazoo", lat: 42.2011, lon: -85.5800 },
+  { name: "Midland", county: "Midland", lat: 43.6156, lon: -84.2472 },
+  { name: "Lincoln Park", county: "Wayne", lat: 42.2506, lon: -83.1788 },
+  { name: "Muskegon", county: "Muskegon", lat: 43.2342, lon: -86.2484 },
+  { name: "Bay City", county: "Bay", lat: 43.5945, lon: -83.8889 },
+  { name: "Jackson", county: "Jackson", lat: 42.2459, lon: -84.4013 },
+  { name: "Holland", county: "Ottawa", lat: 42.7875, lon: -86.1089 },
+  { name: "Port Huron", county: "St. Clair", lat: 42.9709, lon: -82.4249 },
+  { name: "Traverse City", county: "Grand Traverse", lat: 44.7631, lon: -85.6206 },
+  { name: "Marquette", county: "Marquette", lat: 46.5436, lon: -87.3954 },
+  { name: "Sault Ste. Marie", county: "Chippewa", lat: 46.4953, lon: -84.3453 },
+  { name: "Mackinaw City", county: "Cheboygan", lat: 45.7775, lon: -84.7272 },
+  { name: "Petoskey", county: "Emmet", lat: 45.3733, lon: -84.9553 },
+  { name: "Alpena", county: "Alpena", lat: 45.0617, lon: -83.4327 },
+  { name: "Escanaba", county: "Delta", lat: 45.7452, lon: -87.0646 },
+  { name: "Houghton", county: "Houghton", lat: 47.1216, lon: -88.5694 },
+  { name: "Cadillac", county: "Wexford", lat: 44.2520, lon: -85.4012 },
+];
