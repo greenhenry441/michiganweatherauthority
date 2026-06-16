@@ -160,8 +160,9 @@ function HomePage() {
         {/* Sidebar */}
         <aside className="space-y-3">
           <div className="rounded-lg border border-border bg-card p-4">
-            <label className="text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
-              Select Location
+            <label className="text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground flex items-center justify-between">
+              <span>Select Location</span>
+              <span className="text-accent/80">{MICHIGAN_CITIES.length.toLocaleString()} ZIPs</span>
             </label>
             <div className="relative mt-2">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
