@@ -224,8 +224,8 @@ function HomePage() {
               <h2 className="font-display text-3xl md:text-4xl font-bold text-glow">
                 {city.name}, MI
               </h2>
-              <p className="text-xs text-muted-foreground mt-1">
-                {city.county} County • {city.lat.toFixed(3)}°N, {Math.abs(city.lon).toFixed(3)}°W
+              <p className="text-xs text-muted-foreground mt-1 font-mono">
+                ZIP {city.zip} • {city.county} County • {city.lat.toFixed(3)}°N, {Math.abs(city.lon).toFixed(3)}°W
               </p>
             </div>
             <Button
