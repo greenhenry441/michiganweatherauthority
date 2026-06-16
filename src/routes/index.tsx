@@ -65,8 +65,8 @@ function HomePage() {
   const filtered = useMemo(
     () =>
       MICHIGAN_CITIES.filter((c) =>
-        (c.name + " " + c.county).toLowerCase().includes(search.toLowerCase()),
-      ).slice(0, 12),
+        (c.name + " " + c.county + " " + c.zip).toLowerCase().includes(search.toLowerCase()),
+      ).slice(0, 40),
     [search],
   );
 
@@ -160,8 +160,9 @@ function HomePage() {
         {/* Sidebar */}
         <aside className="space-y-3">
           <div className="rounded-lg border border-border bg-card p-4">
-            <label className="text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
-              Select Location
+            <label className="text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground flex items-center justify-between">
+              <span>Select Location</span>
+              <span className="text-accent/80">{MICHIGAN_CITIES.length.toLocaleString()} ZIPs</span>
             </label>
             <div className="relative mt-2">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -175,21 +176,21 @@ function HomePage() {
             <div className="mt-3 max-h-[420px] overflow-y-auto pr-1 space-y-1">
               {filtered.map((c) => (
                 <button
-                  key={c.name + c.county}
+                  key={c.zip}
                   onClick={() => setCity(c)}
                   className={cn(
                     "w-full text-left px-3 py-2 rounded-md text-sm flex items-center justify-between group transition-colors",
-                    city.name === c.name && city.county === c.county
+                    city.zip === c.zip
                       ? "bg-accent/15 text-accent border border-accent/40"
                       : "hover:bg-secondary/60 border border-transparent",
                   )}
                 >
-                  <span className="flex items-center gap-2">
-                    <MapPin className="h-3.5 w-3.5 opacity-60" />
-                    {c.name}
+                  <span className="flex items-center gap-2 min-w-0">
+                    <MapPin className="h-3.5 w-3.5 opacity-60 shrink-0" />
+                    <span className="truncate">{c.name}</span>
                   </span>
-                  <span className="text-[10px] text-muted-foreground font-mono">
-                    {c.county}
+                  <span className="text-[10px] text-muted-foreground font-mono shrink-0 ml-2">
+                    {c.zip}
                   </span>
                 </button>
               ))}
@@ -224,8 +225,8 @@ function HomePage() {
               <h2 className="font-display text-3xl md:text-4xl font-bold text-glow">
                 {city.name}, MI
               </h2>
-              <p className="text-xs text-muted-foreground mt-1">
-                {city.county} County • {city.lat.toFixed(3)}°N, {Math.abs(city.lon).toFixed(3)}°W
+              <p className="text-xs text-muted-foreground mt-1 font-mono">
+                ZIP {city.zip} • {city.county} County • {city.lat.toFixed(3)}°N, {Math.abs(city.lon).toFixed(3)}°W
               </p>
             </div>
             <Button
