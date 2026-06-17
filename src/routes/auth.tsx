@@ -49,7 +49,7 @@ function AuthPage() {
         });
         if (error) throw error;
         toast.success("Account created");
-        nav({ to: "/settings" });
+        nav({ to: "/_authenticated/settings" as any });
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -92,52 +92,34 @@ function AuthPage() {
               <TabsContent value="signup" className="space-y-3 m-0">
                 <div className="space-y-1.5">
                   <Label className="text-xs font-mono uppercase tracking-wider">Display name</Label>
-                  <Input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Your display name"
-                    disabled={busy}
-                  />
+                  <div className="relative">
+                    <User className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                    <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Jane Doe" className="pl-9" />
+                  </div>
                 </div>
               </TabsContent>
 
               <div className="space-y-1.5">
                 <Label className="text-xs font-mono uppercase tracking-wider">Email</Label>
-                <Input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="you@example.com"
-                  disabled={busy}
-                  required
-                />
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" className="pl-9" />
+                </div>
               </div>
 
               <div className="space-y-1.5">
                 <Label className="text-xs font-mono uppercase tracking-wider">Password</Label>
-                <Input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  disabled={busy}
-                  required
-                />
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                  <Input type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" className="pl-9" />
+                </div>
               </div>
 
-              <Button type="submit" disabled={busy} className="w-full">
-                {busy ? "Loading…" : tab === "signin" ? "Sign in" : "Create account"}
+              <Button type="submit" disabled={busy} className="w-full font-display tracking-wider mt-2">
+                {busy ? "Working…" : tab === "signup" ? "Create account" : "Sign in"}
               </Button>
             </form>
           </Tabs>
-
-          <p className="text-[10px] font-mono text-muted-foreground text-center">
-            {tab === "signin" ? "Don't have an account? " : "Already have an account? "}
-            <button onClick={() => setTab(tab === "signin" ? "signup" : "signin")} className="text-accent hover:underline">
-              {tab === "signin" ? "Sign up" : "Sign in"}
-            </button>
-          </p>
         </div>
       </div>
       <Toaster />
