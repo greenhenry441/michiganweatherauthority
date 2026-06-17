@@ -90,6 +90,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      {
+        rel: "icon",
+        type: "image/svg+xml",
+        href:
+          "data:image/svg+xml;utf8," +
+          encodeURIComponent(
+            `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'>
+              <defs>
+                <linearGradient id='g' x1='0' x2='1' y1='0' y2='1'>
+                  <stop offset='0%' stop-color='#3b82f6'/>
+                  <stop offset='100%' stop-color='#1e3a8a'/>
+                </linearGradient>
+              </defs>
+              <rect width='64' height='64' rx='14' fill='url(#g)'/>
+              <path d='M20 30a10 10 0 0 1 19.6-3A8 8 0 1 1 42 43H22a7 7 0 0 1-2-13z' fill='#ffffff' opacity='0.95'/>
+              <path d='M34 33l-7 11h6l-2 8 8-12h-6l3-7z' fill='#facc15' stroke='#1e3a8a' stroke-width='1' stroke-linejoin='round'/>
+            </svg>`,
+          ),
+      },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
