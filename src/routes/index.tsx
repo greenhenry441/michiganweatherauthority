@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle, MapPin, Radio, RefreshCw, Search, Wind, Droplets,
-  Thermometer, Sunrise, Eye, Gauge, Megaphone, ChevronRight, ListOrdered, X,
+  Thermometer, Sunrise, Eye, Gauge, Megaphone, ChevronRight, ListOrdered,
 } from "lucide-react";
 import { MICHIGAN_CITIES, type MichiganCity } from "@/lib/michigan-cities";
 import { getCityWeather, getMichiganAlerts, type NWSAlert } from "@/lib/weather-api";
