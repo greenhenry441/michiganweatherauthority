@@ -139,24 +139,24 @@ function HomePage() {
       <TickerBar entries={allAlerts} />
 
       {/* Header */}
-      <header className="border-b border-border/60 backdrop-blur-md bg-storm-deep/70 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="relative h-10 w-10 rounded-full bg-accent/10 border border-accent/40 grid place-items-center overflow-hidden">
-              <Radio className="h-5 w-5 text-accent" />
+      <header className="border-b border-border/60 backdrop-blur-md bg-card/70 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="relative h-8 w-8 rounded-full bg-accent/10 border border-accent/40 grid place-items-center overflow-hidden shrink-0">
+              <Radio className="h-4 w-4 text-accent" />
               <div className="absolute inset-0 radar-sweep pointer-events-none" />
             </div>
-            <div>
-              <h1 className="font-display text-lg font-bold tracking-wider leading-none">
+            <div className="min-w-0">
+              <h1 className="font-display text-sm md:text-base font-bold tracking-wider leading-none truncate">
                 MICHIGAN WEATHER AUTHORITY
               </h1>
-              <p className="text-[10px] text-muted-foreground tracking-[0.3em] uppercase">
-                MWA • Live Operations Center
+              <p className="text-[9px] text-muted-foreground tracking-[0.3em] uppercase">
+                MWA • Live Ops Center
               </p>
             </div>
           </div>
-          <div className="hidden md:flex items-center gap-2 text-xs text-muted-foreground font-mono">
-            <span className="h-2 w-2 rounded-full bg-accent alert-pulse" />
+          <div className="hidden md:flex items-center gap-2 text-[11px] text-muted-foreground font-mono shrink-0">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent alert-pulse" />
             <span>LIVE</span>
             <span className="text-border">|</span>
             <span suppressHydrationWarning>{clock || "--:--"} ET</span>
@@ -166,17 +166,18 @@ function HomePage() {
 
       {/* Hero Alert Banner */}
       {cityAlerts.length > 0 && (
-        <section className="border-b border-severe/40 bg-severe/10">
-          <div className="max-w-7xl mx-auto px-4 py-3 space-y-2">
-            {cityAlerts.slice(0, 3).map((a, i) => (
+        <section className="border-b border-severe/40 bg-severe/5">
+          <div className="max-w-7xl mx-auto px-4 py-2 space-y-1.5">
+            {cityAlerts.slice(0, 2).map((a, i) => (
               <AlertCard key={i} entry={a} />
             ))}
-            {cityAlerts.length > 3 && (
-              <AllAlertsDialog entries={allAlerts} label={`+${cityAlerts.length - 3} more for ${city.name}`} />
+            {cityAlerts.length > 2 && (
+              <AllAlertsDialog entries={allAlerts} label={`+${cityAlerts.length - 2} more for ${city.name}`} />
             )}
           </div>
         </section>
       )}
+
 
       <main className="max-w-7xl mx-auto px-4 py-4 grid lg:grid-cols-[280px_1fr] gap-4">
         {/* Sidebar */}
