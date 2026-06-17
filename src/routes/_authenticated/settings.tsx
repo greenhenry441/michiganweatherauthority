@@ -15,7 +15,8 @@ import { MICHIGAN_CITIES } from "@/lib/michigan-cities";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/settings")({
-  head: () => ({ meta: [{ title: "Settings — MWA" }, { name: "robots", content: "noindex" }] }),
+  path: "/settings",
+  head: () => ({ meta: [{ title: "Settings - MWA" }, { name: "robots", content: "noindex" }] }),
   component: SettingsPage,
 });
 
@@ -68,9 +69,7 @@ function SettingsPage() {
   const filtered = useMemo(() => {
     if (!search.trim()) return [];
     const q = search.toLowerCase();
-    return MICHIGAN_CITIES.filter((c) =>
-      (c.name + " " + c.county + " " + c.zip).toLowerCase().includes(q),
-    ).slice(0, 8);
+    return MICHIGAN_CITIES.filter((c) => (c.name + " " + c.county + " " + c.zip).toLowerCase().includes(q)).slice(0, 8);
   }, [search]);
 
   const signOut = async () => {
@@ -93,9 +92,7 @@ function SettingsPage() {
 
       <div>
         <h1 className="font-display text-3xl tracking-tight text-glow">Your Account</h1>
-        <p className="text-sm text-muted-foreground">
-          {(profile.data as any)?.email ?? "Loading…"}
-        </p>
+        <p className="text-sm text-muted-foreground">{(profile.data as any)?.email ?? "Loading…"}</p>
       </div>
 
       <section className="rounded-xl border border-border bg-card p-5 space-y-4">
@@ -107,7 +104,10 @@ function SettingsPage() {
         <div className="grid sm:grid-cols-2 gap-3">
           <div className="space-y-1.5">
             <Label className="text-xs font-mono uppercase tracking-wider">Display name</Label>
-            <Input value={form.display_name} onChange={(e) => setForm((f) => ({ ...f, display_name: e.target.value }))} />
+            <Input
+              value={form.display_name}
+              onChange={(e) => setForm((f) => ({ ...f, display_name: e.target.value }))}
+            />
           </div>
           <div className="space-y-1.5">
             <Label className="text-xs font-mono uppercase tracking-wider">Saved city</Label>
@@ -139,8 +139,13 @@ function SettingsPage() {
                   }}
                   className="w-full text-left px-3 py-2 text-sm hover:bg-accent/10 flex justify-between gap-2"
                 >
-                  <span className="flex items-center gap-2"><MapPin className="h-3 w-3 text-muted-foreground" />{c.name}</span>
-                  <span className="text-[10px] font-mono text-muted-foreground">{c.county} · {c.zip}</span>
+                  <span className="flex items-center gap-2">
+                    <MapPin className="h-3 w-3 text-muted-foreground" />
+                    {c.name}
+                  </span>
+                  <span className="text-[10px] font-mono text-muted-foreground">
+                    {c.county} · {c.zip}
+                  </span>
                 </button>
               ))}
             </div>
@@ -181,7 +186,10 @@ function SettingsPage() {
             className="grid grid-cols-2 sm:grid-cols-4 gap-2"
           >
             {(["minor", "moderate", "severe", "extreme"] as const).map((s) => (
-              <label key={s} className="flex items-center gap-2 rounded-md border border-border p-2 text-sm cursor-pointer hover:border-accent">
+              <label
+                key={s}
+                className="flex items-center gap-2 rounded-md border border-border p-2 text-sm cursor-pointer hover:border-accent"
+              >
                 <RadioGroupItem value={s} /> <span className="capitalize">{s}</span>
               </label>
             ))}
@@ -202,7 +210,17 @@ function SettingsPage() {
   );
 }
 
-function ToggleRow({ label, desc, checked, onChange }: { label: string; desc: string; checked: boolean; onChange: (v: boolean) => void }) {
+function ToggleRow({
+  label,
+  desc,
+  checked,
+  onChange,
+}: {
+  label: string;
+  desc: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
   return (
     <div className="flex items-start justify-between gap-4 py-2">
       <div className="min-w-0">
