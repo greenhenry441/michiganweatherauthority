@@ -159,7 +159,7 @@ function HomePage() {
             <span className="h-2 w-2 rounded-full bg-accent alert-pulse" />
             <span>LIVE</span>
             <span className="text-border">|</span>
-            <span>{new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} ET</span>
+            <span suppressHydrationWarning>{clock || "--:--"} ET</span>
           </div>
         </div>
       </header>
