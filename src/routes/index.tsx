@@ -104,6 +104,8 @@ function HomePage() {
     refetchInterval: 2 * 60 * 1000,
   });
 
+  const clock = useClock();
+
   const { alerts: shared } = useSharedAlerts();
 
   const allAlerts: AlertEntry[] = useMemo(
