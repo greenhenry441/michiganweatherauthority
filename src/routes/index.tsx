@@ -206,7 +206,7 @@ function HomePage() {
               <FileText className="h-3.5 w-3.5" /> Forecasts
             </Link>
             {user ? (
-              <Link to="/_authenticated/settings" as any className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider text-accent hover:opacity-80">
+              <Link to={"/_authenticated/settings" as any} className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider text-accent hover:opacity-80">
                 <UserCircle2 className="h-4 w-4" /> Account
               </Link>
             ) : (
