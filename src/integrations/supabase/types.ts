@@ -62,6 +62,54 @@ export type Database = {
         }
         Relationships: []
       }
+      profiles: {
+        Row: {
+          created_at: string
+          display_name: string | null
+          email: string | null
+          home_city: string | null
+          home_lat: number | null
+          home_lon: number | null
+          home_zip: string | null
+          id: string
+          min_severity: string
+          notify_alerts: boolean
+          notify_forecast: boolean
+          notify_marine: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          home_city?: string | null
+          home_lat?: number | null
+          home_lon?: number | null
+          home_zip?: string | null
+          id: string
+          min_severity?: string
+          notify_alerts?: boolean
+          notify_forecast?: boolean
+          notify_marine?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string | null
+          email?: string | null
+          home_city?: string | null
+          home_lat?: number | null
+          home_lon?: number | null
+          home_zip?: string | null
+          id?: string
+          min_severity?: string
+          notify_alerts?: boolean
+          notify_forecast?: boolean
+          notify_marine?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
