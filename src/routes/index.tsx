@@ -139,24 +139,24 @@ function HomePage() {
       <TickerBar entries={allAlerts} />
 
       {/* Header */}
-      <header className="border-b border-border/60 backdrop-blur-md bg-storm-deep/70 sticky top-0 z-40">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="relative h-10 w-10 rounded-full bg-accent/10 border border-accent/40 grid place-items-center overflow-hidden">
-              <Radio className="h-5 w-5 text-accent" />
+      <header className="border-b border-border/60 backdrop-blur-md bg-card/70 sticky top-0 z-40">
+        <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="relative h-8 w-8 rounded-full bg-accent/10 border border-accent/40 grid place-items-center overflow-hidden shrink-0">
+              <Radio className="h-4 w-4 text-accent" />
               <div className="absolute inset-0 radar-sweep pointer-events-none" />
             </div>
-            <div>
-              <h1 className="font-display text-lg font-bold tracking-wider leading-none">
+            <div className="min-w-0">
+              <h1 className="font-display text-sm md:text-base font-bold tracking-wider leading-none truncate">
                 MICHIGAN WEATHER AUTHORITY
               </h1>
-              <p className="text-[10px] text-muted-foreground tracking-[0.3em] uppercase">
-                MWA • Live Operations Center
+              <p className="text-[9px] text-muted-foreground tracking-[0.3em] uppercase">
+                MWA • Live Ops Center
               </p>
             </div>
           </div>
-          <div className="hidden md:flex items-center gap-2 text-xs text-muted-foreground font-mono">
-            <span className="h-2 w-2 rounded-full bg-accent alert-pulse" />
+          <div className="hidden md:flex items-center gap-2 text-[11px] text-muted-foreground font-mono shrink-0">
+            <span className="h-1.5 w-1.5 rounded-full bg-accent alert-pulse" />
             <span>LIVE</span>
             <span className="text-border">|</span>
             <span suppressHydrationWarning>{clock || "--:--"} ET</span>
@@ -166,49 +166,50 @@ function HomePage() {
 
       {/* Hero Alert Banner */}
       {cityAlerts.length > 0 && (
-        <section className="border-b border-severe/40 bg-severe/10">
-          <div className="max-w-7xl mx-auto px-4 py-3 space-y-2">
-            {cityAlerts.slice(0, 3).map((a, i) => (
+        <section className="border-b border-severe/40 bg-severe/5">
+          <div className="max-w-7xl mx-auto px-4 py-2 space-y-1.5">
+            {cityAlerts.slice(0, 2).map((a, i) => (
               <AlertCard key={i} entry={a} />
             ))}
-            {cityAlerts.length > 3 && (
-              <AllAlertsDialog entries={allAlerts} label={`+${cityAlerts.length - 3} more for ${city.name}`} />
+            {cityAlerts.length > 2 && (
+              <AllAlertsDialog entries={allAlerts} label={`+${cityAlerts.length - 2} more for ${city.name}`} />
             )}
           </div>
         </section>
       )}
 
-      <main className="max-w-7xl mx-auto px-4 py-6 grid lg:grid-cols-[320px_1fr] gap-6">
+
+      <main className="max-w-7xl mx-auto px-4 py-4 grid lg:grid-cols-[280px_1fr] gap-4">
         {/* Sidebar */}
-        <aside className="space-y-3">
-          <div className="rounded-lg border border-border bg-card p-4">
+        <aside className="space-y-3 lg:sticky lg:top-[120px] lg:self-start lg:max-h-[calc(100vh-140px)] lg:overflow-y-auto pr-1">
+          <div className="rounded-lg border border-border bg-card p-3">
             <label className="text-[10px] font-mono uppercase tracking-[0.2em] text-muted-foreground flex items-center justify-between">
-              <span>Select Location</span>
+              <span>Location</span>
               <span className="text-accent/80">{MICHIGAN_CITIES.length.toLocaleString()} ZIPs</span>
             </label>
             <div className="relative mt-2">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input
-                placeholder="Search Michigan cities..."
+                placeholder="City, ZIP, county…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="pl-9 bg-input/40 border-border"
+                className="pl-8 h-9 text-sm bg-input/40 border-border"
               />
             </div>
-            <div className="mt-3 max-h-[420px] overflow-y-auto pr-1 space-y-1">
+            <div className="mt-2 max-h-[240px] overflow-y-auto pr-1 space-y-0.5">
               {filtered.map((c) => (
                 <button
                   key={c.zip}
                   onClick={() => setCity(c)}
                   className={cn(
-                    "w-full text-left px-3 py-2 rounded-md text-sm flex items-center justify-between group transition-colors",
+                    "w-full text-left px-2.5 py-1.5 rounded-md text-sm flex items-center justify-between transition-colors",
                     city.zip === c.zip
                       ? "bg-accent/15 text-accent border border-accent/40"
                       : "hover:bg-secondary/60 border border-transparent",
                   )}
                 >
                   <span className="flex items-center gap-2 min-w-0">
-                    <MapPin className="h-3.5 w-3.5 opacity-60 shrink-0" />
+                    <MapPin className="h-3 w-3 opacity-60 shrink-0" />
                     <span className="truncate">{c.name}</span>
                   </span>
                   <span className="text-[10px] text-muted-foreground font-mono shrink-0 ml-2">
@@ -217,17 +218,15 @@ function HomePage() {
                 </button>
               ))}
               {filtered.length === 0 && (
-                <p className="text-xs text-muted-foreground px-3 py-4 text-center">
-                  No matches.
-                </p>
+                <p className="text-xs text-muted-foreground px-3 py-4 text-center">No matches.</p>
               )}
             </div>
           </div>
 
-          <div className="rounded-lg border border-border bg-card p-4 text-xs space-y-3">
+          <div className="rounded-lg border border-border bg-card p-3 text-xs space-y-2.5">
             <div className="flex items-center gap-2 text-accent">
-              <Megaphone className="h-4 w-4" />
-              <span className="font-mono uppercase tracking-wider">Active Alerts</span>
+              <Megaphone className="h-3.5 w-3.5" />
+              <span className="font-mono uppercase tracking-wider text-[10px]">Active Alerts</span>
             </div>
             <div className="grid grid-cols-2 gap-2 text-center">
               <Stat label="Statewide" value={allAlerts.length} />
@@ -238,17 +237,17 @@ function HomePage() {
         </aside>
 
         {/* Main weather */}
-        <section className="space-y-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-mono uppercase tracking-[0.25em] text-muted-foreground">
+        <section className="space-y-4 min-w-0">
+          <div className="flex items-end justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-[10px] font-mono uppercase tracking-[0.25em] text-muted-foreground">
                 Now reporting
               </p>
-              <h2 className="font-display text-3xl md:text-4xl font-bold text-glow">
+              <h2 className="font-display text-2xl md:text-3xl font-bold text-glow truncate">
                 {city.name}, MI
               </h2>
-              <p className="text-xs text-muted-foreground mt-1 font-mono">
-                ZIP {city.zip} • {city.county} County • {city.lat.toFixed(3)}°N, {Math.abs(city.lon).toFixed(3)}°W
+              <p className="text-[11px] text-muted-foreground font-mono truncate">
+                ZIP {city.zip} • {city.county} County
               </p>
             </div>
             <Button
@@ -256,105 +255,113 @@ function HomePage() {
               size="sm"
               onClick={() => weather.refetch()}
               disabled={weather.isFetching}
-              className="text-muted-foreground"
+              className="text-muted-foreground shrink-0 h-8"
             >
-              <RefreshCw className={cn("h-4 w-4 mr-2", weather.isFetching && "animate-spin")} />
-              {weather.isFetching ? "Updating" : "Refresh"}
+              <RefreshCw className={cn("h-3.5 w-3.5 mr-1.5", weather.isFetching && "animate-spin")} />
+              <span className="text-xs">{weather.isFetching ? "Updating" : "Refresh"}</span>
             </Button>
           </div>
 
           {weather.isLoading && <LoadingPanel />}
           {weather.isError && (
-            <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-6 text-sm">
+            <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm">
               Unable to reach NWS data feed. Try refreshing in a moment.
             </div>
           )}
 
           {current && today && weather.data && (
             <>
+              {/* Current conditions */}
               <div className="rounded-xl border border-border bg-card overflow-hidden">
-                <div className="relative p-6 md:p-8 grid md:grid-cols-[1fr_auto] gap-6 items-center">
-                  <div className="absolute inset-0 opacity-30 pointer-events-none scan-line h-px top-auto bottom-0" />
-                  <div>
-                    <div className="flex items-baseline gap-3">
-                      <span className="font-display text-7xl md:text-8xl font-bold text-glow leading-none">
-                        {Math.round(current.temperature)}°
-                      </span>
-                      <span className="text-xl text-muted-foreground">{current.temperatureUnit}</span>
-                    </div>
-                    <p className="mt-2 text-lg font-medium">{current.shortForecast}</p>
-                    <p className="text-sm text-muted-foreground mt-1">{today.detailedForecast}</p>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-5">
-                      <Metric icon={Wind} label="Wind" value={`${current.windDirection} ${current.windSpeed}`} />
-                      <Metric icon={Droplets} label="Humidity" value={current.relativeHumidity?.value != null ? `${Math.round(current.relativeHumidity.value)}%` : "—"} />
-                      <Metric icon={Thermometer} label="Dew Point" value={current.dewpoint?.value != null ? `${Math.round((current.dewpoint.value * 9) / 5 + 32)}°F` : "—"} />
-                      <Metric icon={Gauge} label="Precip" value={current.probabilityOfPrecipitation?.value != null ? `${current.probabilityOfPrecipitation.value}%` : "0%"} />
-                    </div>
-                  </div>
+                <div className="relative p-4 md:p-5 grid grid-cols-[auto_1fr_auto] gap-4 items-center">
                   <img
                     src={current.icon.replace("size=medium", "size=large")}
                     alt={current.shortForecast}
-                    className="h-40 w-40 rounded-lg border border-border/60 bg-storm shadow-glow"
+                    className="h-20 w-20 md:h-24 md:w-24 rounded-lg border border-border/60 bg-storm shadow-glow shrink-0"
                   />
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-border bg-card p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-display tracking-wider text-sm uppercase text-muted-foreground">
-                    Next 24 Hours
-                  </h3>
-                  <Sunrise className="h-4 w-4 text-amber-alert" />
-                </div>
-                <div className="flex gap-2 overflow-x-auto pb-2">
-                  {weather.data.hourly.properties.periods.slice(0, 24).map((p) => (
-                    <div key={p.number} className="flex-none w-20 text-center rounded-lg bg-storm/50 border border-border/40 p-2">
-                      <p className="text-[10px] font-mono text-muted-foreground">
-                        {new Date(p.startTime).toLocaleTimeString([], { hour: "numeric" })}
-                      </p>
-                      <img src={p.icon} alt="" className="h-10 w-10 mx-auto my-1" />
-                      <p className="font-display font-bold">{Math.round(p.temperature)}°</p>
-                      {p.probabilityOfPrecipitation?.value ? (
-                        <p className="text-[10px] text-accent">{p.probabilityOfPrecipitation.value}%</p>
-                      ) : (
-                        <p className="text-[10px] text-transparent">·</p>
-                      )}
+                  <div className="min-w-0">
+                    <div className="flex items-baseline gap-2">
+                      <span className="font-display text-5xl md:text-6xl font-bold text-glow leading-none">
+                        {Math.round(current.temperature)}°
+                      </span>
+                      <span className="text-base text-muted-foreground">{current.temperatureUnit}</span>
                     </div>
-                  ))}
+                    <p className="mt-1 text-sm font-medium truncate">{current.shortForecast}</p>
+                    <p className="text-[11px] text-muted-foreground line-clamp-2">{today.detailedForecast}</p>
+                  </div>
+                  <div className="hidden md:grid grid-cols-2 gap-x-4 gap-y-2 shrink-0 text-xs">
+                    <Metric icon={Wind} label="Wind" value={`${current.windDirection} ${current.windSpeed}`} />
+                    <Metric icon={Droplets} label="Humidity" value={current.relativeHumidity?.value != null ? `${Math.round(current.relativeHumidity.value)}%` : "—"} />
+                    <Metric icon={Thermometer} label="Dew" value={current.dewpoint?.value != null ? `${Math.round((current.dewpoint.value * 9) / 5 + 32)}°F` : "—"} />
+                    <Metric icon={Gauge} label="Precip" value={current.probabilityOfPrecipitation?.value != null ? `${current.probabilityOfPrecipitation.value}%` : "0%"} />
+                  </div>
+                </div>
+                <div className="grid md:hidden grid-cols-4 gap-2 px-4 pb-4 text-xs">
+                  <Metric icon={Wind} label="Wind" value={`${current.windSpeed}`} />
+                  <Metric icon={Droplets} label="Hum" value={current.relativeHumidity?.value != null ? `${Math.round(current.relativeHumidity.value)}%` : "—"} />
+                  <Metric icon={Thermometer} label="Dew" value={current.dewpoint?.value != null ? `${Math.round((current.dewpoint.value * 9) / 5 + 32)}°` : "—"} />
+                  <Metric icon={Gauge} label="Precip" value={current.probabilityOfPrecipitation?.value != null ? `${current.probabilityOfPrecipitation.value}%` : "0%"} />
                 </div>
               </div>
 
-              <div className="rounded-xl border border-border bg-card p-4">
-                <h3 className="font-display tracking-wider text-sm uppercase text-muted-foreground mb-3">
-                  Extended Forecast
-                </h3>
-                <div className="divide-y divide-border/60">
-                  {weather.data.forecast.properties.periods.slice(0, 10).map((p) => (
-                    <div key={p.number} className="flex items-center gap-4 py-3">
-                      <div className="w-24 text-sm font-medium">{p.name}</div>
-                      <img src={p.icon} alt="" className="h-10 w-10" />
-                      <div className="flex-1 text-sm text-muted-foreground truncate">{p.shortForecast}</div>
-                      <div className={cn("font-display text-xl font-bold", p.isDaytime ? "text-amber-alert" : "text-cyan-glow")}>
-                        {Math.round(p.temperature)}°
+              {/* Hourly + Extended side-by-side on wide screens */}
+              <div className="grid xl:grid-cols-[1fr_320px] gap-4">
+                <div className="rounded-xl border border-border bg-card p-3 min-w-0">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-display tracking-wider text-[11px] uppercase text-muted-foreground">
+                      Next 12 Hours
+                    </h3>
+                    <Sunrise className="h-3.5 w-3.5 text-amber-alert" />
+                  </div>
+                  <div className="flex gap-1.5 overflow-x-auto pb-1">
+                    {weather.data.hourly.properties.periods.slice(0, 12).map((p) => (
+                      <div key={p.number} className="flex-none w-[60px] text-center rounded-md bg-storm/50 border border-border/40 py-1.5 px-1">
+                        <p className="text-[10px] font-mono text-muted-foreground">
+                          {new Date(p.startTime).toLocaleTimeString([], { hour: "numeric" })}
+                        </p>
+                        <img src={p.icon} alt="" className="h-7 w-7 mx-auto" />
+                        <p className="font-display font-bold text-sm">{Math.round(p.temperature)}°</p>
+                        <p className={cn("text-[9px]", p.probabilityOfPrecipitation?.value ? "text-accent" : "text-transparent")}>
+                          {p.probabilityOfPrecipitation?.value ? `${p.probabilityOfPrecipitation.value}%` : "·"}
+                        </p>
                       </div>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground/40" />
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-border bg-card p-3">
+                  <h3 className="font-display tracking-wider text-[11px] uppercase text-muted-foreground mb-2">
+                    7-Day Outlook
+                  </h3>
+                  <div className="divide-y divide-border/60">
+                    {weather.data.forecast.properties.periods.slice(0, 7).map((p) => (
+                      <div key={p.number} className="flex items-center gap-2 py-1.5">
+                        <div className="w-16 text-[11px] font-medium truncate">{p.name}</div>
+                        <img src={p.icon} alt="" className="h-7 w-7 shrink-0" />
+                        <div className="flex-1 text-[11px] text-muted-foreground truncate min-w-0">{p.shortForecast}</div>
+                        <div className={cn("font-display text-sm font-bold shrink-0", p.isDaytime ? "text-amber-alert" : "text-cyan-glow")}>
+                          {Math.round(p.temperature)}°
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
               <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
                 <Eye className="h-3 w-3" />
-                Data: NOAA / National Weather Service • Updated{" "}
-                {new Date(weather.data.forecast.properties.updated).toLocaleTimeString()}
+                NOAA / NWS • Updated{" "}
+                <span suppressHydrationWarning>
+                  {new Date(weather.data.forecast.properties.updated).toLocaleTimeString()}
+                </span>
               </div>
             </>
           )}
         </section>
       </main>
 
-      <footer className="border-t border-border/60 mt-12">
-        <div className="max-w-7xl mx-auto px-4 py-6 text-xs text-muted-foreground flex flex-wrap items-center justify-between gap-3">
+      <footer className="border-t border-border/60 mt-6">
+        <div className="max-w-7xl mx-auto px-4 py-3 text-[11px] text-muted-foreground flex flex-wrap items-center justify-between gap-3">
           <span>© Michigan Weather Authority — Unofficial. Source: NWS + MWA.</span>
           <span className="font-mono">MWA · MI · v1.0</span>
         </div>
@@ -362,6 +369,7 @@ function HomePage() {
     </div>
   );
 }
+
 
 function TickerBar({ entries }: { entries: AlertEntry[] }) {
   // Show only the highest-severity tier currently active
