@@ -58,6 +58,26 @@ function alertTitle(entry: AlertEntry): string {
   return entry.alert.properties.event;
 }
 
+const SEV_RANK: Record<string, number> = {
+  extreme: 4, severe: 3, moderate: 2, minor: 1,
+};
+function entrySevRank(e: AlertEntry): number {
+  if (e.kind === "shared") return SEV_RANK[e.alert.severity] ?? 0;
+  const s = (e.alert.properties.severity ?? "").toLowerCase();
+  return SEV_RANK[s] ?? (e.alert.properties.event.toLowerCase().includes("warning") ? 3 : 2);
+}
+function useClock() {
+  const [t, setT] = useState<string>("");
+  useEffect(() => {
+    const tick = () => setT(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
+    tick();
+    const id = window.setInterval(tick, 30_000);
+    return () => window.clearInterval(id);
+  }, []);
+  return t;
+}
+
+
 function HomePage() {
   const [city, setCity] = useState<MichiganCity>(MICHIGAN_CITIES[0]);
   const [search, setSearch] = useState("");
