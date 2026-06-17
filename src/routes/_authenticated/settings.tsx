@@ -14,7 +14,7 @@ import { getMyProfile, updateMyProfile } from "@/lib/profile.functions";
 import { MICHIGAN_CITIES } from "@/lib/michigan-cities";
 import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute("/_authenticated/settings")({
+export const Route = createFileRoute("/settings")({
   path: "/settings",
   head: () => ({ meta: [{ title: "Settings - MWA" }, { name: "robots", content: "noindex" }] }),
   component: SettingsPage,
