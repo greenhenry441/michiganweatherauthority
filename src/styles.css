@@ -44,53 +44,52 @@
   --color-advisory: var(--advisory);
   --color-statement: var(--statement);
 
-  --shadow-glow: 0 0 40px -8px var(--cyan-glow);
-  --shadow-alert: 0 0 32px -4px var(--amber-alert);
-  --gradient-storm: linear-gradient(180deg, oklch(0.18 0.04 245) 0%, oklch(0.10 0.03 250) 100%);
-  --gradient-radar: radial-gradient(circle at 50% 50%, oklch(0.30 0.10 220 / 0.4), transparent 70%);
+  --shadow-glow: 0 10px 40px -12px oklch(0.55 0.18 230 / 0.35);
+  --shadow-alert: 0 10px 32px -8px oklch(0.62 0.22 28 / 0.35);
 }
 
 :root {
-  --radius: 0.75rem;
+  --radius: 0.875rem;
 
-  --background: oklch(0.14 0.02 255);
-  --foreground: oklch(0.97 0.005 240);
-  --card: oklch(0.18 0.025 255 / 0.7);
-  --card-foreground: oklch(0.97 0.005 240);
-  --popover: oklch(0.16 0.025 255);
-  --popover-foreground: oklch(0.97 0.005 240);
-  --primary: oklch(0.82 0.16 78);
-  --primary-foreground: oklch(0.15 0.02 255);
-  --secondary: oklch(0.24 0.03 255);
-  --secondary-foreground: oklch(0.97 0.005 240);
-  --muted: oklch(0.22 0.025 255);
-  --muted-foreground: oklch(0.70 0.015 245);
-  --accent: oklch(0.78 0.16 215);
-  --accent-foreground: oklch(0.13 0.02 255);
-  --destructive: oklch(0.64 0.24 25);
-  --destructive-foreground: oklch(0.98 0 0);
-  --border: oklch(0.30 0.025 250 / 0.6);
-  --input: oklch(0.22 0.025 255);
-  --ring: oklch(0.78 0.16 215);
+  /* Light, airy sky-paper palette */
+  --background: oklch(0.985 0.005 240);
+  --foreground: oklch(0.18 0.03 250);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.18 0.03 250);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.18 0.03 250);
+  --primary: oklch(0.52 0.20 255);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.95 0.02 250);
+  --secondary-foreground: oklch(0.20 0.03 250);
+  --muted: oklch(0.96 0.012 250);
+  --muted-foreground: oklch(0.46 0.025 250);
+  --accent: oklch(0.55 0.20 255);
+  --accent-foreground: oklch(0.99 0 0);
+  --destructive: oklch(0.58 0.24 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.90 0.015 250);
+  --input: oklch(0.97 0.01 250);
+  --ring: oklch(0.55 0.20 255);
 
-  --storm: oklch(0.20 0.03 255);
-  --storm-deep: oklch(0.09 0.02 258);
-  --amber-alert: oklch(0.82 0.17 72);
-  --cyan-glow: oklch(0.82 0.14 210);
+  --storm: oklch(0.97 0.012 245);
+  --storm-deep: oklch(0.93 0.02 245);
+  --amber-alert: oklch(0.68 0.18 55);
+  --cyan-glow: oklch(0.62 0.14 220);
 
-  /* NWS-style alert severity colors */
-  --severe: oklch(0.58 0.25 22);
-  --watch: oklch(0.78 0.17 60);
-  --warning: oklch(0.68 0.22 38);
-  --advisory: oklch(0.78 0.16 95);
-  --statement: oklch(0.66 0.12 220);
+  /* NWS-style alert severity colors (vivid on light) */
+  --severe: oklch(0.55 0.25 25);       /* tornado red */
+  --warning: oklch(0.62 0.22 40);      /* warning orange-red */
+  --watch: oklch(0.72 0.18 70);        /* watch amber */
+  --advisory: oklch(0.78 0.16 95);     /* advisory yellow */
+  --statement: oklch(0.55 0.16 230);   /* statement blue */
 }
 
 @layer base {
   * { border-color: var(--color-border); }
 
   html, body {
-    background: var(--storm-deep);
+    background: var(--background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     font-feature-settings: "ss01", "cv11";
@@ -98,10 +97,9 @@
 
   body {
     background-image:
-      radial-gradient(ellipse 80% 50% at 20% 0%, oklch(0.32 0.12 230 / 0.45), transparent 60%),
-      radial-gradient(ellipse 70% 50% at 85% 10%, oklch(0.28 0.14 290 / 0.35), transparent 60%),
-      radial-gradient(ellipse 90% 60% at 50% 100%, oklch(0.20 0.08 260 / 0.5), transparent 70%),
-      var(--gradient-storm);
+      radial-gradient(ellipse 70% 50% at 10% 0%, oklch(0.85 0.10 235 / 0.55), transparent 60%),
+      radial-gradient(ellipse 60% 45% at 95% 5%, oklch(0.88 0.08 60 / 0.45), transparent 60%),
+      radial-gradient(ellipse 90% 50% at 50% 100%, oklch(0.92 0.06 250 / 0.6), transparent 70%);
     min-height: 100vh;
   }
 
@@ -111,26 +109,26 @@
     inset: 0;
     pointer-events: none;
     background-image:
-      linear-gradient(oklch(0.5 0.05 230 / 0.05) 1px, transparent 1px),
-      linear-gradient(90deg, oklch(0.5 0.05 230 / 0.05) 1px, transparent 1px);
-    background-size: 64px 64px;
+      linear-gradient(oklch(0.55 0.08 250 / 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, oklch(0.55 0.08 250 / 0.06) 1px, transparent 1px);
+    background-size: 56px 56px;
     mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
     z-index: 0;
   }
 
   h1, h2, h3, h4 {
     font-family: var(--font-display);
-    letter-spacing: -0.01em;
+    letter-spacing: -0.015em;
     font-weight: 600;
   }
 }
 
 @utility text-glow {
-  text-shadow: 0 0 24px var(--cyan-glow);
+  text-shadow: 0 1px 0 oklch(1 0 0 / 0.6), 0 8px 32px oklch(0.55 0.18 235 / 0.25);
 }
 
 @utility alert-pulse {
-  animation: alert-pulse 2s ease-in-out infinite;
+  animation: alert-pulse 1.6s ease-in-out infinite;
 }
 
 @utility scan-line {
@@ -140,24 +138,28 @@
 }
 
 @utility ticker {
-  animation: ticker 60s linear infinite;
+  animation: ticker 18s linear infinite;
+}
+
+@utility ticker-fast {
+  animation: ticker 9s linear infinite;
 }
 
 @utility glass {
-  background: linear-gradient(180deg, oklch(0.20 0.03 255 / 0.55), oklch(0.14 0.02 255 / 0.65));
+  background: linear-gradient(180deg, oklch(1 0 0 / 0.85), oklch(1 0 0 / 0.65));
   backdrop-filter: blur(14px) saturate(140%);
   -webkit-backdrop-filter: blur(14px) saturate(140%);
-  border: 1px solid oklch(0.40 0.03 230 / 0.25);
+  border: 1px solid oklch(0.85 0.02 250 / 0.6);
 }
 
 @utility hairline {
-  background-image: linear-gradient(90deg, transparent, oklch(0.6 0.05 230 / 0.4), transparent);
+  background-image: linear-gradient(90deg, transparent, oklch(0.55 0.08 250 / 0.4), transparent);
   height: 1px;
 }
 
 @keyframes alert-pulse {
   0%, 100% { box-shadow: 0 0 0 0 currentColor; opacity: 1; }
-  50% { box-shadow: 0 0 0 12px transparent; opacity: 0.85; }
+  50% { box-shadow: 0 0 0 10px transparent; opacity: 0.7; }
 }
 
 @keyframes scan {
@@ -180,7 +182,7 @@
   position: absolute;
   inset: 0;
   background: conic-gradient(from 0deg, transparent 0deg, var(--cyan-glow) 30deg, transparent 60deg);
-  opacity: 0.5;
+  opacity: 0.45;
   animation: radar-sweep 4s linear infinite;
   border-radius: 50%;
 }

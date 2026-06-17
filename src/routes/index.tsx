@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle, MapPin, Radio, RefreshCw, Search, Wind, Droplets,
-  Thermometer, Sunrise, Eye, Gauge, Megaphone, ChevronRight, ListOrdered, X,
+  Thermometer, Sunrise, Eye, Gauge, Megaphone, ChevronRight, ListOrdered,
 } from "lucide-react";
 import { MICHIGAN_CITIES, type MichiganCity } from "@/lib/michigan-cities";
 import { getCityWeather, getMichiganAlerts, type NWSAlert } from "@/lib/weather-api";
@@ -58,6 +58,26 @@ function alertTitle(entry: AlertEntry): string {
   return entry.alert.properties.event;
 }
 
+const SEV_RANK: Record<string, number> = {
+  extreme: 4, severe: 3, moderate: 2, minor: 1,
+};
+function entrySevRank(e: AlertEntry): number {
+  if (e.kind === "shared") return SEV_RANK[e.alert.severity] ?? 0;
+  const s = (e.alert.properties.severity ?? "").toLowerCase();
+  return SEV_RANK[s] ?? (e.alert.properties.event.toLowerCase().includes("warning") ? 3 : 2);
+}
+function useClock() {
+  const [t, setT] = useState<string>("");
+  useEffect(() => {
+    const tick = () => setT(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
+    tick();
+    const id = window.setInterval(tick, 30_000);
+    return () => window.clearInterval(id);
+  }, []);
+  return t;
+}
+
+
 function HomePage() {
   const [city, setCity] = useState<MichiganCity>(MICHIGAN_CITIES[0]);
   const [search, setSearch] = useState("");
@@ -83,6 +103,8 @@ function HomePage() {
     staleTime: 60 * 1000,
     refetchInterval: 2 * 60 * 1000,
   });
+
+  const clock = useClock();
 
   const { alerts: shared } = useSharedAlerts();
 
@@ -137,7 +159,7 @@ function HomePage() {
             <span className="h-2 w-2 rounded-full bg-accent alert-pulse" />
             <span>LIVE</span>
             <span className="text-border">|</span>
-            <span>{new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} ET</span>
+            <span suppressHydrationWarning>{clock || "--:--"} ET</span>
           </div>
         </div>
       </header>
@@ -342,43 +364,61 @@ function HomePage() {
 }
 
 function TickerBar({ entries }: { entries: AlertEntry[] }) {
-  const items: { title: string; tone: string; meta: string }[] = entries.map((e) => {
+  // Show only the highest-severity tier currently active
+  const topRank = entries.reduce((m, e) => Math.max(m, entrySevRank(e)), 0);
+  const top = entries.filter((e) => entrySevRank(e) === topRank);
+
+  const tierLabel =
+    topRank >= 4 ? "EXTREME" :
+    topRank === 3 ? "SEVERE" :
+    topRank === 2 ? "MODERATE" :
+    topRank === 1 ? "MINOR" : "ALL CLEAR";
+
+  const tierBg =
+    topRank >= 4 ? "bg-severe text-white border-severe" :
+    topRank === 3 ? "bg-warning text-white border-warning" :
+    topRank === 2 ? "bg-watch text-black border-watch" :
+    topRank === 1 ? "bg-advisory text-black border-advisory" :
+    "bg-accent text-white border-accent";
+
+  const items: { title: string; meta: string }[] = top.map((e) => {
     if (e.kind === "shared") {
       return {
         title: alertTitle(e),
-        tone: e.alert.severity === "extreme" ? "text-severe" : e.alert.category === "warning" ? "text-warning" : e.alert.category === "watch" ? "text-watch" : "text-amber-alert",
         meta: `${e.alert.areas.join(", ")} • ${e.alert.headline}`,
       };
     }
     return {
       title: e.alert.properties.event,
-      tone: "text-amber-alert",
       meta: e.alert.properties.areaDesc,
     };
   });
 
   const display = items.length
     ? items
-    : [{ title: "ALL CLEAR", tone: "text-accent", meta: "No active alerts across Michigan" }];
-  const doubled = [...display, ...display];
+    : [{ title: "ALL CLEAR", meta: "No active alerts across Michigan" }];
+  const doubled = [...display, ...display, ...display, ...display];
 
   return (
-    <div className="bg-amber-alert/15 border-b border-amber-alert/40 overflow-hidden">
+    <div className={cn("border-b overflow-hidden", tierBg.replace(/text-\S+/, "").replace(/bg-\S+/, "bg-opacity-10"))} style={{ backgroundColor: "transparent" }}>
       <div className="flex items-stretch max-w-[100vw]">
-        <div className="flex-none bg-amber-alert text-black px-3 grid place-items-center text-[11px] font-mono font-bold uppercase tracking-wider gap-1.5">
+        <div className={cn("flex-none px-3 grid place-items-center text-[11px] font-mono font-bold uppercase tracking-wider gap-1.5 border-r", tierBg)}>
           <span className="flex items-center gap-1.5">
-            <AlertTriangle className="h-3 w-3" /> MWA Wire
+            <AlertTriangle className="h-3 w-3 alert-pulse" /> {tierLabel}
           </span>
         </div>
-        <div className="overflow-hidden flex-1 group">
-          <div className="ticker whitespace-nowrap flex gap-10 py-2 group-hover:[animation-play-state:paused]">
+        <div className={cn("overflow-hidden flex-1 group border-y", topRank >= 3 ? "bg-severe/5 border-severe/30" : topRank === 2 ? "bg-watch/10 border-watch/40" : topRank === 1 ? "bg-advisory/10 border-advisory/40" : "bg-accent/5 border-accent/20")}>
+          <div className="ticker-fast whitespace-nowrap flex gap-10 py-2 group-hover:[animation-play-state:paused]">
             {doubled.map((t, i) => (
               <span
                 key={i}
                 className="text-xs font-display tracking-wider font-semibold uppercase flex items-center gap-2"
               >
-                <span className={cn("font-bold", t.tone)}>⚡ {t.title}</span>
-                <span className="text-amber-alert/70 normal-case font-sans font-normal tracking-normal">
+                <span className={cn(
+                  "font-bold",
+                  topRank >= 4 ? "text-severe" : topRank === 3 ? "text-warning" : topRank === 2 ? "text-watch" : topRank === 1 ? "text-foreground" : "text-accent",
+                )}>⚡ {t.title}</span>
+                <span className="text-muted-foreground normal-case font-sans font-normal tracking-normal">
                   — {t.meta}
                 </span>
               </span>
@@ -414,15 +454,16 @@ function AllAlertsDialog({
           className={cn(
             "inline-flex items-center gap-1.5 font-mono uppercase tracking-wider transition-colors",
             tickerStyle &&
-              "flex-none bg-storm-deep text-amber-alert hover:bg-storm border-l border-amber-alert/40 px-3 text-[11px] font-bold",
+              "flex-none bg-card text-foreground hover:bg-muted border-l border-border px-3 text-[11px] font-bold",
             !tickerStyle && full && "w-full justify-center bg-accent/10 hover:bg-accent/20 text-accent border border-accent/30 rounded-md px-3 py-2 text-xs",
-            !tickerStyle && !full && "text-amber-alert hover:text-amber-alert/80 text-xs",
+            !tickerStyle && !full && "text-accent hover:text-accent/80 text-xs",
           )}
         >
           <ListOrdered className="h-3.5 w-3.5" />
           {label}
         </button>
       </DialogTrigger>
+
       <DialogContent className="max-w-3xl bg-card border-border max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-display tracking-wider text-2xl flex items-center gap-2">
