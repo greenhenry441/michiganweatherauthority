@@ -94,7 +94,11 @@ function CommandConsole({ code }: { code: string }) {
   const [areas, setAreas] = useState("Statewide");
   const [description, setDescription] = useState("");
   const [instruction, setInstruction] = useState("");
+  const [scheduleMode, setScheduleMode] = useState<"duration" | "window">("duration");
   const [duration, setDuration] = useState(60);
+  const [startsImmediately, setStartsImmediately] = useState(true);
+  const [startsAtLocal, setStartsAtLocal] = useState("");
+  const [endsAtLocal, setEndsAtLocal] = useState("");
   const [issuer, setIssuer] = useState("MWA Operations");
   const [submitting, setSubmitting] = useState(false);
 
