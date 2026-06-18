@@ -12,6 +12,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import { getMyProfile, updateMyProfile } from "@/lib/profile.functions";
 import { MICHIGAN_CITIES } from "@/lib/michigan-cities";
+import { NWS_ALERT_TYPES } from "@/lib/nws-alert-types";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/settings")({
