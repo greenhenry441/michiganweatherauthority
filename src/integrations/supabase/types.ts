@@ -74,8 +74,12 @@ export type Database = {
           id: string
           min_severity: string
           notify_alerts: boolean
+          notify_categories: string[]
+          notify_event_types: string[]
           notify_forecast: boolean
+          notify_hourly_forecast: boolean
           notify_marine: boolean
+          notify_only_my_area: boolean
           updated_at: string
         }
         Insert: {
@@ -89,8 +93,12 @@ export type Database = {
           id: string
           min_severity?: string
           notify_alerts?: boolean
+          notify_categories?: string[]
+          notify_event_types?: string[]
           notify_forecast?: boolean
+          notify_hourly_forecast?: boolean
           notify_marine?: boolean
+          notify_only_my_area?: boolean
           updated_at?: string
         }
         Update: {
@@ -104,8 +112,12 @@ export type Database = {
           id?: string
           min_severity?: string
           notify_alerts?: boolean
+          notify_categories?: string[]
+          notify_event_types?: string[]
           notify_forecast?: boolean
+          notify_hourly_forecast?: boolean
           notify_marine?: boolean
+          notify_only_my_area?: boolean
           updated_at?: string
         }
         Relationships: []

@@ -3,19 +3,28 @@ import { z } from "zod";
 
 const ACCESS_CODE = "mwa-admin";
 
-const alertSchema = z.object({
-  code: z.string(),
-  typeId: z.string().nullable(),
-  customName: z.string().nullable(),
-  category: z.enum(["warning", "watch", "advisory", "statement", "extreme"]),
-  severity: z.enum(["extreme", "severe", "moderate", "minor"]),
-  headline: z.string().min(3).max(200),
-  description: z.string().min(3).max(4000),
-  instruction: z.string().max(2000).nullable(),
-  areas: z.array(z.string().min(1).max(80)).max(50),
-  issuer: z.string().min(1).max(80),
-  durationMinutes: z.number().int().min(1).max(2880),
-});
+const alertSchema = z
+  .object({
+    code: z.string(),
+    typeId: z.string().nullable(),
+    customName: z.string().nullable(),
+    category: z.enum(["warning", "watch", "advisory", "statement", "extreme"]),
+    severity: z.enum(["extreme", "severe", "moderate", "minor"]),
+    headline: z.string().min(3).max(200),
+    description: z.string().min(3).max(4000),
+    instruction: z.string().max(2000).nullable(),
+    areas: z.array(z.string().min(1).max(80)).max(50),
+    issuer: z.string().min(1).max(80),
+    // Either provide a duration (minutes) starting now, or explicit start/end ISO times.
+    durationMinutes: z.number().int().min(1).max(7 * 24 * 60).nullable().optional(),
+    startsAt: z.string().datetime().nullable().optional(),
+    endsAt: z.string().datetime().nullable().optional(),
+    startsImmediately: z.boolean().optional(),
+  })
+  .refine(
+    (d) => d.durationMinutes != null || d.endsAt != null,
+    { message: "Provide either durationMinutes or an end time" },
+  );
 
 export const issueAlert = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => alertSchema.parse(data))
@@ -24,7 +33,13 @@ export const issueAlert = createServerFn({ method: "POST" })
       throw new Error("Invalid access code");
     }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const expires_at = new Date(Date.now() + data.durationMinutes * 60_000).toISOString();
+    const now = new Date();
+    const issued_at = data.startsImmediately || !data.startsAt ? now : new Date(data.startsAt);
+    const expires_at = data.endsAt
+      ? new Date(data.endsAt)
+      : new Date(issued_at.getTime() + (data.durationMinutes ?? 60) * 60_000);
+    if (expires_at <= issued_at) throw new Error("End time must be after start time");
+
     const { data: row, error } = await supabaseAdmin
       .from("alerts")
       .insert({
@@ -37,7 +52,8 @@ export const issueAlert = createServerFn({ method: "POST" })
         instruction: data.instruction,
         areas: data.areas.length ? data.areas : ["Statewide"],
         issuer: data.issuer,
-        expires_at,
+        issued_at: issued_at.toISOString(),
+        expires_at: expires_at.toISOString(),
         source: "manual",
       })
       .select()
