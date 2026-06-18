@@ -664,9 +664,7 @@ function AllAlertsDialog({ entries, label, tickerStyle }: { entries: AlertEntry[
         {entries.length === 0 ? (
           <p className="text-sm text-muted-foreground py-10 text-center">No active alerts in Michigan right now.</p>
         ) : (
-          <div className="space-y-3">
-            {entries.map((e, i) => <FullAlert key={i} entry={e} />)}
-          </div>
+          <GroupedAlerts entries={entries} />
         )}
       </DialogContent>
     </Dialog>
