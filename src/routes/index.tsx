@@ -766,7 +766,7 @@ function useForecastNotifications(city: MichiganCity, weather: WeatherBundle | u
 
 /* ---------------- Ticker (shows ALL alerts now) ---------------- */
 
-function TickerBar({ entries }: { entries: AlertEntry[] }) {
+function TickerBar({ entries, city }: { entries: AlertEntry[]; city?: MichiganCity }) {
   const items = entries.map((e) => {
     if (e.kind === "shared") {
       return {
