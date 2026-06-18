@@ -299,17 +299,6 @@ function HomePage() {
               <ExtraStatsPanel data={extra.data} loading={extra.isLoading} />
             </div>
 
-            {/* AI summary */}
-            <AISummaryCard
-              city={city}
-              tempF={current.temperature}
-              shortForecast={current.shortForecast}
-              detailed={today.detailedForecast}
-              windSpeed={current.windSpeed}
-              precipPct={current.probabilityOfPrecipitation?.value ?? null}
-              aqi={extra.data?.aqi ?? null}
-              uv={extra.data?.uvIndex ?? null}
-            />
 
             {/* Hourly + Extended */}
             <div className="grid xl:grid-cols-[1fr_320px] gap-4">
