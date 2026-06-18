@@ -671,6 +671,56 @@ function AllAlertsDialog({ entries, label, tickerStyle }: { entries: AlertEntry[
   );
 }
 
+function alertCategory(entry: AlertEntry): "warning" | "watch" | "advisory" | "statement" {
+  if (entry.kind === "shared") {
+    const c = entry.alert.category;
+    if (c === "warning" || c === "extreme") return "warning";
+    if (c === "watch") return "watch";
+    if (c === "advisory") return "advisory";
+    return "statement";
+  }
+  const e = entry.alert.properties.event.toLowerCase();
+  if (e.includes("warning")) return "warning";
+  if (e.includes("watch")) return "watch";
+  if (e.includes("advisory")) return "advisory";
+  return "statement";
+}
+
+const GROUP_ORDER: Array<{ key: "warning" | "watch" | "advisory" | "statement"; label: string; color: string }> = [
+  { key: "warning", label: "Warnings", color: "text-warning border-warning/40 bg-warning/5" },
+  { key: "watch", label: "Watches", color: "text-watch border-watch/40 bg-watch/10" },
+  { key: "advisory", label: "Advisories", color: "text-amber-alert border-advisory/40 bg-advisory/10" },
+  { key: "statement", label: "Statements", color: "text-accent border-accent/30 bg-accent/5" },
+];
+
+function GroupedAlerts({ entries }: { entries: AlertEntry[] }) {
+  const groups = useMemo(() => {
+    const m: Record<string, AlertEntry[]> = { warning: [], watch: [], advisory: [], statement: [] };
+    for (const e of entries) m[alertCategory(e)].push(e);
+    return m;
+  }, [entries]);
+
+  return (
+    <div className="space-y-5">
+      {GROUP_ORDER.map((g) => {
+        const list = groups[g.key];
+        if (!list.length) return null;
+        return (
+          <section key={g.key} className="space-y-2">
+            <div className={cn("flex items-center justify-between rounded-md border px-3 py-1.5", g.color)}>
+              <h3 className="font-display tracking-wider uppercase text-xs font-bold">{g.label}</h3>
+              <span className="text-[10px] font-mono opacity-80">{list.length} active</span>
+            </div>
+            <div className="space-y-3">
+              {list.map((e, i) => <FullAlert key={i} entry={e} />)}
+            </div>
+          </section>
+        );
+      })}
+    </div>
+  );
+}
+
 function FullAlert({ entry }: { entry: AlertEntry }) {
   if (entry.kind === "shared") {
     const a = entry.alert;
