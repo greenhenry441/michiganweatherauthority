@@ -114,15 +114,33 @@ function HomePage() {
     } catch {}
   }, []);
 
-  // Load signed-in user's home location
+  // Load signed-in user's home location + notification prefs
+  const [prefs, setPrefs] = useState<NotifyPrefs | null>(null);
   useEffect(() => {
-    if (!user) return;
+    if (!user) { setPrefs(null); return; }
     let cancelled = false;
     (async () => {
-      const { data } = await supabase.from("profiles").select("home_zip, home_city, home_lat, home_lon").eq("id", user.id).maybeSingle();
-      if (cancelled || !data?.home_zip) return;
-      const match = MICHIGAN_CITIES.find((c) => c.zip === data.home_zip);
-      if (match) setCity(match);
+      const { data } = await supabase
+        .from("profiles")
+        .select("home_zip, home_city, home_lat, home_lon, notify_alerts, notify_forecast, notify_hourly_forecast, notify_marine, notify_only_my_area, notify_categories, notify_event_types, min_severity")
+        .eq("id", user.id)
+        .maybeSingle();
+      if (cancelled || !data) return;
+      const d = data as any;
+      if (d.home_zip) {
+        const match = MICHIGAN_CITIES.find((c) => c.zip === d.home_zip);
+        if (match) setCity(match);
+      }
+      setPrefs({
+        notify_alerts: !!d.notify_alerts,
+        notify_forecast: !!d.notify_forecast,
+        notify_hourly_forecast: !!d.notify_hourly_forecast,
+        notify_marine: !!d.notify_marine,
+        notify_only_my_area: d.notify_only_my_area ?? true,
+        notify_categories: d.notify_categories ?? ["warning", "watch", "advisory", "statement"],
+        notify_event_types: d.notify_event_types ?? [],
+        min_severity: d.min_severity ?? "moderate",
+      });
     })();
     return () => { cancelled = true; };
   }, [user]);
