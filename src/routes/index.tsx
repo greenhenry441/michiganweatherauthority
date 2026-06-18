@@ -23,6 +23,7 @@ import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import { IosInstallBanner } from "@/components/IosInstallBanner";
+import { InstallAppButton } from "@/components/InstallAppButton";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -211,6 +212,7 @@ function HomePage() {
             <Link to="/forecasts" className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider text-muted-foreground hover:text-accent">
               <FileText className="h-3.5 w-3.5" /> Forecasts
             </Link>
+            <InstallAppButton />
             <NotifyToggle />
             {user ? (
               <Link to="/settings" className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider text-accent hover:opacity-80">
