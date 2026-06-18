@@ -289,22 +289,66 @@ function CommandConsole({ code }: { code: string }) {
             </TabsContent>
           </Tabs>
 
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label>Duration (minutes)</Label>
-              <Input
-                type="number" min={5} max={2880}
-                value={duration}
-                onChange={(e) => setDuration(Number(e.target.value))}
-              />
-              <p className="text-[10px] text-muted-foreground">
-                Expires {new Date(Date.now() + duration * 60_000).toLocaleString()}
-              </p>
+          <div className="space-y-3 rounded-lg border border-border/60 bg-storm/30 p-3">
+            <div className="flex items-center justify-between gap-3">
+              <Label className="text-xs font-mono uppercase tracking-wider text-muted-foreground">Scheduling</Label>
+              <Tabs value={scheduleMode} onValueChange={(v) => setScheduleMode(v as "duration" | "window")}>
+                <TabsList className="h-8">
+                  <TabsTrigger value="duration" className="text-xs h-7">Duration</TabsTrigger>
+                  <TabsTrigger value="window" className="text-xs h-7">Specific times</TabsTrigger>
+                </TabsList>
+              </Tabs>
             </div>
-            <div className="space-y-1.5">
-              <Label>Issued by</Label>
-              <Input value={issuer} onChange={(e) => setIssuer(e.target.value)} />
-            </div>
+
+            {scheduleMode === "duration" ? (
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label>Active for (minutes)</Label>
+                  <Input
+                    type="number" min={5} max={10080}
+                    value={duration}
+                    onChange={(e) => setDuration(Number(e.target.value))}
+                  />
+                  <p className="text-[10px] text-muted-foreground">
+                    Starts now, expires {new Date(Date.now() + duration * 60_000).toLocaleString()}
+                  </p>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Issued by</Label>
+                  <Input value={issuer} onChange={(e) => setIssuer(e.target.value)} />
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <label className="flex items-center gap-2 text-sm cursor-pointer">
+                  <Checkbox checked={startsImmediately} onCheckedChange={(v) => setStartsImmediately(!!v)} />
+                  Starts immediately
+                </label>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <Label>Start</Label>
+                    <Input
+                      type="datetime-local"
+                      disabled={startsImmediately}
+                      value={startsAtLocal}
+                      onChange={(e) => setStartsAtLocal(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label>End</Label>
+                    <Input
+                      type="datetime-local"
+                      value={endsAtLocal}
+                      onChange={(e) => setEndsAtLocal(e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Issued by</Label>
+                  <Input value={issuer} onChange={(e) => setIssuer(e.target.value)} />
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="space-y-1.5">
