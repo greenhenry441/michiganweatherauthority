@@ -177,11 +177,79 @@ function SettingsPage() {
           onChange={(v) => setForm((f) => ({ ...f, notify_forecast: v }))}
         />
         <ToggleRow
+          label="Hourly forecast pings"
+          desc="A short ping at the top of each hour with the next-hour outlook."
+          checked={form.notify_hourly_forecast}
+          onChange={(v) => setForm((f) => ({ ...f, notify_hourly_forecast: v }))}
+        />
+        <ToggleRow
           label="Marine alerts (Great Lakes)"
           desc="Gale, small craft, and beach hazards for Michigan waters."
           checked={form.notify_marine}
           onChange={(v) => setForm((f) => ({ ...f, notify_marine: v }))}
         />
+        <ToggleRow
+          label="Only my area"
+          desc="Only get alert notifications when your home city or county is in the affected area."
+          checked={form.notify_only_my_area}
+          onChange={(v) => setForm((f) => ({ ...f, notify_only_my_area: v }))}
+        />
+
+        <div className="pt-2 space-y-2">
+          <Label className="text-xs font-mono uppercase tracking-wider">Alert categories to notify on</Label>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {(["warning", "watch", "advisory", "statement"] as const).map((c) => {
+              const on = form.notify_categories.includes(c);
+              return (
+                <label key={c} className="flex items-center gap-2 rounded-md border border-border p-2 text-sm cursor-pointer hover:border-accent">
+                  <Checkbox
+                    checked={on}
+                    onCheckedChange={(v) =>
+                      setForm((f) => ({
+                        ...f,
+                        notify_categories: v
+                          ? Array.from(new Set([...f.notify_categories, c]))
+                          : f.notify_categories.filter((x) => x !== c),
+                      }))
+                    }
+                  />
+                  <span className="capitalize">{c}s</span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="pt-2 space-y-2">
+          <Label className="text-xs font-mono uppercase tracking-wider">
+            Specific alert products (optional — leave empty for all)
+          </Label>
+          <div className="max-h-56 overflow-y-auto rounded-md border border-border divide-y divide-border/60">
+            {NWS_ALERT_TYPES.map((t) => {
+              const on = form.notify_event_types.includes(t.name);
+              return (
+                <label key={t.id} className="flex items-center gap-2 px-2 py-1.5 text-xs cursor-pointer hover:bg-accent/10">
+                  <Checkbox
+                    checked={on}
+                    onCheckedChange={(v) =>
+                      setForm((f) => ({
+                        ...f,
+                        notify_event_types: v
+                          ? Array.from(new Set([...f.notify_event_types, t.name]))
+                          : f.notify_event_types.filter((x) => x !== t.name),
+                      }))
+                    }
+                  />
+                  <span className="flex-1">{t.name}</span>
+                  <span className="text-[10px] text-muted-foreground capitalize">{t.category}</span>
+                </label>
+              );
+            })}
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            Selecting one or more limits notifications to just those products. Empty = every product in your chosen categories.
+          </p>
+        </div>
 
         <div className="pt-2 space-y-2">
           <Label className="text-xs font-mono uppercase tracking-wider">Minimum severity to notify</Label>
@@ -197,7 +265,7 @@ function SettingsPage() {
             ))}
           </RadioGroup>
           <p className="text-[10px] text-muted-foreground">
-            Browser push delivery coming soon — your preferences are stored now and used as soon as it's enabled.
+            Notifications fire while MWA is open in any tab on this device. Make sure you've turned them on in the header.
           </p>
         </div>
       </section>
