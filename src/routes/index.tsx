@@ -826,7 +826,7 @@ function TickerBar({ entries }: { entries: AlertEntry[] }) {
   );
 }
 
-function AllAlertsDialog({ entries, label, tickerStyle }: { entries: AlertEntry[]; label: string; tickerStyle?: boolean; full?: boolean }) {
+function AllAlertsDialog({ entries, label, tickerStyle, city }: { entries: AlertEntry[]; label: string; tickerStyle?: boolean; full?: boolean; city?: MichiganCity }) {
   const [open, setOpen] = useState(false);
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -853,7 +853,7 @@ function AllAlertsDialog({ entries, label, tickerStyle }: { entries: AlertEntry[
         {entries.length === 0 ? (
           <p className="text-sm text-muted-foreground py-10 text-center">No active alerts in Michigan right now.</p>
         ) : (
-          <GroupedAlerts entries={entries} />
+          <GroupedAlerts entries={entries} city={city} />
         )}
       </DialogContent>
     </Dialog>
