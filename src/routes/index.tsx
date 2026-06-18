@@ -163,6 +163,8 @@ function HomePage() {
     [shared, nwsAlerts.data],
   );
 
+  useAlertNotifications(allAlerts);
+
   const cityAlerts = useMemo(() => {
     return allAlerts.filter((a) => {
       if (a.kind === "shared") {
