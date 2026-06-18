@@ -196,7 +196,8 @@ function HomePage() {
     [shared, nwsAlerts.data],
   );
 
-  useAlertNotifications(allAlerts);
+  useAlertNotifications(allAlerts, city, prefs);
+  useForecastNotifications(city, weather.data, prefs);
 
   const cityAlerts = useMemo(() => {
     return allAlerts.filter((a) => {
