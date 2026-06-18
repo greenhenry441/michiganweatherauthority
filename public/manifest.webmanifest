@@ -1,0 +1,15 @@
+{
+  "name": "Michigan Weather Authority",
+  "short_name": "MWA",
+  "description": "Live weather, forecasts, and alerts for every city in Michigan.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0b1220",
+  "theme_color": "#1e3a8a",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
