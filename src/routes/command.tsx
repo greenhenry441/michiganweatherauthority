@@ -141,6 +141,20 @@ function CommandConsole({ code }: { code: string }) {
               category: customCategory,
               severity: customSeverity,
             };
+      const schedule =
+        scheduleMode === "duration"
+          ? { durationMinutes: Number(duration), startsImmediately: true, startsAt: null, endsAt: null }
+          : {
+              startsImmediately,
+              startsAt: startsImmediately || !startsAtLocal ? null : new Date(startsAtLocal).toISOString(),
+              endsAt: endsAtLocal ? new Date(endsAtLocal).toISOString() : null,
+              durationMinutes: null,
+            };
+      if (scheduleMode === "window" && !endsAtLocal) {
+        toast.error("Pick an end date/time, or switch to Duration mode");
+        setSubmitting(false);
+        return;
+      }
       await issueFn({
         data: {
           ...payload,
@@ -149,7 +163,7 @@ function CommandConsole({ code }: { code: string }) {
           instruction: instruction.trim() || null,
           areas: areaList,
           issuer: issuer.trim() || "MWA",
-          durationMinutes: Number(duration),
+          ...schedule,
         },
       });
       toast.success(`Alert broadcast to all visitors`);
