@@ -593,7 +593,51 @@ function NotifyToggle() {
   );
 }
 
-function useAlertNotifications(entries: AlertEntry[]) {
+const SEV_RANK_LOCAL: Record<string, number> = { extreme: 4, severe: 3, moderate: 2, minor: 1 };
+
+function entryCategory(e: AlertEntry): NotifyCategory {
+  if (e.kind === "shared") {
+    const c = e.alert.category;
+    if (c === "warning" || c === "extreme") return "warning";
+    if (c === "watch") return "watch";
+    if (c === "advisory") return "advisory";
+    return "statement";
+  }
+  const ev = e.alert.properties.event.toLowerCase();
+  if (ev.includes("warning")) return "warning";
+  if (ev.includes("watch")) return "watch";
+  if (ev.includes("advisory")) return "advisory";
+  return "statement";
+}
+
+function entrySeverity(e: AlertEntry): NotifySeverity {
+  if (e.kind === "shared") return e.alert.severity;
+  const s = (e.alert.properties.severity ?? "").toLowerCase();
+  if (s === "extreme" || s === "severe" || s === "moderate" || s === "minor") return s;
+  return e.alert.properties.event.toLowerCase().includes("warning") ? "severe" : "moderate";
+}
+
+function entryMatchesArea(e: AlertEntry, city: MichiganCity): boolean {
+  if (e.kind === "shared") {
+    return e.alert.areas.some(
+      (x) =>
+        x.toLowerCase() === "statewide" ||
+        x.toLowerCase().includes(city.name.toLowerCase()) ||
+        x.toLowerCase().includes(city.county.toLowerCase()),
+    );
+  }
+  const desc = e.alert.properties.areaDesc.toLowerCase();
+  return desc.includes(city.county.toLowerCase()) || desc.includes(city.name.toLowerCase());
+}
+
+function entryIsMarine(e: AlertEntry): boolean {
+  const text = e.kind === "shared"
+    ? `${e.alert.areas.join(" ")} ${e.alert.headline}`.toLowerCase()
+    : `${e.alert.properties.areaDesc} ${e.alert.properties.event}`.toLowerCase();
+  return /marine|lake (huron|michigan|superior|erie|ontario)|gale|small craft|beach hazard/.test(text);
+}
+
+function useAlertNotifications(entries: AlertEntry[], city: MichiganCity, prefs: NotifyPrefs | null) {
   const initialized = useRef(false);
   useEffect(() => {
     if (typeof window === "undefined" || !("Notification" in window)) return;
@@ -610,13 +654,37 @@ function useAlertNotifications(entries: AlertEntry[]) {
       return;
     }
 
+    // Signed-out fallback: notify on everything in current city (back-compat).
+    const p: NotifyPrefs = prefs ?? {
+      notify_alerts: true,
+      notify_forecast: false,
+      notify_hourly_forecast: false,
+      notify_marine: true,
+      notify_only_my_area: true,
+      notify_categories: ["warning", "watch", "advisory", "statement"],
+      notify_event_types: [],
+      min_severity: "minor",
+    };
+
+    if (!p.notify_alerts) return;
+    const minRank = SEV_RANK_LOCAL[p.min_severity] ?? 1;
+    const typeSet = new Set(p.notify_event_types.map((t) => t.toLowerCase()));
+
     (async () => {
       const reg = "serviceWorker" in navigator ? await navigator.serviceWorker.getRegistration() : null;
       for (let i = 0; i < entries.length; i++) {
         const id = ids[i];
         if (seenSet.has(id)) continue;
         const e = entries[i];
+
+        const marine = entryIsMarine(e);
+        if (marine && !p.notify_marine) { seenSet.add(id); continue; }
+        if (p.notify_only_my_area && !marine && !entryMatchesArea(e, city)) { seenSet.add(id); continue; }
+        if (!p.notify_categories.includes(entryCategory(e))) { seenSet.add(id); continue; }
+        if ((SEV_RANK_LOCAL[entrySeverity(e)] ?? 0) < minRank) { seenSet.add(id); continue; }
         const title = e.kind === "shared" ? alertTitle(e) : e.alert.properties.event;
+        if (typeSet.size > 0 && !typeSet.has(title.toLowerCase())) { seenSet.add(id); continue; }
+
         const body = e.kind === "shared"
           ? `${e.alert.areas.join(", ")} — ${e.alert.headline}`
           : `${e.alert.properties.areaDesc}`;
@@ -628,7 +696,71 @@ function useAlertNotifications(entries: AlertEntry[]) {
       }
       localStorage.setItem(LS_NOTIFY_SEEN, JSON.stringify(Array.from(seenSet).slice(-300)));
     })();
-  }, [entries]);
+  }, [entries, city, prefs]);
+}
+
+/* ---------------- Forecast notifications (daily + hourly) ---------------- */
+
+const LS_FORECAST_DAILY = "mwa.notify.forecast.daily";
+const LS_FORECAST_HOURLY = "mwa.notify.forecast.hourly";
+
+type WeatherBundle = ReturnType<typeof Object> & {
+  forecast: { properties: { periods: Array<{ name: string; temperature: number; shortForecast: string; detailedForecast: string }> } };
+  hourly: { properties: { periods: Array<{ startTime: string; temperature: number; shortForecast: string; probabilityOfPrecipitation?: { value: number | null } }> } };
+};
+
+function useForecastNotifications(city: MichiganCity, weather: WeatherBundle | undefined, prefs: NotifyPrefs | null) {
+  useEffect(() => {
+    if (typeof window === "undefined" || !("Notification" in window) || !weather || !prefs) return;
+    if (localStorage.getItem(LS_NOTIFY) !== "1" || Notification.permission !== "granted") return;
+
+    const send = async (title: string, body: string, tag: string) => {
+      try {
+        const reg = "serviceWorker" in navigator ? await navigator.serviceWorker.getRegistration() : null;
+        if (reg) reg.showNotification(title, { body, tag, data: { url: "/" } });
+        else new Notification(title, { body, tag });
+      } catch {}
+    };
+
+    const tick = () => {
+      const now = new Date();
+      // Daily digest at 7am local
+      if (prefs.notify_forecast && now.getHours() === 7) {
+        const key = `${city.zip}:${now.toISOString().slice(0, 10)}`;
+        if (localStorage.getItem(LS_FORECAST_DAILY) !== key) {
+          const today = weather.forecast.properties.periods[0];
+          if (today) {
+            send(
+              `Today in ${city.name}`,
+              `${today.name}: ${today.shortForecast}, ${Math.round(today.temperature)}°. ${today.detailedForecast.slice(0, 140)}`,
+              `mwa-daily-${key}`,
+            );
+            localStorage.setItem(LS_FORECAST_DAILY, key);
+          }
+        }
+      }
+      // Hourly ping at minute 0
+      if (prefs.notify_hourly_forecast && now.getMinutes() < 5) {
+        const key = `${city.zip}:${now.toISOString().slice(0, 13)}`;
+        if (localStorage.getItem(LS_FORECAST_HOURLY) !== key) {
+          const nextHour = weather.hourly.properties.periods[1] ?? weather.hourly.properties.periods[0];
+          if (nextHour) {
+            const pop = nextHour.probabilityOfPrecipitation?.value;
+            send(
+              `Next hour · ${city.name}`,
+              `${nextHour.shortForecast}, ${Math.round(nextHour.temperature)}°${pop ? ` · ${pop}% precip` : ""}`,
+              `mwa-hourly-${key}`,
+            );
+            localStorage.setItem(LS_FORECAST_HOURLY, key);
+          }
+        }
+      }
+    };
+
+    tick();
+    const id = window.setInterval(tick, 60_000);
+    return () => window.clearInterval(id);
+  }, [city, weather, prefs]);
 }
 
 
