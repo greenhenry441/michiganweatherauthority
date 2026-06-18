@@ -365,6 +365,7 @@ function HomePage() {
           <span className="font-mono">MWA · MI · v1.1</span>
         </div>
       </footer>
+      <Toaster />
     </div>
   );
 }
