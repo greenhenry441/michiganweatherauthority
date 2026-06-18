@@ -96,6 +96,19 @@ function useAuthUser() {
   return user;
 }
 
+type NotifyCategory = "warning" | "watch" | "advisory" | "statement";
+type NotifySeverity = "extreme" | "severe" | "moderate" | "minor";
+interface NotifyPrefs {
+  notify_alerts: boolean;
+  notify_forecast: boolean;
+  notify_hourly_forecast: boolean;
+  notify_marine: boolean;
+  notify_only_my_area: boolean;
+  notify_categories: NotifyCategory[];
+  notify_event_types: string[];
+  min_severity: NotifySeverity;
+}
+
 const LS_CITY = "mwa.home.city";
 
 function HomePage() {
