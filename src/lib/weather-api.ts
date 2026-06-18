@@ -189,22 +189,24 @@ export interface ProductSummary {
   productName: string;
 }
 
+const NWS_LD_HEADERS: HeadersInit = { "User-Agent": UA, Accept: "application/ld+json" };
+
 export async function getProductTypes(office: string): Promise<{ productCode: string; productName: string }[]> {
-  const r = await fetch(`https://api.weather.gov/products/locations/${office}/types`, { headers: { Accept: "application/ld+json" } });
+  const r = await fetch(`https://api.weather.gov/products/locations/${office}/types`, { headers: NWS_LD_HEADERS });
   if (!r.ok) return [];
   const j = await r.json();
   return (j["@graph"] ?? []).map((g: any) => ({ productCode: g.productCode, productName: g.productName }));
 }
 
 export async function getProductList(office: string, productCode: string): Promise<ProductSummary[]> {
-  const r = await fetch(`https://api.weather.gov/products/locations/${office}/types/${productCode}`, { headers: { Accept: "application/ld+json" } });
+  const r = await fetch(`https://api.weather.gov/products/locations/${office}/types/${productCode}`, { headers: NWS_LD_HEADERS });
   if (!r.ok) return [];
   const j = await r.json();
   return (j["@graph"] ?? []).slice(0, 10);
 }
 
 export async function getProductText(id: string): Promise<string> {
-  const r = await fetch(`https://api.weather.gov/products/${id}`, { headers: { Accept: "application/ld+json" } });
+  const r = await fetch(`https://api.weather.gov/products/${id}`, { headers: NWS_LD_HEADERS });
   if (!r.ok) throw new Error(`product ${r.status}`);
   const j = await r.json();
   return j.productText ?? "";
