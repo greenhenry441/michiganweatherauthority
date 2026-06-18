@@ -523,7 +523,14 @@ function NotifyToggle() {
     localStorage.setItem(LS_NOTIFY, "1");
     setEnabled(true);
     toast.success("You'll be notified of new Michigan alerts");
-    try { new Notification("MWA notifications enabled", { body: "You'll get a ping for new MI alerts while this tab is open." }); } catch {}
+    try {
+      const reg = "serviceWorker" in navigator ? await navigator.serviceWorker.getRegistration() : null;
+      if (reg) {
+        reg.showNotification("MWA notifications enabled", { body: "You'll get a ping for new Michigan alerts.", tag: "mwa-welcome" });
+      } else {
+        new Notification("MWA notifications enabled", { body: "You'll get a ping for new MI alerts while this tab is open." });
+      }
+    } catch {}
   };
 
   return (
@@ -553,24 +560,29 @@ function useAlertNotifications(entries: AlertEntry[]) {
     const ids = entries.map((e) => e.kind === "shared" ? `s:${e.alert.id}` : `n:${e.alert.properties.id}`);
 
     if (!initialized.current) {
-      // First mount: don't fire for pre-existing alerts; just record them
       initialized.current = true;
       localStorage.setItem(LS_NOTIFY_SEEN, JSON.stringify(ids.slice(0, 200)));
       return;
     }
 
-    for (let i = 0; i < entries.length; i++) {
-      const id = ids[i];
-      if (seenSet.has(id)) continue;
-      const e = entries[i];
-      const title = e.kind === "shared" ? alertTitle(e) : e.alert.properties.event;
-      const body = e.kind === "shared"
-        ? `${e.alert.areas.join(", ")} — ${e.alert.headline}`
-        : `${e.alert.properties.areaDesc}`;
-      try { new Notification(`⚠ ${title}`, { body, tag: id }); } catch {}
-      seenSet.add(id);
-    }
-    localStorage.setItem(LS_NOTIFY_SEEN, JSON.stringify(Array.from(seenSet).slice(-300)));
+    (async () => {
+      const reg = "serviceWorker" in navigator ? await navigator.serviceWorker.getRegistration() : null;
+      for (let i = 0; i < entries.length; i++) {
+        const id = ids[i];
+        if (seenSet.has(id)) continue;
+        const e = entries[i];
+        const title = e.kind === "shared" ? alertTitle(e) : e.alert.properties.event;
+        const body = e.kind === "shared"
+          ? `${e.alert.areas.join(", ")} — ${e.alert.headline}`
+          : `${e.alert.properties.areaDesc}`;
+        try {
+          if (reg) reg.showNotification(`⚠ ${title}`, { body, tag: id, data: { url: "/" } });
+          else new Notification(`⚠ ${title}`, { body, tag: id });
+        } catch {}
+        seenSet.add(id);
+      }
+      localStorage.setItem(LS_NOTIFY_SEEN, JSON.stringify(Array.from(seenSet).slice(-300)));
+    })();
   }, [entries]);
 }
 
