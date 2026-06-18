@@ -46,7 +46,11 @@ function SettingsPage() {
     home_lon: null as number | null,
     notify_alerts: true,
     notify_forecast: false,
+    notify_hourly_forecast: false,
     notify_marine: false,
+    notify_only_my_area: true,
+    notify_categories: ["warning", "watch", "advisory", "statement"] as Array<"warning" | "watch" | "advisory" | "statement">,
+    notify_event_types: [] as string[],
     min_severity: "moderate" as "extreme" | "severe" | "moderate" | "minor",
   });
 
