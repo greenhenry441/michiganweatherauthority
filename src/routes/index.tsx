@@ -882,26 +882,47 @@ const GROUP_ORDER: Array<{ key: "warning" | "watch" | "advisory" | "statement"; 
   { key: "statement", label: "Statements", color: "text-accent border-accent/30 bg-accent/5" },
 ];
 
-function GroupedAlerts({ entries }: { entries: AlertEntry[] }) {
+function GroupedAlerts({ entries, city }: { entries: AlertEntry[]; city?: MichiganCity }) {
   const groups = useMemo(() => {
     const m: Record<string, AlertEntry[]> = { warning: [], watch: [], advisory: [], statement: [] };
     for (const e of entries) m[alertCategory(e)].push(e);
+    if (city) {
+      for (const k of Object.keys(m)) {
+        m[k].sort((a, b) => {
+          const al = entryMatchesArea(a, city) ? 0 : 1;
+          const bl = entryMatchesArea(b, city) ? 0 : 1;
+          return al - bl;
+        });
+      }
+    }
     return m;
-  }, [entries]);
+  }, [entries, city]);
 
   return (
     <div className="space-y-5">
       {GROUP_ORDER.map((g) => {
         const list = groups[g.key];
         if (!list.length) return null;
+        const localCount = city ? list.filter((e) => entryMatchesArea(e, city)).length : 0;
         return (
           <section key={g.key} className="space-y-2">
             <div className={cn("flex items-center justify-between rounded-md border px-3 py-1.5", g.color)}>
               <h3 className="font-display tracking-wider uppercase text-xs font-bold">{g.label}</h3>
-              <span className="text-[10px] font-mono opacity-80">{list.length} active</span>
+              <span className="text-[10px] font-mono opacity-80">
+                {localCount > 0 ? `${localCount} for ${city!.name} · ` : ""}{list.length} active
+              </span>
             </div>
             <div className="space-y-3">
-              {list.map((e, i) => <FullAlert key={i} entry={e} />)}
+              {list.map((e, i) => (
+                <div key={i} className="relative">
+                  {city && entryMatchesArea(e, city) && (
+                    <span className="absolute -top-2 left-3 z-10 text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded border border-accent/60 bg-card text-accent">
+                      Your area
+                    </span>
+                  )}
+                  <FullAlert entry={e} />
+                </div>
+              ))}
             </div>
           </section>
         );
