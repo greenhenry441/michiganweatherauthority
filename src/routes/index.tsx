@@ -219,7 +219,7 @@ function HomePage() {
 
   return (
     <div className="min-h-screen">
-      <TickerBar entries={allAlerts} />
+      <TickerBar entries={allAlerts} city={city} />
       <IosInstallBanner />
 
 
