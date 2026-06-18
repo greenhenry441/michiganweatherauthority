@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle, MapPin, Radio, RefreshCw, Search, Wind, Droplets,
-  Thermometer, Sunrise, Eye, Gauge, Megaphone, ListOrdered, Sparkles,
-  Sun, Activity, UserCircle2, FileText, LogIn, Sunset, Cloud,
+  Thermometer, Sunrise, Eye, Gauge, Megaphone, ListOrdered,
+  Sun, Activity, UserCircle2, FileText, LogIn, Sunset, Cloud, Bell, BellOff,
 } from "lucide-react";
 import { MICHIGAN_CITIES, type MichiganCity } from "@/lib/michigan-cities";
 import {
@@ -13,13 +13,14 @@ import {
 } from "@/lib/weather-api";
 import { useSharedAlerts, type SharedAlert } from "@/lib/alerts-store";
 import { getAlertType } from "@/lib/nws-alert-types";
-import { summarizeForecast } from "@/lib/ai-summary.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { toast } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
@@ -162,6 +163,8 @@ function HomePage() {
     [shared, nwsAlerts.data],
   );
 
+  useAlertNotifications(allAlerts);
+
   const cityAlerts = useMemo(() => {
     return allAlerts.filter((a) => {
       if (a.kind === "shared") {
@@ -205,8 +208,9 @@ function HomePage() {
             <Link to="/forecasts" className="hidden sm:inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider text-muted-foreground hover:text-accent">
               <FileText className="h-3.5 w-3.5" /> Forecasts
             </Link>
+            <NotifyToggle />
             {user ? (
-              <Link to={"/_authenticated/settings" as any} className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider text-accent hover:opacity-80">
+              <Link to="/settings" className="inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider text-accent hover:opacity-80">
                 <UserCircle2 className="h-4 w-4" /> Account
               </Link>
             ) : (
@@ -295,17 +299,6 @@ function HomePage() {
               <ExtraStatsPanel data={extra.data} loading={extra.isLoading} />
             </div>
 
-            {/* AI summary */}
-            <AISummaryCard
-              city={city}
-              tempF={current.temperature}
-              shortForecast={current.shortForecast}
-              detailed={today.detailedForecast}
-              windSpeed={current.windSpeed}
-              precipPct={current.probabilityOfPrecipitation?.value ?? null}
-              aqi={extra.data?.aqi ?? null}
-              uv={extra.data?.uvIndex ?? null}
-            />
 
             {/* Hourly + Extended */}
             <div className="grid xl:grid-cols-[1fr_320px] gap-4">
@@ -372,6 +365,7 @@ function HomePage() {
           <span className="font-mono">MWA · MI · v1.1</span>
         </div>
       </footer>
+      <Toaster />
     </div>
   );
 }
@@ -495,79 +489,91 @@ function BigStat({ label, value, chip, chipClass, loading }: { label: string; va
   );
 }
 
-/* ---------------- AI Summary ---------------- */
+/* ---------------- Notifications (in-tab; works on mobile while open) ---------------- */
 
-function AISummaryCard(props: {
-  city: MichiganCity;
-  tempF: number;
-  shortForecast: string;
-  detailed: string;
-  windSpeed: string;
-  precipPct: number | null;
-  aqi: number | null;
-  uv: number | null;
-}) {
-  const fn = summarizeForecast;
-  const mutation = useMutation({
-    mutationFn: async () =>
-      fn({
-        data: {
-          city: props.city.name,
-          county: props.city.county,
-          shortForecast: props.shortForecast,
-          detailed: props.detailed,
-          tempF: Math.round(props.tempF),
-          windSpeed: props.windSpeed,
-          precipPct: props.precipPct,
-          aqi: props.aqi,
-          uv: props.uv,
-        },
-      }),
-  });
+const LS_NOTIFY = "mwa.notify.enabled";
+const LS_NOTIFY_SEEN = "mwa.notify.seen";
 
-  // Auto-run on city change
+function NotifyToggle() {
+  const supported = typeof window !== "undefined" && "Notification" in window;
+  const [enabled, setEnabled] = useState(false);
+
   useEffect(() => {
-    mutation.reset();
-    mutation.mutate();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.city.zip]);
+    if (!supported) return;
+    const stored = localStorage.getItem(LS_NOTIFY) === "1";
+    setEnabled(stored && Notification.permission === "granted");
+  }, [supported]);
+
+  if (!supported) return null;
+
+  const toggle = async () => {
+    if (enabled) {
+      localStorage.setItem(LS_NOTIFY, "0");
+      setEnabled(false);
+      toast.message("Alert notifications turned off");
+      return;
+    }
+    const perm = Notification.permission === "granted"
+      ? "granted"
+      : await Notification.requestPermission();
+    if (perm !== "granted") {
+      toast.error("Notifications were blocked by your browser");
+      return;
+    }
+    localStorage.setItem(LS_NOTIFY, "1");
+    setEnabled(true);
+    toast.success("You'll be notified of new Michigan alerts");
+    try { new Notification("MWA notifications enabled", { body: "You'll get a ping for new MI alerts while this tab is open." }); } catch {}
+  };
 
   return (
-    <div className="rounded-xl border border-accent/30 bg-gradient-to-br from-accent/5 via-card to-card p-4 md:p-5">
-      <div className="flex items-center justify-between gap-2 mb-3">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-accent" />
-          <h3 className="font-display tracking-wider text-[11px] uppercase text-accent">
-            MWA AI · What to do in {props.city.name} today
-          </h3>
-        </div>
-        <Button variant="ghost" size="sm" onClick={() => mutation.mutate()} disabled={mutation.isPending} className="h-7 text-[11px]">
-          <RefreshCw className={cn("h-3 w-3 mr-1", mutation.isPending && "animate-spin")} /> Regenerate
-        </Button>
-      </div>
-      {mutation.isPending && <p className="text-sm text-muted-foreground">Analyzing today's conditions…</p>}
-      {mutation.isError && <p className="text-sm text-destructive">{(mutation.error as Error).message}</p>}
-      {mutation.data && (
-        <div className="space-y-3">
-          <p className="text-sm leading-relaxed">{mutation.data.summary}</p>
-          <div className="grid sm:grid-cols-3 gap-2">
-            {mutation.data.activities?.map((a, i) => (
-              <div key={i} className="rounded-lg border border-border bg-card p-3">
-                <p className="font-display font-bold text-sm">{a.title}</p>
-                <p className="text-xs text-muted-foreground mt-1">{a.why}</p>
-              </div>
-            ))}
-          </div>
-          {mutation.data.warnings && (
-            <div className="rounded-md border border-amber-alert/40 bg-amber-alert/10 p-2.5 text-xs">
-              ⚠ {mutation.data.warnings}
-            </div>
-          )}
-        </div>
+    <button
+      onClick={toggle}
+      title={enabled ? "Disable alert notifications" : "Enable alert notifications"}
+      className={cn(
+        "inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider transition-colors",
+        enabled ? "text-accent" : "text-muted-foreground hover:text-accent",
       )}
-    </div>
+    >
+      {enabled ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+      <span className="hidden sm:inline">{enabled ? "Alerts on" : "Notify"}</span>
+    </button>
   );
 }
+
+function useAlertNotifications(entries: AlertEntry[]) {
+  const initialized = useRef(false);
+  useEffect(() => {
+    if (typeof window === "undefined" || !("Notification" in window)) return;
+    if (localStorage.getItem(LS_NOTIFY) !== "1" || Notification.permission !== "granted") return;
+
+    const seen: string[] = JSON.parse(localStorage.getItem(LS_NOTIFY_SEEN) || "[]");
+    const seenSet = new Set(seen);
+
+    const ids = entries.map((e) => e.kind === "shared" ? `s:${e.alert.id}` : `n:${e.alert.properties.id}`);
+
+    if (!initialized.current) {
+      // First mount: don't fire for pre-existing alerts; just record them
+      initialized.current = true;
+      localStorage.setItem(LS_NOTIFY_SEEN, JSON.stringify(ids.slice(0, 200)));
+      return;
+    }
+
+    for (let i = 0; i < entries.length; i++) {
+      const id = ids[i];
+      if (seenSet.has(id)) continue;
+      const e = entries[i];
+      const title = e.kind === "shared" ? alertTitle(e) : e.alert.properties.event;
+      const body = e.kind === "shared"
+        ? `${e.alert.areas.join(", ")} — ${e.alert.headline}`
+        : `${e.alert.properties.areaDesc}`;
+      try { new Notification(`⚠ ${title}`, { body, tag: id }); } catch {}
+      seenSet.add(id);
+    }
+    localStorage.setItem(LS_NOTIFY_SEEN, JSON.stringify(Array.from(seenSet).slice(-300)));
+  }, [entries]);
+}
+
 
 /* ---------------- Ticker (shows ALL alerts now) ---------------- */
 
@@ -658,12 +664,60 @@ function AllAlertsDialog({ entries, label, tickerStyle }: { entries: AlertEntry[
         {entries.length === 0 ? (
           <p className="text-sm text-muted-foreground py-10 text-center">No active alerts in Michigan right now.</p>
         ) : (
-          <div className="space-y-3">
-            {entries.map((e, i) => <FullAlert key={i} entry={e} />)}
-          </div>
+          <GroupedAlerts entries={entries} />
         )}
       </DialogContent>
     </Dialog>
+  );
+}
+
+function alertCategory(entry: AlertEntry): "warning" | "watch" | "advisory" | "statement" {
+  if (entry.kind === "shared") {
+    const c = entry.alert.category;
+    if (c === "warning" || c === "extreme") return "warning";
+    if (c === "watch") return "watch";
+    if (c === "advisory") return "advisory";
+    return "statement";
+  }
+  const e = entry.alert.properties.event.toLowerCase();
+  if (e.includes("warning")) return "warning";
+  if (e.includes("watch")) return "watch";
+  if (e.includes("advisory")) return "advisory";
+  return "statement";
+}
+
+const GROUP_ORDER: Array<{ key: "warning" | "watch" | "advisory" | "statement"; label: string; color: string }> = [
+  { key: "warning", label: "Warnings", color: "text-warning border-warning/40 bg-warning/5" },
+  { key: "watch", label: "Watches", color: "text-watch border-watch/40 bg-watch/10" },
+  { key: "advisory", label: "Advisories", color: "text-amber-alert border-advisory/40 bg-advisory/10" },
+  { key: "statement", label: "Statements", color: "text-accent border-accent/30 bg-accent/5" },
+];
+
+function GroupedAlerts({ entries }: { entries: AlertEntry[] }) {
+  const groups = useMemo(() => {
+    const m: Record<string, AlertEntry[]> = { warning: [], watch: [], advisory: [], statement: [] };
+    for (const e of entries) m[alertCategory(e)].push(e);
+    return m;
+  }, [entries]);
+
+  return (
+    <div className="space-y-5">
+      {GROUP_ORDER.map((g) => {
+        const list = groups[g.key];
+        if (!list.length) return null;
+        return (
+          <section key={g.key} className="space-y-2">
+            <div className={cn("flex items-center justify-between rounded-md border px-3 py-1.5", g.color)}>
+              <h3 className="font-display tracking-wider uppercase text-xs font-bold">{g.label}</h3>
+              <span className="text-[10px] font-mono opacity-80">{list.length} active</span>
+            </div>
+            <div className="space-y-3">
+              {list.map((e, i) => <FullAlert key={i} entry={e} />)}
+            </div>
+          </section>
+        );
+      })}
+    </div>
   );
 }
 

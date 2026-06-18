@@ -80,7 +80,7 @@ export async function getForecast(url: string): Promise<Forecast> {
 export async function getMichiganAlerts(): Promise<NWSAlert[]> {
   const [land, marine] = await Promise.all([
     fetch(`https://api.weather.gov/alerts/active?area=MI`, { headers: HEADERS }).then((r) => (r.ok ? r.json() : { features: [] })),
-    fetch(`https://api.weather.gov/alerts/active?region_type=marine&region=gl`, { headers: HEADERS }).then((r) => (r.ok ? r.json() : { features: [] })),
+    fetch(`https://api.weather.gov/alerts/active?region=GL`, { headers: HEADERS }).then((r) => (r.ok ? r.json() : { features: [] })),
   ]);
   const seen = new Set<string>();
   const out: NWSAlert[] = [];
@@ -96,7 +96,8 @@ export async function getMichiganAlerts(): Promise<NWSAlert[]> {
   // Filter Great Lakes marine to zones touching Michigan waters
   const miMarine = (marine.features ?? []).filter((f: NWSAlert) => {
     const a = (f.properties.areaDesc || "").toLowerCase();
-    return /lake superior|lake michigan|lake huron|lake erie|saginaw bay|whitefish|munising|grand traverse|keweenaw|st\.? clair|detroit river/.test(a);
+    // Explicit "MI" mention, MI-named waters, or Michigan-shoreline place names
+    return /\bmi\b|michigan|lake superior|lake huron|saginaw|whitefish|munising|grand traverse|keweenaw|st\.? clair|detroit river|mackinac|drummond|seul choix|point betsie|manistee|ludington|holland mi|south haven mi|st joseph mi|new buffalo|port huron|alpena|presque isle|rogers city|tawas|harbor beach|port austin/.test(a);
   });
   push(miMarine);
   return out;
@@ -188,22 +189,24 @@ export interface ProductSummary {
   productName: string;
 }
 
+const NWS_LD_HEADERS: HeadersInit = { "User-Agent": UA, Accept: "application/ld+json" };
+
 export async function getProductTypes(office: string): Promise<{ productCode: string; productName: string }[]> {
-  const r = await fetch(`https://api.weather.gov/products/locations/${office}/types`, { headers: { Accept: "application/ld+json" } });
+  const r = await fetch(`https://api.weather.gov/products/locations/${office}/types`, { headers: NWS_LD_HEADERS });
   if (!r.ok) return [];
   const j = await r.json();
   return (j["@graph"] ?? []).map((g: any) => ({ productCode: g.productCode, productName: g.productName }));
 }
 
 export async function getProductList(office: string, productCode: string): Promise<ProductSummary[]> {
-  const r = await fetch(`https://api.weather.gov/products/locations/${office}/types/${productCode}`, { headers: { Accept: "application/ld+json" } });
+  const r = await fetch(`https://api.weather.gov/products/locations/${office}/types/${productCode}`, { headers: NWS_LD_HEADERS });
   if (!r.ok) return [];
   const j = await r.json();
   return (j["@graph"] ?? []).slice(0, 10);
 }
 
 export async function getProductText(id: string): Promise<string> {
-  const r = await fetch(`https://api.weather.gov/products/${id}`, { headers: { Accept: "application/ld+json" } });
+  const r = await fetch(`https://api.weather.gov/products/${id}`, { headers: NWS_LD_HEADERS });
   if (!r.ok) throw new Error(`product ${r.status}`);
   const j = await r.json();
   return j.productText ?? "";
