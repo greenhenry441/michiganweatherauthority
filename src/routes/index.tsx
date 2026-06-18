@@ -820,7 +820,7 @@ function TickerBar({ entries }: { entries: AlertEntry[] }) {
             })}
           </div>
         </div>
-        <AllAlertsDialog entries={entries} label={`Read all (${entries.length})`} tickerStyle />
+        <AllAlertsDialog entries={entries} label={`Read all (${entries.length})`} tickerStyle city={city} />
       </div>
     </div>
   );
