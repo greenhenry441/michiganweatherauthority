@@ -488,79 +488,91 @@ function BigStat({ label, value, chip, chipClass, loading }: { label: string; va
   );
 }
 
-/* ---------------- AI Summary ---------------- */
+/* ---------------- Notifications (in-tab; works on mobile while open) ---------------- */
 
-function AISummaryCard(props: {
-  city: MichiganCity;
-  tempF: number;
-  shortForecast: string;
-  detailed: string;
-  windSpeed: string;
-  precipPct: number | null;
-  aqi: number | null;
-  uv: number | null;
-}) {
-  const fn = summarizeForecast;
-  const mutation = useMutation({
-    mutationFn: async () =>
-      fn({
-        data: {
-          city: props.city.name,
-          county: props.city.county,
-          shortForecast: props.shortForecast,
-          detailed: props.detailed,
-          tempF: Math.round(props.tempF),
-          windSpeed: props.windSpeed,
-          precipPct: props.precipPct,
-          aqi: props.aqi,
-          uv: props.uv,
-        },
-      }),
-  });
+const LS_NOTIFY = "mwa.notify.enabled";
+const LS_NOTIFY_SEEN = "mwa.notify.seen";
 
-  // Auto-run on city change
+function NotifyToggle() {
+  const supported = typeof window !== "undefined" && "Notification" in window;
+  const [enabled, setEnabled] = useState(false);
+
   useEffect(() => {
-    mutation.reset();
-    mutation.mutate();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [props.city.zip]);
+    if (!supported) return;
+    const stored = localStorage.getItem(LS_NOTIFY) === "1";
+    setEnabled(stored && Notification.permission === "granted");
+  }, [supported]);
+
+  if (!supported) return null;
+
+  const toggle = async () => {
+    if (enabled) {
+      localStorage.setItem(LS_NOTIFY, "0");
+      setEnabled(false);
+      toast.message("Alert notifications turned off");
+      return;
+    }
+    const perm = Notification.permission === "granted"
+      ? "granted"
+      : await Notification.requestPermission();
+    if (perm !== "granted") {
+      toast.error("Notifications were blocked by your browser");
+      return;
+    }
+    localStorage.setItem(LS_NOTIFY, "1");
+    setEnabled(true);
+    toast.success("You'll be notified of new Michigan alerts");
+    try { new Notification("MWA notifications enabled", { body: "You'll get a ping for new MI alerts while this tab is open." }); } catch {}
+  };
 
   return (
-    <div className="rounded-xl border border-accent/30 bg-gradient-to-br from-accent/5 via-card to-card p-4 md:p-5">
-      <div className="flex items-center justify-between gap-2 mb-3">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-accent" />
-          <h3 className="font-display tracking-wider text-[11px] uppercase text-accent">
-            MWA AI · What to do in {props.city.name} today
-          </h3>
-        </div>
-        <Button variant="ghost" size="sm" onClick={() => mutation.mutate()} disabled={mutation.isPending} className="h-7 text-[11px]">
-          <RefreshCw className={cn("h-3 w-3 mr-1", mutation.isPending && "animate-spin")} /> Regenerate
-        </Button>
-      </div>
-      {mutation.isPending && <p className="text-sm text-muted-foreground">Analyzing today's conditions…</p>}
-      {mutation.isError && <p className="text-sm text-destructive">{(mutation.error as Error).message}</p>}
-      {mutation.data && (
-        <div className="space-y-3">
-          <p className="text-sm leading-relaxed">{mutation.data.summary}</p>
-          <div className="grid sm:grid-cols-3 gap-2">
-            {mutation.data.activities?.map((a, i) => (
-              <div key={i} className="rounded-lg border border-border bg-card p-3">
-                <p className="font-display font-bold text-sm">{a.title}</p>
-                <p className="text-xs text-muted-foreground mt-1">{a.why}</p>
-              </div>
-            ))}
-          </div>
-          {mutation.data.warnings && (
-            <div className="rounded-md border border-amber-alert/40 bg-amber-alert/10 p-2.5 text-xs">
-              ⚠ {mutation.data.warnings}
-            </div>
-          )}
-        </div>
+    <button
+      onClick={toggle}
+      title={enabled ? "Disable alert notifications" : "Enable alert notifications"}
+      className={cn(
+        "inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider transition-colors",
+        enabled ? "text-accent" : "text-muted-foreground hover:text-accent",
       )}
-    </div>
+    >
+      {enabled ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+      <span className="hidden sm:inline">{enabled ? "Alerts on" : "Notify"}</span>
+    </button>
   );
 }
+
+function useAlertNotifications(entries: AlertEntry[]) {
+  const initialized = useRef(false);
+  useEffect(() => {
+    if (typeof window === "undefined" || !("Notification" in window)) return;
+    if (localStorage.getItem(LS_NOTIFY) !== "1" || Notification.permission !== "granted") return;
+
+    const seen: string[] = JSON.parse(localStorage.getItem(LS_NOTIFY_SEEN) || "[]");
+    const seenSet = new Set(seen);
+
+    const ids = entries.map((e) => e.kind === "shared" ? `s:${e.alert.id}` : `n:${e.alert.properties.id}`);
+
+    if (!initialized.current) {
+      // First mount: don't fire for pre-existing alerts; just record them
+      initialized.current = true;
+      localStorage.setItem(LS_NOTIFY_SEEN, JSON.stringify(ids.slice(0, 200)));
+      return;
+    }
+
+    for (let i = 0; i < entries.length; i++) {
+      const id = ids[i];
+      if (seenSet.has(id)) continue;
+      const e = entries[i];
+      const title = e.kind === "shared" ? alertTitle(e) : e.alert.properties.event;
+      const body = e.kind === "shared"
+        ? `${e.alert.areas.join(", ")} — ${e.alert.headline}`
+        : `${e.alert.properties.areaDesc}`;
+      try { new Notification(`⚠ ${title}`, { body, tag: id }); } catch {}
+      seenSet.add(id);
+    }
+    localStorage.setItem(LS_NOTIFY_SEEN, JSON.stringify(Array.from(seenSet).slice(-300)));
+  }, [entries]);
+}
+
 
 /* ---------------- Ticker (shows ALL alerts now) ---------------- */
 
