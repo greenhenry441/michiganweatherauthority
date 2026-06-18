@@ -22,6 +22,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
+import { IosInstallBanner } from "@/components/IosInstallBanner";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -186,6 +187,8 @@ function HomePage() {
   return (
     <div className="min-h-screen">
       <TickerBar entries={allAlerts} />
+      <IosInstallBanner />
+
 
       {/* Header */}
       <header className="border-b border-border/60 backdrop-blur-md bg-card/70 sticky top-0 z-40">
@@ -495,16 +498,24 @@ const LS_NOTIFY = "mwa.notify.enabled";
 const LS_NOTIFY_SEEN = "mwa.notify.seen";
 
 function NotifyToggle() {
-  const supported = typeof window !== "undefined" && "Notification" in window;
+  const [mounted, setMounted] = useState(false);
+  const [supported, setSupported] = useState(false);
   const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
-    if (!supported) return;
+    setMounted(true);
+    const sup = "Notification" in window;
+    setSupported(sup);
+    if (!sup) return;
     const stored = localStorage.getItem(LS_NOTIFY) === "1";
     setEnabled(stored && Notification.permission === "granted");
-  }, [supported]);
+  }, []);
 
-  if (!supported) return null;
+  if (!mounted || !supported) {
+    // Stable SSR/first-paint placeholder so hydration matches.
+    return <span className="inline-block w-[68px] h-4" aria-hidden />;
+  }
+
 
   const toggle = async () => {
     if (enabled) {

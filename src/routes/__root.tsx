@@ -78,9 +78,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: "Michigan Weather Authority" },
       { name: "description", content: "Live weather, forecasts, and alerts for every city in Michigan." },
+      { name: "theme-color", content: "#1e3a8a" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
+      { name: "apple-mobile-web-app-title", content: "MWA" },
       { property: "og:title", content: "Michigan Weather Authority" },
       { property: "og:description", content: "Live weather, forecasts, and alerts for every city in Michigan." },
       { property: "og:type", content: "website" },
@@ -92,25 +97,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      {
-        rel: "icon",
-        type: "image/svg+xml",
-        href:
-          "data:image/svg+xml;utf8," +
-          encodeURIComponent(
-            `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'>
-              <defs>
-                <linearGradient id='g' x1='0' x2='1' y1='0' y2='1'>
-                  <stop offset='0%' stop-color='#3b82f6'/>
-                  <stop offset='100%' stop-color='#1e3a8a'/>
-                </linearGradient>
-              </defs>
-              <rect width='64' height='64' rx='14' fill='url(#g)'/>
-              <path d='M20 30a10 10 0 0 1 19.6-3A8 8 0 1 1 42 43H22a7 7 0 0 1-2-13z' fill='#ffffff' opacity='0.95'/>
-              <path d='M34 33l-7 11h6l-2 8 8-12h-6l3-7z' fill='#facc15' stroke='#1e3a8a' stroke-width='1' stroke-linejoin='round'/>
-            </svg>`,
-          ),
-      },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "apple-touch-icon", href: "/icon-512.png" },
+      { rel: "icon", type: "image/png", sizes: "512x512", href: "/icon-512.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
