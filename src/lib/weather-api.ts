@@ -57,6 +57,10 @@ export interface NWSAlert {
     effective: string;
     expires: string;
     senderName: string;
+    status?: string; // Actual | Exercise | System | Test | Draft
+    messageType?: string; // Alert | Update | Cancel
+    category?: string; // Met (weather) | CivilEmergency | Safety | Security | Rescue | Fire | Health | Env | Transport | Infra | CBRNE | Other
+    response?: string;
   };
 }
 
@@ -78,9 +82,14 @@ export async function getForecast(url: string): Promise<Forecast> {
  * — we filter to MI-relevant zones (LSZ, LMZ, LHZ, LEZ).
  */
 export async function getMichiganAlerts(): Promise<NWSAlert[]> {
-  const [land, marine] = await Promise.all([
+  const [land, marine, tests] = await Promise.all([
+    // Active feed = status "Actual" only. This already includes non-weather / EAS
+    // emergencies (civil emergency, AMBER, evacuation, law-enforcement, etc.).
     fetch(`https://api.weather.gov/alerts/active?area=MI`, { headers: HEADERS }).then((r) => (r.ok ? r.json() : { features: [] })),
     fetch(`https://api.weather.gov/alerts/active?region=GL`, { headers: HEADERS }).then((r) => (r.ok ? r.json() : { features: [] })),
+    // The active feed deliberately omits test/system messages, so request them
+    // explicitly to surface EAS tests (Required Monthly/Weekly Test, demos).
+    fetch(`https://api.weather.gov/alerts?area=MI&status=test&limit=50`, { headers: HEADERS }).then((r) => (r.ok ? r.json() : { features: [] })),
   ]);
   const seen = new Set<string>();
   const out: NWSAlert[] = [];
@@ -100,6 +109,14 @@ export async function getMichiganAlerts(): Promise<NWSAlert[]> {
     return /\bmi\b|michigan|lake superior|lake huron|saginaw|whitefish|munising|grand traverse|keweenaw|st\.? clair|detroit river|mackinac|drummond|seul choix|point betsie|manistee|ludington|holland mi|south haven mi|st joseph mi|new buffalo|port huron|alpena|presque isle|rogers city|tawas|harbor beach|port austin/.test(a);
   });
   push(miMarine);
+  // Keep only test messages still inside their effective window so the list
+  // doesn't fill up with stale historical tests.
+  const now = Date.now();
+  const liveTests = (tests.features ?? []).filter((f: NWSAlert) => {
+    const exp = f.properties?.expires ? new Date(f.properties.expires).getTime() : 0;
+    return !exp || exp > now;
+  });
+  push(liveTests);
   return out;
 }
 

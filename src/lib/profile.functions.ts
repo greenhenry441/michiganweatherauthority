@@ -25,7 +25,10 @@ const updateSchema = z.object({
   notify_hourly_forecast: z.boolean().optional(),
   notify_marine: z.boolean().optional(),
   notify_only_my_area: z.boolean().optional(),
-  notify_categories: z.array(z.enum(["warning", "watch", "advisory", "statement"])).max(4).optional(),
+  notify_categories: z
+    .array(z.enum(["warning", "watch", "advisory", "statement", "no_non_weather", "no_test"]))
+    .max(6)
+    .optional(),
   notify_event_types: z.array(z.string().max(120)).max(60).optional(),
   min_severity: z.enum(["extreme", "severe", "moderate", "minor"]).optional(),
 });

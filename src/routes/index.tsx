@@ -98,13 +98,18 @@ function useAuthUser() {
 
 type NotifyCategory = "warning" | "watch" | "advisory" | "statement";
 type NotifySeverity = "extreme" | "severe" | "moderate" | "minor";
+// Non-weather (EAS) emergencies and test messages are ON by default ("automatically
+// received"). We persist an opt-OUT sentinel in notify_categories so existing rows
+// keep receiving them without a schema change.
+const OPT_OUT_NON_WEATHER = "no_non_weather";
+const OPT_OUT_TEST = "no_test";
 interface NotifyPrefs {
   notify_alerts: boolean;
   notify_forecast: boolean;
   notify_hourly_forecast: boolean;
   notify_marine: boolean;
   notify_only_my_area: boolean;
-  notify_categories: NotifyCategory[];
+  notify_categories: string[];
   notify_event_types: string[];
   min_severity: NotifySeverity;
 }
@@ -637,6 +642,26 @@ function entryIsMarine(e: AlertEntry): boolean {
   return /marine|lake (huron|michigan|superior|erie|ontario)|gale|small craft|beach hazard/.test(text);
 }
 
+// Test / demo / exercise messages (EAS RMT/RWT, etc.). Shared alerts are never tests.
+function entryIsTest(e: AlertEntry): boolean {
+  if (e.kind === "shared") return false;
+  const status = (e.alert.properties.status ?? "").toLowerCase();
+  if (status === "test" || status === "exercise" || status === "system") return true;
+  return /test message|required (monthly|weekly) test|practice|demo|\brmt\b|\brwt\b/.test(
+    e.alert.properties.event.toLowerCase(),
+  );
+}
+
+// Non-weather emergencies / EAS (NWS category != "Met"): civil emergency, AMBER, etc.
+function entryIsNonWeather(e: AlertEntry): boolean {
+  if (e.kind === "shared") return false;
+  const cat = (e.alert.properties.category ?? "").toLowerCase();
+  if (cat && cat !== "met") return true;
+  return /amber|child abduction|civil (emergency|danger)|law enforcement|evacuation|shelter in place|911|hazardous materials|radiological|nuclear power plant|local area emergency|administrative message|blue alert|silver alert/.test(
+    e.alert.properties.event.toLowerCase(),
+  );
+}
+
 function useAlertNotifications(entries: AlertEntry[], city: MichiganCity, prefs: NotifyPrefs | null) {
   const initialized = useRef(false);
   useEffect(() => {
@@ -669,6 +694,8 @@ function useAlertNotifications(entries: AlertEntry[], city: MichiganCity, prefs:
     if (!p.notify_alerts) return;
     const minRank = SEV_RANK_LOCAL[p.min_severity] ?? 1;
     const typeSet = new Set(p.notify_event_types.map((t) => t.toLowerCase()));
+    const easOn = !p.notify_categories.includes(OPT_OUT_NON_WEATHER);
+    const testOn = !p.notify_categories.includes(OPT_OUT_TEST);
 
     (async () => {
       const reg = "serviceWorker" in navigator ? await navigator.serviceWorker.getRegistration() : null;
@@ -678,19 +705,36 @@ function useAlertNotifications(entries: AlertEntry[], city: MichiganCity, prefs:
         const e = entries[i];
 
         const marine = entryIsMarine(e);
-        if (marine && !p.notify_marine) { seenSet.add(id); continue; }
-        if (p.notify_only_my_area && !marine && !entryMatchesArea(e, city)) { seenSet.add(id); continue; }
-        if (!p.notify_categories.includes(entryCategory(e))) { seenSet.add(id); continue; }
-        if ((SEV_RANK_LOCAL[entrySeverity(e)] ?? 0) < minRank) { seenSet.add(id); continue; }
-        const title = e.kind === "shared" ? alertTitle(e) : e.alert.properties.event;
-        if (typeSet.size > 0 && !typeSet.has(title.toLowerCase())) { seenSet.add(id); continue; }
+        const isTest = entryIsTest(e);
+        const isNonWeather = !isTest && entryIsNonWeather(e);
 
+        // Location gate applies to everything except marine zones.
+        if (p.notify_only_my_area && !marine && !entryMatchesArea(e, city)) { seenSet.add(id); continue; }
+
+        if (isTest) {
+          // EAS tests bypass the weather category/severity/event-type filters.
+          if (!testOn) { seenSet.add(id); continue; }
+        } else if (isNonWeather) {
+          // Non-weather EAS emergencies bypass the weather-oriented filters too.
+          if (!easOn) { seenSet.add(id); continue; }
+        } else {
+          if (marine && !p.notify_marine) { seenSet.add(id); continue; }
+          if (!p.notify_categories.includes(entryCategory(e))) { seenSet.add(id); continue; }
+          if ((SEV_RANK_LOCAL[entrySeverity(e)] ?? 0) < minRank) { seenSet.add(id); continue; }
+          if (typeSet.size > 0) {
+            const t = (e.kind === "shared" ? alertTitle(e) : e.alert.properties.event).toLowerCase();
+            if (!typeSet.has(t)) { seenSet.add(id); continue; }
+          }
+        }
+
+        const title = e.kind === "shared" ? alertTitle(e) : e.alert.properties.event;
+        const prefix = isTest ? "[TEST]" : isNonWeather ? "[EAS]" : "⚠";
         const body = e.kind === "shared"
           ? `${e.alert.areas.join(", ")} — ${e.alert.headline}`
           : `${e.alert.properties.areaDesc}`;
         try {
-          if (reg) reg.showNotification(`⚠ ${title}`, { body, tag: id, data: { url: "/" } });
-          else new Notification(`⚠ ${title}`, { body, tag: id });
+          if (reg) reg.showNotification(`${prefix} ${title}`, { body, tag: id, data: { url: "/" } });
+          else new Notification(`${prefix} ${title}`, { body, tag: id });
         } catch {}
         seenSet.add(id);
       }

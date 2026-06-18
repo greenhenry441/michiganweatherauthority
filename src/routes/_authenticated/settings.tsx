@@ -49,7 +49,7 @@ function SettingsPage() {
     notify_hourly_forecast: false,
     notify_marine: false,
     notify_only_my_area: true,
-    notify_categories: ["warning", "watch", "advisory", "statement"] as Array<"warning" | "watch" | "advisory" | "statement">,
+    notify_categories: ["warning", "watch", "advisory", "statement"] as string[],
     notify_event_types: [] as string[],
     min_severity: "moderate" as "extreme" | "severe" | "moderate" | "minor",
   });
@@ -193,6 +193,32 @@ function SettingsPage() {
           desc="Only get alert notifications when your home city or county is in the affected area."
           checked={form.notify_only_my_area}
           onChange={(v) => setForm((f) => ({ ...f, notify_only_my_area: v }))}
+        />
+        <ToggleRow
+          label="Non-weather emergency alerts (EAS)"
+          desc="Civil emergencies, AMBER/Silver alerts, evacuations, law-enforcement and other non-weather emergency messages."
+          checked={!form.notify_categories.includes("no_non_weather")}
+          onChange={(v) =>
+            setForm((f) => ({
+              ...f,
+              notify_categories: v
+                ? f.notify_categories.filter((x) => x !== "no_non_weather")
+                : Array.from(new Set([...f.notify_categories, "no_non_weather"])),
+            }))
+          }
+        />
+        <ToggleRow
+          label="Test & demo alerts"
+          desc="Required weekly/monthly tests (RWT/RMT) and EAS demonstration messages. These bypass the severity and category filters below."
+          checked={!form.notify_categories.includes("no_test")}
+          onChange={(v) =>
+            setForm((f) => ({
+              ...f,
+              notify_categories: v
+                ? f.notify_categories.filter((x) => x !== "no_test")
+                : Array.from(new Set([...f.notify_categories, "no_test"])),
+            }))
+          }
         />
 
         <div className="pt-2 space-y-2">
