@@ -65,7 +65,11 @@ function SettingsPage() {
         home_lon: p.home_lon ?? null,
         notify_alerts: !!p.notify_alerts,
         notify_forecast: !!p.notify_forecast,
+        notify_hourly_forecast: !!p.notify_hourly_forecast,
         notify_marine: !!p.notify_marine,
+        notify_only_my_area: p.notify_only_my_area ?? true,
+        notify_categories: (p.notify_categories ?? ["warning", "watch", "advisory", "statement"]) as any,
+        notify_event_types: (p.notify_event_types ?? []) as string[],
         min_severity: p.min_severity ?? "moderate",
       });
     }
