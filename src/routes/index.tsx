@@ -22,6 +22,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
+import { IosInstallBanner } from "@/components/IosInstallBanner";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -186,6 +187,8 @@ function HomePage() {
   return (
     <div className="min-h-screen">
       <TickerBar entries={allAlerts} />
+      <IosInstallBanner />
+
 
       {/* Header */}
       <header className="border-b border-border/60 backdrop-blur-md bg-card/70 sticky top-0 z-40">
