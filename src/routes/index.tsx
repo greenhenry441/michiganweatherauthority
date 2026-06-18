@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle, MapPin, Radio, RefreshCw, Search, Wind, Droplets,
-  Thermometer, Sunrise, Eye, Gauge, Megaphone, ListOrdered, Sparkles,
-  Sun, Activity, UserCircle2, FileText, LogIn, Sunset, Cloud,
+  Thermometer, Sunrise, Eye, Gauge, Megaphone, ListOrdered,
+  Sun, Activity, UserCircle2, FileText, LogIn, Sunset, Cloud, Bell, BellOff,
 } from "lucide-react";
 import { MICHIGAN_CITIES, type MichiganCity } from "@/lib/michigan-cities";
 import {
@@ -13,13 +13,14 @@ import {
 } from "@/lib/weather-api";
 import { useSharedAlerts, type SharedAlert } from "@/lib/alerts-store";
 import { getAlertType } from "@/lib/nws-alert-types";
-import { summarizeForecast } from "@/lib/ai-summary.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { toast } from "sonner";
+import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
