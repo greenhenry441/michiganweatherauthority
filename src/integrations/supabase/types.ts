@@ -26,6 +26,7 @@ export type Database = {
           instruction: string | null
           issued_at: string
           issuer: string
+          kind: string
           severity: string
           source: string
           type_id: string | null
@@ -41,6 +42,7 @@ export type Database = {
           instruction?: string | null
           issued_at?: string
           issuer?: string
+          kind?: string
           severity?: string
           source?: string
           type_id?: string | null
@@ -56,6 +58,7 @@ export type Database = {
           instruction?: string | null
           issued_at?: string
           issuer?: string
+          kind?: string
           severity?: string
           source?: string
           type_id?: string | null
@@ -75,12 +78,17 @@ export type Database = {
           min_severity: string
           notify_alerts: boolean
           notify_categories: string[]
+          notify_eas: boolean
           notify_event_types: string[]
           notify_forecast: boolean
           notify_hourly_forecast: boolean
           notify_marine: boolean
           notify_only_my_area: boolean
           updated_at: string
+          work_city: string | null
+          work_lat: number | null
+          work_lon: number | null
+          work_zip: string | null
         }
         Insert: {
           created_at?: string
@@ -94,12 +102,17 @@ export type Database = {
           min_severity?: string
           notify_alerts?: boolean
           notify_categories?: string[]
+          notify_eas?: boolean
           notify_event_types?: string[]
           notify_forecast?: boolean
           notify_hourly_forecast?: boolean
           notify_marine?: boolean
           notify_only_my_area?: boolean
           updated_at?: string
+          work_city?: string | null
+          work_lat?: number | null
+          work_lon?: number | null
+          work_zip?: string | null
         }
         Update: {
           created_at?: string
@@ -113,12 +126,17 @@ export type Database = {
           min_severity?: string
           notify_alerts?: boolean
           notify_categories?: string[]
+          notify_eas?: boolean
           notify_event_types?: string[]
           notify_forecast?: boolean
           notify_hourly_forecast?: boolean
           notify_marine?: boolean
           notify_only_my_area?: boolean
           updated_at?: string
+          work_city?: string | null
+          work_lat?: number | null
+          work_lon?: number | null
+          work_zip?: string | null
         }
         Relationships: []
       }
