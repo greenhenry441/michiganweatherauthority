@@ -13,6 +13,7 @@ import {
 } from "@/lib/weather-api";
 import { useSharedAlerts, type SharedAlert } from "@/lib/alerts-store";
 import { getAlertType } from "@/lib/nws-alert-types";
+import { getEasType, MWA_NETWORK_TYPE } from "@/lib/eas-alert-types";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,8 +61,12 @@ function severityFromShared(a: SharedAlert) {
 
 function alertTitle(entry: AlertEntry): string {
   if (entry.kind === "shared") {
-    const t = entry.alert.type_id ? getAlertType(entry.alert.type_id) : undefined;
-    return t?.name ?? entry.alert.custom_name ?? "Weather Alert";
+    const id = entry.alert.type_id;
+    if (id) {
+      const t = getAlertType(id) ?? getEasType(id);
+      if (t) return t.name;
+    }
+    return entry.alert.custom_name ?? "Alert";
   }
   return entry.alert.properties.event;
 }
@@ -103,10 +108,13 @@ interface NotifyPrefs {
   notify_forecast: boolean;
   notify_hourly_forecast: boolean;
   notify_marine: boolean;
+  notify_eas: boolean;
   notify_only_my_area: boolean;
   notify_categories: NotifyCategory[];
   notify_event_types: string[];
   min_severity: NotifySeverity;
+  work_city?: string | null;
+  work_county?: string | null;
 }
 
 const LS_CITY = "mwa.home.city";
