@@ -208,31 +208,32 @@ function HomePage() {
     [shared, nwsAlerts.data],
   );
 
+  const weatherAlerts = useMemo(
+    () => allAlerts.filter((a) => a.kind === "nws" || (a.kind === "shared" && (a.alert.kind ?? "weather") === "weather")),
+    [allAlerts],
+  );
+  const easAlerts = useMemo(
+    () => allAlerts.filter((a) => a.kind === "shared" && (a.alert.kind === "eas" || a.alert.kind === "mwa-network")),
+    [allAlerts],
+  );
+
   useAlertNotifications(allAlerts, city, prefs);
   useForecastNotifications(city, weather.data, prefs);
 
-  const cityAlerts = useMemo(() => {
-    return allAlerts.filter((a) => {
-      if (a.kind === "shared") {
-        return a.alert.areas.some(
-          (x) =>
-            x.toLowerCase() === "statewide" ||
-            x.toLowerCase().includes(city.name.toLowerCase()) ||
-            x.toLowerCase().includes(city.county.toLowerCase()),
-        );
-      }
-      const desc = a.alert.properties.areaDesc.toLowerCase();
-      return desc.includes(city.county.toLowerCase()) || desc.includes(city.name.toLowerCase());
-    });
-  }, [allAlerts, city]);
+  const cityAlerts = useMemo(
+    () => weatherAlerts.filter((a) => entryMatchesArea(a, city)),
+    [weatherAlerts, city],
+  );
 
   const current = weather.data?.hourly.properties.periods[0];
   const today = weather.data?.forecast.properties.periods[0];
 
   return (
     <div className="min-h-screen">
-      <TickerBar entries={allAlerts} city={city} />
+      <TickerBar entries={weatherAlerts} city={city} />
+      {easAlerts.length > 0 && <EasTickerBar entries={easAlerts} />}
       <IosInstallBanner />
+
 
 
       {/* Header */}
