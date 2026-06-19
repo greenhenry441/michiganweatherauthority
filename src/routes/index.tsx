@@ -672,6 +672,7 @@ function useAlertNotifications(entries: AlertEntry[], city: MichiganCity, prefs:
       notify_forecast: false,
       notify_hourly_forecast: false,
       notify_marine: true,
+      notify_eas: true,
       notify_only_my_area: true,
       notify_categories: ["warning", "watch", "advisory", "statement"],
       notify_event_types: [],
