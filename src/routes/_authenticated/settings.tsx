@@ -37,17 +37,23 @@ function SettingsPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const [search, setSearch] = useState("");
+  const [searchHome, setSearchHome] = useState("");
+  const [searchWork, setSearchWork] = useState("");
   const [form, setForm] = useState({
     display_name: "",
     home_zip: "",
     home_city: "",
     home_lat: null as number | null,
     home_lon: null as number | null,
+    work_zip: "",
+    work_city: "",
+    work_lat: null as number | null,
+    work_lon: null as number | null,
     notify_alerts: true,
     notify_forecast: false,
     notify_hourly_forecast: false,
     notify_marine: false,
+    notify_eas: true,
     notify_only_my_area: true,
     notify_categories: ["warning", "watch", "advisory", "statement"] as Array<"warning" | "watch" | "advisory" | "statement">,
     notify_event_types: [] as string[],
@@ -63,10 +69,15 @@ function SettingsPage() {
         home_city: p.home_city ?? "",
         home_lat: p.home_lat ?? null,
         home_lon: p.home_lon ?? null,
+        work_zip: p.work_zip ?? "",
+        work_city: p.work_city ?? "",
+        work_lat: p.work_lat ?? null,
+        work_lon: p.work_lon ?? null,
         notify_alerts: !!p.notify_alerts,
         notify_forecast: !!p.notify_forecast,
         notify_hourly_forecast: !!p.notify_hourly_forecast,
         notify_marine: !!p.notify_marine,
+        notify_eas: p.notify_eas ?? true,
         notify_only_my_area: p.notify_only_my_area ?? true,
         notify_categories: (p.notify_categories ?? ["warning", "watch", "advisory", "statement"]) as any,
         notify_event_types: (p.notify_event_types ?? []) as string[],
@@ -75,13 +86,8 @@ function SettingsPage() {
     }
   }, [profile.data]);
 
-  const filtered = useMemo(() => {
-    if (!search.trim()) return [];
-    const q = search.toLowerCase();
-    return MICHIGAN_CITIES.filter((c) =>
-      (c.name + " " + c.county + " " + c.zip).toLowerCase().includes(q),
-    ).slice(0, 8);
-  }, [search]);
+  const filteredHome = useMemo(() => filterCities(searchHome), [searchHome]);
+  const filteredWork = useMemo(() => filterCities(searchWork), [searchWork]);
 
   const signOut = async () => {
     await qc.cancelQueries();
@@ -111,51 +117,44 @@ function SettingsPage() {
       <section className="rounded-xl border border-border bg-card p-5 space-y-4">
         <div className="flex items-center gap-2 text-accent">
           <MapPin className="h-4 w-4" />
-          <h2 className="font-display tracking-wider uppercase text-sm">Home Location</h2>
-        </div>
-
-        <div className="grid sm:grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label className="text-xs font-mono uppercase tracking-wider">Display name</Label>
-            <Input value={form.display_name} onChange={(e) => setForm((f) => ({ ...f, display_name: e.target.value }))} />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs font-mono uppercase tracking-wider">Saved city</Label>
-            <Input readOnly value={form.home_city ? `${form.home_city} (${form.home_zip})` : "— none selected —"} />
-          </div>
+          <h2 className="font-display tracking-wider uppercase text-sm">Your Locations</h2>
         </div>
 
         <div className="space-y-1.5">
-          <Label className="text-xs font-mono uppercase tracking-wider">Search & set your home city</Label>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Type a Michigan city, ZIP, or county…"
-              className="pl-9"
-            />
-          </div>
-          {filtered.length > 0 && (
-            <div className="rounded-md border border-border bg-popover divide-y divide-border/60 max-h-64 overflow-y-auto">
-              {filtered.map((c) => (
-                <button
-                  key={c.zip}
-                  type="button"
-                  onClick={() => {
-                    setForm((f) => ({ ...f, home_zip: c.zip, home_city: c.name, home_lat: c.lat, home_lon: c.lon }));
-                    setSearch("");
-                    toast.message(`${c.name} selected — click Save to remember it.`);
-                  }}
-                  className="w-full text-left px-3 py-2 text-sm hover:bg-accent/10 flex justify-between gap-2"
-                >
-                  <span className="flex items-center gap-2"><MapPin className="h-3 w-3 text-muted-foreground" />{c.name}</span>
-                  <span className="text-[10px] font-mono text-muted-foreground">{c.county} · {c.zip}</span>
-                </button>
-              ))}
-            </div>
-          )}
+          <Label className="text-xs font-mono uppercase tracking-wider">Display name</Label>
+          <Input value={form.display_name} onChange={(e) => setForm((f) => ({ ...f, display_name: e.target.value }))} />
         </div>
+
+        <CitySearchField
+          label="Home city"
+          saved={form.home_city ? `${form.home_city} (${form.home_zip})` : null}
+          search={searchHome}
+          onSearch={setSearchHome}
+          results={filteredHome}
+          onPick={(c) => {
+            setForm((f) => ({ ...f, home_zip: c.zip, home_city: c.name, home_lat: c.lat, home_lon: c.lon }));
+            setSearchHome("");
+            toast.message(`${c.name} set as home — click Save to remember it.`);
+          }}
+          onClear={() => setForm((f) => ({ ...f, home_zip: "", home_city: "", home_lat: null, home_lon: null }))}
+        />
+
+        <CitySearchField
+          label="Work city (optional)"
+          saved={form.work_city ? `${form.work_city} (${form.work_zip})` : null}
+          search={searchWork}
+          onSearch={setSearchWork}
+          results={filteredWork}
+          onPick={(c) => {
+            setForm((f) => ({ ...f, work_zip: c.zip, work_city: c.name, work_lat: c.lat, work_lon: c.lon }));
+            setSearchWork("");
+            toast.message(`${c.name} set as work — click Save to remember it.`);
+          }}
+          onClear={() => setForm((f) => ({ ...f, work_zip: "", work_city: "", work_lat: null, work_lon: null }))}
+        />
+        <p className="text-[10px] text-muted-foreground">
+          When "Only my area" is on, you get alerts for both your home and work city / county.
+        </p>
       </section>
 
       <section className="rounded-xl border border-border bg-card p-5 space-y-4">
@@ -189,8 +188,14 @@ function SettingsPage() {
           onChange={(v) => setForm((f) => ({ ...f, notify_marine: v }))}
         />
         <ToggleRow
+          label="EAS / Emergency broadcasts"
+          desc="AMBER, civil emergency, evacuation, and EAS tests on the separate EAS ticker."
+          checked={form.notify_eas}
+          onChange={(v) => setForm((f) => ({ ...f, notify_eas: v }))}
+        />
+        <ToggleRow
           label="Only my area"
-          desc="Only get alert notifications when your home city or county is in the affected area."
+          desc="Only notify when your home or work city / county is in the affected area."
           checked={form.notify_only_my_area}
           onChange={(v) => setForm((f) => ({ ...f, notify_only_my_area: v }))}
         />
@@ -270,12 +275,94 @@ function SettingsPage() {
         </div>
       </section>
 
-      <div className="flex gap-2 justify-end">
+      <div className="flex flex-wrap gap-2 justify-end">
+        <Button variant="outline" type="button" onClick={testNotification} size="lg">
+          <Bell className="h-4 w-4 mr-2" /> Send test notification
+        </Button>
         <Button onClick={() => save.mutate(form)} disabled={save.isPending} size="lg">
           <Save className="h-4 w-4 mr-2" /> {save.isPending ? "Saving…" : "Save changes"}
         </Button>
       </div>
       <Toaster />
+    </div>
+  );
+}
+
+async function testNotification() {
+  if (typeof window === "undefined" || !("Notification" in window)) {
+    toast.error("Your browser doesn't support notifications");
+    return;
+  }
+  let perm = Notification.permission;
+  if (perm === "default") perm = await Notification.requestPermission();
+  if (perm !== "granted") {
+    toast.error("Notifications are blocked by your browser");
+    return;
+  }
+  try {
+    const reg = "serviceWorker" in navigator ? await navigator.serviceWorker.getRegistration() : null;
+    const title = "MWA test notification";
+    const body = "If you can read this, your device is set up for MWA alerts.";
+    if (reg) reg.showNotification(title, { body, tag: "mwa-test", data: { url: "/" } });
+    else new Notification(title, { body, tag: "mwa-test" });
+    toast.success("Test notification sent");
+  } catch (e) {
+    toast.error((e as Error).message);
+  }
+}
+
+function filterCities(q: string) {
+  if (!q.trim()) return [];
+  const term = q.toLowerCase();
+  return MICHIGAN_CITIES.filter((c) =>
+    (c.name + " " + c.county + " " + c.zip).toLowerCase().includes(term),
+  ).slice(0, 8);
+}
+
+function CitySearchField({
+  label, saved, search, onSearch, results, onPick, onClear,
+}: {
+  label: string;
+  saved: string | null;
+  search: string;
+  onSearch: (v: string) => void;
+  results: ReturnType<typeof filterCities>;
+  onPick: (c: ReturnType<typeof filterCities>[number]) => void;
+  onClear: () => void;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-xs font-mono uppercase tracking-wider">{label}</Label>
+      <div className="flex gap-2">
+        <Input readOnly value={saved ?? "— none selected —"} />
+        {saved && (
+          <Button type="button" variant="ghost" size="sm" onClick={onClear}>Clear</Button>
+        )}
+      </div>
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+        <Input
+          value={search}
+          onChange={(e) => onSearch(e.target.value)}
+          placeholder="Type a Michigan city, ZIP, or county…"
+          className="pl-9"
+        />
+      </div>
+      {results.length > 0 && (
+        <div className="rounded-md border border-border bg-popover divide-y divide-border/60 max-h-64 overflow-y-auto">
+          {results.map((c) => (
+            <button
+              key={c.zip}
+              type="button"
+              onClick={() => onPick(c)}
+              className="w-full text-left px-3 py-2 text-sm hover:bg-accent/10 flex justify-between gap-2"
+            >
+              <span className="flex items-center gap-2"><MapPin className="h-3 w-3 text-muted-foreground" />{c.name}</span>
+              <span className="text-[10px] font-mono text-muted-foreground">{c.county} · {c.zip}</span>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -64,18 +64,18 @@ function AuthPage() {
     }
   };
 
-  const signInGoogle = async () => {
+  const signInOAuth = async (provider: "google" | "apple") => {
     setBusy(true);
     try {
-      const result = await lovable.auth.signInWithOAuth("google", {
+      const result = await lovable.auth.signInWithOAuth(provider, {
         redirect_uri: window.location.origin,
       });
       if (result.error) {
-        toast.error(result.error.message ?? "Google sign-in failed");
+        toast.error(result.error.message ?? `${provider} sign-in failed`);
         setBusy(false);
         return;
       }
-      if (result.redirected) return; // browser navigating away
+      if (result.redirected) return;
       nav({ to: "/" });
     } catch (err) {
       toast.error((err as Error).message);
@@ -102,15 +102,23 @@ function AuthPage() {
             </div>
           </div>
 
-          <Button type="button" variant="outline" onClick={signInGoogle} disabled={busy} className="w-full">
-            <svg className="h-4 w-4 mr-2" viewBox="0 0 48 48" aria-hidden>
-              <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.4-.4-3.5z"/>
-              <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.4 6.3 14.7z"/>
-              <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.5-5.2l-6.2-5.2c-2 1.4-4.6 2.4-7.3 2.4-5.2 0-9.7-3.4-11.3-8l-6.5 5C9.5 39.5 16.2 44 24 44z"/>
-              <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.3 5.7l6.2 5.2C40.7 36.5 44 30.8 44 24c0-1.2-.1-2.4-.4-3.5z"/>
-            </svg>
-            Continue with Google
-          </Button>
+          <div className="grid gap-2">
+            <Button type="button" variant="outline" onClick={() => signInOAuth("google")} disabled={busy} className="w-full">
+              <svg className="h-4 w-4 mr-2" viewBox="0 0 48 48" aria-hidden>
+                <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.6-6 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.4-.4-3.5z"/>
+                <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.4 6.3 14.7z"/>
+                <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.5-5.2l-6.2-5.2c-2 1.4-4.6 2.4-7.3 2.4-5.2 0-9.7-3.4-11.3-8l-6.5 5C9.5 39.5 16.2 44 24 44z"/>
+                <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.3 5.7l6.2 5.2C40.7 36.5 44 30.8 44 24c0-1.2-.1-2.4-.4-3.5z"/>
+              </svg>
+              Continue with Google
+            </Button>
+            <Button type="button" variant="outline" onClick={() => signInOAuth("apple")} disabled={busy} className="w-full">
+              <svg className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                <path d="M16.365 1.43c0 1.14-.46 2.23-1.21 3.04-.81.87-2.13 1.55-3.21 1.46-.14-1.11.41-2.27 1.13-3.04.83-.88 2.25-1.54 3.29-1.46zM20.5 17.05c-.59 1.31-.87 1.89-1.63 3.04-1.06 1.61-2.56 3.62-4.42 3.64-1.65.02-2.07-1.08-4.31-1.06-2.24.01-2.71 1.08-4.36 1.06-1.86-.02-3.28-1.83-4.34-3.44C-.92 16.79-1.33 11.42 1.04 8.5c1.6-2.04 4.13-2.66 5.74-2.7 1.7-.05 3.31 1.15 4.31 1.15 1 0 2.96-1.42 4.99-1.21.85.04 3.24.34 4.78 2.6-.13.08-2.85 1.66-2.82 4.96.04 3.94 3.47 5.26 3.51 5.27-.03.09-.55 1.88-1.83 4.38h.77z"/>
+              </svg>
+              Continue with Apple
+            </Button>
+          </div>
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-border" /></div>

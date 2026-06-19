@@ -13,6 +13,7 @@ import {
 } from "@/lib/weather-api";
 import { useSharedAlerts, type SharedAlert } from "@/lib/alerts-store";
 import { getAlertType } from "@/lib/nws-alert-types";
+import { getEasType, MWA_NETWORK_TYPE } from "@/lib/eas-alert-types";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -60,8 +61,12 @@ function severityFromShared(a: SharedAlert) {
 
 function alertTitle(entry: AlertEntry): string {
   if (entry.kind === "shared") {
-    const t = entry.alert.type_id ? getAlertType(entry.alert.type_id) : undefined;
-    return t?.name ?? entry.alert.custom_name ?? "Weather Alert";
+    const id = entry.alert.type_id;
+    if (id) {
+      const t = getAlertType(id) ?? getEasType(id);
+      if (t) return t.name;
+    }
+    return entry.alert.custom_name ?? "Alert";
   }
   return entry.alert.properties.event;
 }
@@ -103,10 +108,13 @@ interface NotifyPrefs {
   notify_forecast: boolean;
   notify_hourly_forecast: boolean;
   notify_marine: boolean;
+  notify_eas: boolean;
   notify_only_my_area: boolean;
   notify_categories: NotifyCategory[];
   notify_event_types: string[];
   min_severity: NotifySeverity;
+  work_city?: string | null;
+  work_county?: string | null;
 }
 
 const LS_CITY = "mwa.home.city";
@@ -135,7 +143,7 @@ function HomePage() {
     (async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("home_zip, home_city, home_lat, home_lon, notify_alerts, notify_forecast, notify_hourly_forecast, notify_marine, notify_only_my_area, notify_categories, notify_event_types, min_severity")
+        .select("home_zip, home_city, home_lat, home_lon, work_zip, work_city, notify_alerts, notify_forecast, notify_hourly_forecast, notify_marine, notify_eas, notify_only_my_area, notify_categories, notify_event_types, min_severity")
         .eq("id", user.id)
         .maybeSingle();
       if (cancelled || !data) return;
@@ -144,15 +152,19 @@ function HomePage() {
         const match = MICHIGAN_CITIES.find((c) => c.zip === d.home_zip);
         if (match) setCity(match);
       }
+      const workMatch = d.work_zip ? MICHIGAN_CITIES.find((c) => c.zip === d.work_zip) : null;
       setPrefs({
         notify_alerts: !!d.notify_alerts,
         notify_forecast: !!d.notify_forecast,
         notify_hourly_forecast: !!d.notify_hourly_forecast,
         notify_marine: !!d.notify_marine,
+        notify_eas: d.notify_eas ?? true,
         notify_only_my_area: d.notify_only_my_area ?? true,
         notify_categories: d.notify_categories ?? ["warning", "watch", "advisory", "statement"],
         notify_event_types: d.notify_event_types ?? [],
         min_severity: d.min_severity ?? "moderate",
+        work_city: workMatch?.name ?? d.work_city ?? null,
+        work_county: workMatch?.county ?? null,
       });
     })();
     return () => { cancelled = true; };
@@ -196,31 +208,32 @@ function HomePage() {
     [shared, nwsAlerts.data],
   );
 
+  const weatherAlerts = useMemo(
+    () => allAlerts.filter((a) => a.kind === "nws" || (a.kind === "shared" && (a.alert.kind ?? "weather") === "weather")),
+    [allAlerts],
+  );
+  const easAlerts = useMemo(
+    () => allAlerts.filter((a) => a.kind === "shared" && (a.alert.kind === "eas" || a.alert.kind === "mwa-network")),
+    [allAlerts],
+  );
+
   useAlertNotifications(allAlerts, city, prefs);
   useForecastNotifications(city, weather.data, prefs);
 
-  const cityAlerts = useMemo(() => {
-    return allAlerts.filter((a) => {
-      if (a.kind === "shared") {
-        return a.alert.areas.some(
-          (x) =>
-            x.toLowerCase() === "statewide" ||
-            x.toLowerCase().includes(city.name.toLowerCase()) ||
-            x.toLowerCase().includes(city.county.toLowerCase()),
-        );
-      }
-      const desc = a.alert.properties.areaDesc.toLowerCase();
-      return desc.includes(city.county.toLowerCase()) || desc.includes(city.name.toLowerCase());
-    });
-  }, [allAlerts, city]);
+  const cityAlerts = useMemo(
+    () => weatherAlerts.filter((a) => entryMatchesArea(a, city)),
+    [weatherAlerts, city],
+  );
 
   const current = weather.data?.hourly.properties.periods[0];
   const today = weather.data?.forecast.properties.periods[0];
 
   return (
     <div className="min-h-screen">
-      <TickerBar entries={allAlerts} city={city} />
+      <TickerBar entries={weatherAlerts} city={city} />
+      {easAlerts.length > 0 && <EasTickerBar entries={easAlerts} />}
       <IosInstallBanner />
+
 
 
       {/* Header */}
@@ -617,17 +630,21 @@ function entrySeverity(e: AlertEntry): NotifySeverity {
   return e.alert.properties.event.toLowerCase().includes("warning") ? "severe" : "moderate";
 }
 
-function entryMatchesArea(e: AlertEntry, city: MichiganCity): boolean {
+function matchesPlace(e: AlertEntry, name: string, county: string): boolean {
+  const n = name.toLowerCase(), c = county.toLowerCase();
   if (e.kind === "shared") {
     return e.alert.areas.some(
-      (x) =>
-        x.toLowerCase() === "statewide" ||
-        x.toLowerCase().includes(city.name.toLowerCase()) ||
-        x.toLowerCase().includes(city.county.toLowerCase()),
+      (x) => x.toLowerCase() === "statewide" || x.toLowerCase().includes(n) || x.toLowerCase().includes(c),
     );
   }
   const desc = e.alert.properties.areaDesc.toLowerCase();
-  return desc.includes(city.county.toLowerCase()) || desc.includes(city.name.toLowerCase());
+  return desc.includes(c) || desc.includes(n);
+}
+
+function entryMatchesArea(e: AlertEntry, city: MichiganCity, work?: { name?: string | null; county?: string | null } | null): boolean {
+  if (matchesPlace(e, city.name, city.county)) return true;
+  if (work?.name && work?.county && matchesPlace(e, work.name, work.county)) return true;
+  return false;
 }
 
 function entryIsMarine(e: AlertEntry): boolean {
@@ -660,6 +677,7 @@ function useAlertNotifications(entries: AlertEntry[], city: MichiganCity, prefs:
       notify_forecast: false,
       notify_hourly_forecast: false,
       notify_marine: true,
+      notify_eas: true,
       notify_only_my_area: true,
       notify_categories: ["warning", "watch", "advisory", "statement"],
       notify_event_types: [],
@@ -676,21 +694,28 @@ function useAlertNotifications(entries: AlertEntry[], city: MichiganCity, prefs:
         const id = ids[i];
         if (seenSet.has(id)) continue;
         const e = entries[i];
+        const isEas = e.kind === "shared" && (e.alert.kind === "eas" || e.alert.kind === "mwa-network");
 
-        const marine = entryIsMarine(e);
-        if (marine && !p.notify_marine) { seenSet.add(id); continue; }
-        if (p.notify_only_my_area && !marine && !entryMatchesArea(e, city)) { seenSet.add(id); continue; }
-        if (!p.notify_categories.includes(entryCategory(e))) { seenSet.add(id); continue; }
-        if ((SEV_RANK_LOCAL[entrySeverity(e)] ?? 0) < minRank) { seenSet.add(id); continue; }
+        if (isEas) {
+          if (!p.notify_eas) { seenSet.add(id); continue; }
+        } else {
+          const marine = entryIsMarine(e);
+          if (marine && !p.notify_marine) { seenSet.add(id); continue; }
+          if (p.notify_only_my_area && !marine && !entryMatchesArea(e, city, { name: p.work_city, county: p.work_county })) { seenSet.add(id); continue; }
+          if (!p.notify_categories.includes(entryCategory(e))) { seenSet.add(id); continue; }
+          if ((SEV_RANK_LOCAL[entrySeverity(e)] ?? 0) < minRank) { seenSet.add(id); continue; }
+          const title = e.kind === "shared" ? alertTitle(e) : e.alert.properties.event;
+          if (typeSet.size > 0 && !typeSet.has(title.toLowerCase())) { seenSet.add(id); continue; }
+        }
+
         const title = e.kind === "shared" ? alertTitle(e) : e.alert.properties.event;
-        if (typeSet.size > 0 && !typeSet.has(title.toLowerCase())) { seenSet.add(id); continue; }
-
         const body = e.kind === "shared"
           ? `${e.alert.areas.join(", ")} — ${e.alert.headline}`
           : `${e.alert.properties.areaDesc}`;
         try {
-          if (reg) reg.showNotification(`⚠ ${title}`, { body, tag: id, data: { url: "/" } });
-          else new Notification(`⚠ ${title}`, { body, tag: id });
+          const prefix = isEas ? "🚨" : "⚠";
+          if (reg) reg.showNotification(`${prefix} ${title}`, { body, tag: id, data: { url: "/" } });
+          else new Notification(`${prefix} ${title}`, { body, tag: id });
         } catch {}
         seenSet.add(id);
       }
@@ -712,7 +737,8 @@ type WeatherBundle = ReturnType<typeof Object> & {
 function useForecastNotifications(city: MichiganCity, weather: WeatherBundle | undefined, prefs: NotifyPrefs | null) {
   useEffect(() => {
     if (typeof window === "undefined" || !("Notification" in window) || !weather || !prefs) return;
-    if (localStorage.getItem(LS_NOTIFY) !== "1" || Notification.permission !== "granted") return;
+    if (Notification.permission !== "granted") return;
+    if (!prefs.notify_forecast && !prefs.notify_hourly_forecast) return;
 
     const send = async (title: string, body: string, tag: string) => {
       try {
@@ -764,7 +790,57 @@ function useForecastNotifications(city: MichiganCity, weather: WeatherBundle | u
 }
 
 
+/* ---------------- EAS / Emergency ticker (separate from weather) ---------------- */
+
+function EasTickerBar({ entries }: { entries: AlertEntry[] }) {
+  const items = entries.map((e) => {
+    if (e.kind === "shared") {
+      const isNetwork = e.alert.kind === "mwa-network";
+      return {
+        title: alertTitle(e),
+        meta: `${e.alert.areas.join(", ")} — ${e.alert.headline}`,
+        isNetwork,
+      };
+    }
+    return { title: "", meta: "", isNetwork: false };
+  });
+
+  const hasNetwork = items.some((i) => i.isNetwork);
+  const tierBg = hasNetwork && items.every((i) => i.isNetwork)
+    ? "bg-accent text-white border-accent"
+    : "bg-amber-alert text-black border-amber-alert";
+  const label = items.every((i) => i.isNetwork) ? "MWA NETWORK" : "EAS / EMERGENCY";
+
+  const doubled = [...items, ...items, ...items];
+
+  return (
+    <div className="border-b overflow-hidden">
+      <div className="flex items-stretch max-w-[100vw]">
+        <div className={cn("flex-none px-3 grid place-items-center text-[11px] font-mono font-bold uppercase tracking-wider gap-1.5 border-r", tierBg)}>
+          <span className="flex items-center gap-1.5">
+            <Megaphone className="h-3 w-3 alert-pulse" /> {label} · {entries.length}
+          </span>
+        </div>
+        <div className="overflow-hidden flex-1 group border-y bg-amber-alert/5 border-amber-alert/30">
+          <div className="ticker-fast whitespace-nowrap flex gap-8 py-2 group-hover:[animation-play-state:paused]">
+            {doubled.map((t, i) => (
+              <span key={i} className="text-xs font-display tracking-wider font-semibold uppercase flex items-center gap-2">
+                <span className={cn("font-bold", t.isNetwork ? "text-accent" : "text-amber-alert")}>
+                  {t.isNetwork ? "📡" : "🚨"} {t.title}
+                </span>
+                <span className="text-muted-foreground normal-case font-sans font-normal tracking-normal">— {t.meta}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+        <AllAlertsDialog entries={entries} label={`Read EAS (${entries.length})`} tickerStyle />
+      </div>
+    </div>
+  );
+}
+
 /* ---------------- Ticker (shows ALL alerts now) ---------------- */
+
 
 function TickerBar({ entries, city }: { entries: AlertEntry[]; city?: MichiganCity }) {
   const items = entries.map((e) => {

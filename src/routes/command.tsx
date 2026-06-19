@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { Radio, Send, Trash2, Lock, AlertTriangle, ArrowLeft, Sparkles } from "lucide-react";
+import { Radio, Send, Trash2, Lock, AlertTriangle, ArrowLeft, Sparkles, Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,8 +16,9 @@ import {
   Tabs, TabsContent, TabsList, TabsTrigger,
 } from "@/components/ui/tabs";
 import { NWS_ALERT_TYPES, getAlertType, type AlertCategory, type AlertSeverity } from "@/lib/nws-alert-types";
+import { EAS_ALERT_TYPES, MWA_NETWORK_TYPE, getEasType } from "@/lib/eas-alert-types";
+import { MICHIGAN_COUNTIES } from "@/lib/michigan-counties";
 import { useSharedAlerts } from "@/lib/alerts-store";
-import { MICHIGAN_CITIES } from "@/lib/michigan-cities";
 import { issueAlert, cancelAlert } from "@/lib/admin-alerts.functions";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
@@ -34,6 +35,7 @@ export const Route = createFileRoute("/command")({
 });
 
 const ACCESS_CODE = "mwa-admin";
+type AlertKind = "weather" | "eas" | "mwa-network";
 
 function CommandPage() {
   const [unlocked, setUnlocked] = useState(false);
@@ -49,7 +51,7 @@ function CommandPage() {
           </div>
           <h1 className="font-display text-2xl">MWA Command Center</h1>
           <p className="text-sm text-muted-foreground">
-            Enter operator access code to issue manual weather alerts.
+            Enter operator access code to issue manual alerts.
           </p>
           <form
             onSubmit={(e) => {
@@ -88,10 +90,10 @@ function CommandConsole({ code }: { code: string }) {
   const issueFn = useServerFn(issueAlert);
   const cancelFn = useServerFn(cancelAlert);
 
-  // shared
+  const [kind, setKind] = useState<AlertKind>("weather");
   const [mode, setMode] = useState<"template" | "custom">("template");
   const [headline, setHeadline] = useState("");
-  const [areas, setAreas] = useState("Statewide");
+  const [areas, setAreas] = useState<string[]>(["Statewide"]);
   const [description, setDescription] = useState("");
   const [instruction, setInstruction] = useState("");
   const [scheduleMode, setScheduleMode] = useState<"duration" | "window">("duration");
@@ -102,15 +104,15 @@ function CommandConsole({ code }: { code: string }) {
   const [issuer, setIssuer] = useState("MWA Operations");
   const [submitting, setSubmitting] = useState(false);
 
-  // template fields
   const [typeId, setTypeId] = useState(NWS_ALERT_TYPES[0].id);
+  const [easTypeId, setEasTypeId] = useState(EAS_ALERT_TYPES[0].id);
 
-  // custom fields
   const [customName, setCustomName] = useState("");
   const [customCategory, setCustomCategory] = useState<AlertCategory>("statement");
   const [customSeverity, setCustomSeverity] = useState<AlertSeverity>("moderate");
 
   const selectedTemplate = getAlertType(typeId);
+  const selectedEas = getEasType(easTypeId);
 
   const issue = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,29 +120,40 @@ function CommandConsole({ code }: { code: string }) {
       toast.error("Headline and description are required");
       return;
     }
-    if (mode === "custom" && !customName.trim()) {
+    if (kind === "weather" && mode === "custom" && !customName.trim()) {
       toast.error("Custom alert name is required");
       return;
     }
-    const areaList = areas.split(",").map((a) => a.trim()).filter(Boolean);
+    if (areas.length === 0) {
+      toast.error("Select at least one area");
+      return;
+    }
     setSubmitting(true);
     try {
-      const payload =
-        mode === "template"
+      let payload: any;
+      if (kind === "weather") {
+        payload = mode === "template"
           ? {
-              code,
-              typeId,
-              customName: null,
+              kind, code, typeId, customName: null,
               category: (selectedTemplate?.category ?? "statement") as AlertCategory,
               severity: (selectedTemplate?.severity ?? "minor") as AlertSeverity,
             }
           : {
-              code,
-              typeId: null,
-              customName: customName.trim(),
-              category: customCategory,
-              severity: customSeverity,
+              kind, code, typeId: null, customName: customName.trim(),
+              category: customCategory, severity: customSeverity,
             };
+      } else if (kind === "eas") {
+        payload = {
+          kind, code, typeId: easTypeId, customName: null,
+          category: (selectedEas?.category ?? "statement") as AlertCategory,
+          severity: (selectedEas?.severity ?? "minor") as AlertSeverity,
+        };
+      } else {
+        payload = {
+          kind, code, typeId: MWA_NETWORK_TYPE.id, customName: customName.trim() || "MWA Network Notification",
+          category: customCategory, severity: customSeverity,
+        };
+      }
       const schedule =
         scheduleMode === "duration"
           ? { durationMinutes: Number(duration), startsImmediately: true, startsAt: null, endsAt: null }
@@ -161,15 +174,13 @@ function CommandConsole({ code }: { code: string }) {
           headline: headline.trim(),
           description: description.trim(),
           instruction: instruction.trim() || null,
-          areas: areaList,
+          areas,
           issuer: issuer.trim() || "MWA",
           ...schedule,
         },
       });
-      toast.success(`Alert broadcast to all visitors`);
-      setHeadline("");
-      setDescription("");
-      setInstruction("");
+      toast.success("Alert broadcast to all visitors");
+      setHeadline(""); setDescription(""); setInstruction("");
     } catch (err) {
       toast.error((err as Error).message || "Failed to issue alert");
     } finally {
@@ -213,81 +224,96 @@ function CommandConsole({ code }: { code: string }) {
         <form onSubmit={issue} className="rounded-xl border border-border bg-card p-6 space-y-5">
           <div className="flex items-center gap-2">
             <AlertTriangle className="h-5 w-5 text-amber-alert" />
-            <h2 className="font-display text-xl tracking-wider">Issue Weather Alert</h2>
+            <h2 className="font-display text-xl tracking-wider">Issue Alert</h2>
             <Badge variant="outline" className="ml-auto text-[10px] font-mono">
               Broadcasts live to all visitors
             </Badge>
           </div>
 
-          <Tabs value={mode} onValueChange={(v) => setMode(v as "template" | "custom")}>
-            <TabsList className="grid grid-cols-2 w-full">
-              <TabsTrigger value="template">NWS Template</TabsTrigger>
-              <TabsTrigger value="custom" className="gap-1.5">
-                <Sparkles className="h-3.5 w-3.5" /> Custom Alert
-              </TabsTrigger>
-            </TabsList>
+          <div className="space-y-1.5">
+            <Label>Alert Channel</Label>
+            <Tabs value={kind} onValueChange={(v) => setKind(v as AlertKind)}>
+              <TabsList className="grid grid-cols-3 w-full">
+                <TabsTrigger value="weather">Weather</TabsTrigger>
+                <TabsTrigger value="eas">EAS</TabsTrigger>
+                <TabsTrigger value="mwa-network">MWA Network</TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <p className="text-[10px] text-muted-foreground">
+              Weather → main weather ticker. EAS → separate Emergency ticker (tests, AMBER, civil). MWA Network → system status to all visitors.
+            </p>
+          </div>
 
-            <TabsContent value="template" className="space-y-4 pt-4">
-              <div className="space-y-1.5">
-                <Label>Alert Product</Label>
-                <Select value={typeId} onValueChange={setTypeId}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent className="max-h-[320px]">
-                    {NWS_ALERT_TYPES.map((t) => (
-                      <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {selectedTemplate && (
-                  <div className="flex items-center gap-2 pt-1">
-                    <Badge variant="outline" className="capitalize">{selectedTemplate.category}</Badge>
-                    <Badge variant="outline" className="capitalize">{selectedTemplate.severity}</Badge>
-                  </div>
-                )}
-              </div>
-            </TabsContent>
+          {kind === "weather" && (
+            <Tabs value={mode} onValueChange={(v) => setMode(v as "template" | "custom")}>
+              <TabsList className="grid grid-cols-2 w-full">
+                <TabsTrigger value="template">NWS Template</TabsTrigger>
+                <TabsTrigger value="custom" className="gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5" /> Custom Alert
+                </TabsTrigger>
+              </TabsList>
 
-            <TabsContent value="custom" className="space-y-4 pt-4">
-              <div className="space-y-1.5">
-                <Label>Custom Alert Name</Label>
-                <Input
-                  value={customName}
-                  onChange={(e) => setCustomName(e.target.value)}
-                  placeholder="e.g. Sudden Lake Effect Whiteout"
-                  maxLength={80}
+              <TabsContent value="template" className="space-y-4 pt-4">
+                <div className="space-y-1.5">
+                  <Label>Alert Product</Label>
+                  <Select value={typeId} onValueChange={setTypeId}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent className="max-h-[320px]">
+                      {NWS_ALERT_TYPES.map((t) => (
+                        <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedTemplate && (
+                    <div className="flex items-center gap-2 pt-1">
+                      <Badge variant="outline" className="capitalize">{selectedTemplate.category}</Badge>
+                      <Badge variant="outline" className="capitalize">{selectedTemplate.severity}</Badge>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+
+              <TabsContent value="custom" className="space-y-4 pt-4">
+                <CustomFields
+                  name={customName} onName={setCustomName}
+                  cat={customCategory} onCat={setCustomCategory}
+                  sev={customSeverity} onSev={setCustomSeverity}
+                  namePlaceholder="e.g. Sudden Lake Effect Whiteout"
                 />
-                <p className="text-[10px] text-muted-foreground">
-                  Use when no NWS template fits. This name shows as the alert headline product.
-                </p>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label>Category</Label>
-                  <Select value={customCategory} onValueChange={(v) => setCustomCategory(v as AlertCategory)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="warning">Warning</SelectItem>
-                      <SelectItem value="watch">Watch</SelectItem>
-                      <SelectItem value="advisory">Advisory</SelectItem>
-                      <SelectItem value="statement">Statement</SelectItem>
-                    </SelectContent>
-                  </Select>
+              </TabsContent>
+            </Tabs>
+          )}
+
+          {kind === "eas" && (
+            <div className="space-y-1.5">
+              <Label>EAS Product</Label>
+              <Select value={easTypeId} onValueChange={setEasTypeId}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent className="max-h-[320px]">
+                  {EAS_ALERT_TYPES.map((t) => (
+                    <SelectItem key={t.id} value={t.id}>{t.name} ({t.code})</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {selectedEas && (
+                <div className="flex items-center gap-2 pt-1">
+                  <Badge variant="outline" className="capitalize">{selectedEas.category}</Badge>
+                  <Badge variant="outline" className="capitalize">{selectedEas.severity}</Badge>
+                  <Badge variant="outline" className="font-mono">{selectedEas.code}</Badge>
                 </div>
-                <div className="space-y-1.5">
-                  <Label>Severity</Label>
-                  <Select value={customSeverity} onValueChange={(v) => setCustomSeverity(v as AlertSeverity)}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="extreme">Extreme</SelectItem>
-                      <SelectItem value="severe">Severe</SelectItem>
-                      <SelectItem value="moderate">Moderate</SelectItem>
-                      <SelectItem value="minor">Minor</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
+              )}
+            </div>
+          )}
+
+          {kind === "mwa-network" && (
+            <CustomFields
+              name={customName} onName={setCustomName}
+              cat={customCategory} onCat={setCustomCategory}
+              sev={customSeverity} onSev={setCustomSeverity}
+              namePlaceholder="e.g. Scheduled maintenance window"
+              hint="Defaults to 'MWA Network Notification' if left blank."
+            />
+          )}
 
           <div className="space-y-3 rounded-lg border border-border/60 bg-storm/30 p-3">
             <div className="flex items-center justify-between gap-3">
@@ -351,25 +377,7 @@ function CommandConsole({ code }: { code: string }) {
             )}
           </div>
 
-          <div className="space-y-1.5">
-            <Label>Affected Areas</Label>
-            <Input
-              value={areas}
-              onChange={(e) => setAreas(e.target.value)}
-              placeholder="Detroit, Wayne, Macomb — or 'Statewide'"
-            />
-            <p className="text-[10px] text-muted-foreground">
-              Comma-separate city or county names. Use "Statewide" for all of Michigan.
-            </p>
-            <div className="flex flex-wrap gap-1 pt-1">
-              {["Statewide", "Detroit", "Grand Rapids", "Lansing", "Wayne", "Oakland", "Marquette", "Traverse City"].map((q) => (
-                <button
-                  key={q} type="button" onClick={() => setAreas(q)}
-                  className="text-[10px] px-2 py-0.5 rounded border border-border hover:border-accent hover:text-accent font-mono"
-                >{q}</button>
-              ))}
-            </div>
-          </div>
+          <AreaPicker areas={areas} onChange={setAreas} />
 
           <div className="space-y-1.5">
             <Label>Headline</Label>
@@ -418,7 +426,9 @@ function CommandConsole({ code }: { code: string }) {
             ) : (
               <div className="space-y-2 max-h-[520px] overflow-y-auto pr-1">
                 {alerts.map((a) => {
-                  const t = a.type_id ? getAlertType(a.type_id) : undefined;
+                  const t = a.type_id
+                    ? (getAlertType(a.type_id) ?? getEasType(a.type_id))
+                    : undefined;
                   return (
                     <div
                       key={a.id}
@@ -431,9 +441,14 @@ function CommandConsole({ code }: { code: string }) {
                       )}
                     >
                       <div className="flex items-start justify-between gap-2">
-                        <span className="font-display font-bold uppercase tracking-wider">
-                          {t?.name ?? a.custom_name ?? "Alert"}
-                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-display font-bold uppercase tracking-wider">
+                            {t?.name ?? a.custom_name ?? "Alert"}
+                          </span>
+                          <Badge variant="outline" className="text-[9px] font-mono uppercase">
+                            {a.kind === "eas" ? "EAS" : a.kind === "mwa-network" ? "Network" : "WX"}
+                          </Badge>
+                        </div>
                         <button
                           onClick={() => remove(a.id)}
                           className="text-muted-foreground hover:text-destructive"
@@ -445,7 +460,7 @@ function CommandConsole({ code }: { code: string }) {
                       <p className="font-medium">{a.headline}</p>
                       <p className="text-muted-foreground line-clamp-2">{a.description}</p>
                       <div className="flex items-center justify-between pt-1 font-mono text-[10px] text-muted-foreground">
-                        <span>{a.areas.join(", ")}</span>
+                        <span className="truncate">{a.areas.join(", ")}</span>
                         <span>exp {new Date(a.expires_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>
                       </div>
                     </div>
@@ -454,16 +469,132 @@ function CommandConsole({ code }: { code: string }) {
               </div>
             )}
           </div>
-
-          <div className="rounded-xl border border-border bg-card p-4 text-xs text-muted-foreground space-y-2">
-            <p className="font-display uppercase tracking-wider text-accent">Notes</p>
-            <p>Cities in directory: {MICHIGAN_CITIES.length}.</p>
-            <p>NWS alerts for Michigan auto-poll every 2 minutes.</p>
-            <p>Manual alerts here broadcast in real time to every visitor via Lovable Cloud.</p>
-          </div>
         </aside>
       </main>
       <Toaster />
+    </div>
+  );
+}
+
+function CustomFields({
+  name, onName, cat, onCat, sev, onSev, namePlaceholder, hint,
+}: {
+  name: string; onName: (v: string) => void;
+  cat: AlertCategory; onCat: (v: AlertCategory) => void;
+  sev: AlertSeverity; onSev: (v: AlertSeverity) => void;
+  namePlaceholder: string; hint?: string;
+}) {
+  return (
+    <>
+      <div className="space-y-1.5">
+        <Label>Alert Name</Label>
+        <Input value={name} onChange={(e) => onName(e.target.value)} placeholder={namePlaceholder} maxLength={80} />
+        {hint && <p className="text-[10px] text-muted-foreground">{hint}</p>}
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label>Category</Label>
+          <Select value={cat} onValueChange={(v) => onCat(v as AlertCategory)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="warning">Warning</SelectItem>
+              <SelectItem value="watch">Watch</SelectItem>
+              <SelectItem value="advisory">Advisory</SelectItem>
+              <SelectItem value="statement">Statement</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-1.5">
+          <Label>Severity</Label>
+          <Select value={sev} onValueChange={(v) => onSev(v as AlertSeverity)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="extreme">Extreme</SelectItem>
+              <SelectItem value="severe">Severe</SelectItem>
+              <SelectItem value="moderate">Moderate</SelectItem>
+              <SelectItem value="minor">Minor</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+    </>
+  );
+}
+
+function AreaPicker({ areas, onChange }: { areas: string[]; onChange: (v: string[]) => void }) {
+  const [q, setQ] = useState("");
+  const isStatewide = areas.includes("Statewide");
+  const selected = new Set(areas);
+
+  const matches = useMemo(() => {
+    if (!q.trim()) return MICHIGAN_COUNTIES.slice(0, 12);
+    const term = q.toLowerCase();
+    return MICHIGAN_COUNTIES.filter((c) => c.toLowerCase().includes(term)).slice(0, 20);
+  }, [q]);
+
+  const toggle = (county: string) => {
+    if (selected.has(county)) onChange(areas.filter((a) => a !== county));
+    else onChange([...areas.filter((a) => a !== "Statewide"), county]);
+  };
+
+  return (
+    <div className="space-y-2 rounded-lg border border-border/60 bg-storm/30 p-3">
+      <Label className="text-xs font-mono uppercase tracking-wider text-muted-foreground">Affected Areas</Label>
+
+      <label className="flex items-center gap-2 text-sm cursor-pointer">
+        <Checkbox
+          checked={isStatewide}
+          onCheckedChange={(v) => onChange(v ? ["Statewide"] : [])}
+        />
+        Statewide (all of Michigan)
+      </label>
+
+      {!isStatewide && (
+        <>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <Input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Search Michigan counties…"
+              className="pl-9"
+            />
+          </div>
+
+          {areas.length > 0 && (
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {areas.map((a) => (
+                <button
+                  key={a}
+                  type="button"
+                  onClick={() => onChange(areas.filter((x) => x !== a))}
+                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-accent/60 bg-accent/10 text-accent text-[11px] font-mono"
+                >
+                  {a} <X className="h-3 w-3" />
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="max-h-48 overflow-y-auto rounded-md border border-border divide-y divide-border/60">
+            {matches.map((c) => (
+              <label
+                key={c}
+                className="flex items-center gap-2 px-2 py-1.5 text-xs cursor-pointer hover:bg-accent/10"
+              >
+                <Checkbox checked={selected.has(c)} onCheckedChange={() => toggle(c)} />
+                <span className="flex-1">{c} County</span>
+              </label>
+            ))}
+            {matches.length === 0 && (
+              <p className="text-xs text-muted-foreground px-3 py-4 text-center">No matches.</p>
+            )}
+          </div>
+          <p className="text-[10px] text-muted-foreground">
+            Selected counties appear as chips above. Pick as many as you need.
+          </p>
+        </>
+      )}
     </div>
   );
 }
