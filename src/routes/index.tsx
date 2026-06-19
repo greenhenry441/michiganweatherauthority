@@ -737,7 +737,8 @@ type WeatherBundle = ReturnType<typeof Object> & {
 function useForecastNotifications(city: MichiganCity, weather: WeatherBundle | undefined, prefs: NotifyPrefs | null) {
   useEffect(() => {
     if (typeof window === "undefined" || !("Notification" in window) || !weather || !prefs) return;
-    if (localStorage.getItem(LS_NOTIFY) !== "1" || Notification.permission !== "granted") return;
+    if (Notification.permission !== "granted") return;
+    if (!prefs.notify_forecast && !prefs.notify_hourly_forecast) return;
 
     const send = async (title: string, body: string, tag: string) => {
       try {
