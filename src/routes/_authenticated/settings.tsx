@@ -279,6 +279,9 @@ function SettingsPage() {
         <Button variant="outline" type="button" onClick={testNotification} size="lg">
           <Bell className="h-4 w-4 mr-2" /> Send test notification
         </Button>
+        <Button onClick={() => save.mutate(form)} disabled={save.isPending} size="lg">
+          <Save className="h-4 w-4 mr-2" /> {save.isPending ? "Saving…" : "Save changes"}
+        </Button>
       </div>
       <Toaster />
     </div>
