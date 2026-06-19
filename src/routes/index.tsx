@@ -789,7 +789,57 @@ function useForecastNotifications(city: MichiganCity, weather: WeatherBundle | u
 }
 
 
+/* ---------------- EAS / Emergency ticker (separate from weather) ---------------- */
+
+function EasTickerBar({ entries }: { entries: AlertEntry[] }) {
+  const items = entries.map((e) => {
+    if (e.kind === "shared") {
+      const isNetwork = e.alert.kind === "mwa-network";
+      return {
+        title: alertTitle(e),
+        meta: `${e.alert.areas.join(", ")} — ${e.alert.headline}`,
+        isNetwork,
+      };
+    }
+    return { title: "", meta: "", isNetwork: false };
+  });
+
+  const hasNetwork = items.some((i) => i.isNetwork);
+  const tierBg = hasNetwork && items.every((i) => i.isNetwork)
+    ? "bg-accent text-white border-accent"
+    : "bg-amber-alert text-black border-amber-alert";
+  const label = items.every((i) => i.isNetwork) ? "MWA NETWORK" : "EAS / EMERGENCY";
+
+  const doubled = [...items, ...items, ...items];
+
+  return (
+    <div className="border-b overflow-hidden">
+      <div className="flex items-stretch max-w-[100vw]">
+        <div className={cn("flex-none px-3 grid place-items-center text-[11px] font-mono font-bold uppercase tracking-wider gap-1.5 border-r", tierBg)}>
+          <span className="flex items-center gap-1.5">
+            <Megaphone className="h-3 w-3 alert-pulse" /> {label} · {entries.length}
+          </span>
+        </div>
+        <div className="overflow-hidden flex-1 group border-y bg-amber-alert/5 border-amber-alert/30">
+          <div className="ticker-fast whitespace-nowrap flex gap-8 py-2 group-hover:[animation-play-state:paused]">
+            {doubled.map((t, i) => (
+              <span key={i} className="text-xs font-display tracking-wider font-semibold uppercase flex items-center gap-2">
+                <span className={cn("font-bold", t.isNetwork ? "text-accent" : "text-amber-alert")}>
+                  {t.isNetwork ? "📡" : "🚨"} {t.title}
+                </span>
+                <span className="text-muted-foreground normal-case font-sans font-normal tracking-normal">— {t.meta}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+        <AllAlertsDialog entries={entries} label={`Read EAS (${entries.length})`} tickerStyle />
+      </div>
+    </div>
+  );
+}
+
 /* ---------------- Ticker (shows ALL alerts now) ---------------- */
+
 
 function TickerBar({ entries, city }: { entries: AlertEntry[]; city?: MichiganCity }) {
   const items = entries.map((e) => {
