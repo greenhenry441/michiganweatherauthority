@@ -630,17 +630,21 @@ function entrySeverity(e: AlertEntry): NotifySeverity {
   return e.alert.properties.event.toLowerCase().includes("warning") ? "severe" : "moderate";
 }
 
-function entryMatchesArea(e: AlertEntry, city: MichiganCity): boolean {
+function matchesPlace(e: AlertEntry, name: string, county: string): boolean {
+  const n = name.toLowerCase(), c = county.toLowerCase();
   if (e.kind === "shared") {
     return e.alert.areas.some(
-      (x) =>
-        x.toLowerCase() === "statewide" ||
-        x.toLowerCase().includes(city.name.toLowerCase()) ||
-        x.toLowerCase().includes(city.county.toLowerCase()),
+      (x) => x.toLowerCase() === "statewide" || x.toLowerCase().includes(n) || x.toLowerCase().includes(c),
     );
   }
   const desc = e.alert.properties.areaDesc.toLowerCase();
-  return desc.includes(city.county.toLowerCase()) || desc.includes(city.name.toLowerCase());
+  return desc.includes(c) || desc.includes(n);
+}
+
+function entryMatchesArea(e: AlertEntry, city: MichiganCity, work?: { name?: string | null; county?: string | null } | null): boolean {
+  if (matchesPlace(e, city.name, city.county)) return true;
+  if (work?.name && work?.county && matchesPlace(e, work.name, work.county)) return true;
+  return false;
 }
 
 function entryIsMarine(e: AlertEntry): boolean {
@@ -690,21 +694,28 @@ function useAlertNotifications(entries: AlertEntry[], city: MichiganCity, prefs:
         const id = ids[i];
         if (seenSet.has(id)) continue;
         const e = entries[i];
+        const isEas = e.kind === "shared" && (e.alert.kind === "eas" || e.alert.kind === "mwa-network");
 
-        const marine = entryIsMarine(e);
-        if (marine && !p.notify_marine) { seenSet.add(id); continue; }
-        if (p.notify_only_my_area && !marine && !entryMatchesArea(e, city)) { seenSet.add(id); continue; }
-        if (!p.notify_categories.includes(entryCategory(e))) { seenSet.add(id); continue; }
-        if ((SEV_RANK_LOCAL[entrySeverity(e)] ?? 0) < minRank) { seenSet.add(id); continue; }
+        if (isEas) {
+          if (!p.notify_eas) { seenSet.add(id); continue; }
+        } else {
+          const marine = entryIsMarine(e);
+          if (marine && !p.notify_marine) { seenSet.add(id); continue; }
+          if (p.notify_only_my_area && !marine && !entryMatchesArea(e, city, { name: p.work_city, county: p.work_county })) { seenSet.add(id); continue; }
+          if (!p.notify_categories.includes(entryCategory(e))) { seenSet.add(id); continue; }
+          if ((SEV_RANK_LOCAL[entrySeverity(e)] ?? 0) < minRank) { seenSet.add(id); continue; }
+          const title = e.kind === "shared" ? alertTitle(e) : e.alert.properties.event;
+          if (typeSet.size > 0 && !typeSet.has(title.toLowerCase())) { seenSet.add(id); continue; }
+        }
+
         const title = e.kind === "shared" ? alertTitle(e) : e.alert.properties.event;
-        if (typeSet.size > 0 && !typeSet.has(title.toLowerCase())) { seenSet.add(id); continue; }
-
         const body = e.kind === "shared"
           ? `${e.alert.areas.join(", ")} — ${e.alert.headline}`
           : `${e.alert.properties.areaDesc}`;
         try {
-          if (reg) reg.showNotification(`⚠ ${title}`, { body, tag: id, data: { url: "/" } });
-          else new Notification(`⚠ ${title}`, { body, tag: id });
+          const prefix = isEas ? "🚨" : "⚠";
+          if (reg) reg.showNotification(`${prefix} ${title}`, { body, tag: id, data: { url: "/" } });
+          else new Notification(`${prefix} ${title}`, { body, tag: id });
         } catch {}
         seenSet.add(id);
       }
