@@ -37,17 +37,23 @@ function SettingsPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const [search, setSearch] = useState("");
+  const [searchHome, setSearchHome] = useState("");
+  const [searchWork, setSearchWork] = useState("");
   const [form, setForm] = useState({
     display_name: "",
     home_zip: "",
     home_city: "",
     home_lat: null as number | null,
     home_lon: null as number | null,
+    work_zip: "",
+    work_city: "",
+    work_lat: null as number | null,
+    work_lon: null as number | null,
     notify_alerts: true,
     notify_forecast: false,
     notify_hourly_forecast: false,
     notify_marine: false,
+    notify_eas: true,
     notify_only_my_area: true,
     notify_categories: ["warning", "watch", "advisory", "statement"] as Array<"warning" | "watch" | "advisory" | "statement">,
     notify_event_types: [] as string[],
@@ -63,10 +69,15 @@ function SettingsPage() {
         home_city: p.home_city ?? "",
         home_lat: p.home_lat ?? null,
         home_lon: p.home_lon ?? null,
+        work_zip: p.work_zip ?? "",
+        work_city: p.work_city ?? "",
+        work_lat: p.work_lat ?? null,
+        work_lon: p.work_lon ?? null,
         notify_alerts: !!p.notify_alerts,
         notify_forecast: !!p.notify_forecast,
         notify_hourly_forecast: !!p.notify_hourly_forecast,
         notify_marine: !!p.notify_marine,
+        notify_eas: p.notify_eas ?? true,
         notify_only_my_area: p.notify_only_my_area ?? true,
         notify_categories: (p.notify_categories ?? ["warning", "watch", "advisory", "statement"]) as any,
         notify_event_types: (p.notify_event_types ?? []) as string[],
@@ -75,13 +86,8 @@ function SettingsPage() {
     }
   }, [profile.data]);
 
-  const filtered = useMemo(() => {
-    if (!search.trim()) return [];
-    const q = search.toLowerCase();
-    return MICHIGAN_CITIES.filter((c) =>
-      (c.name + " " + c.county + " " + c.zip).toLowerCase().includes(q),
-    ).slice(0, 8);
-  }, [search]);
+  const filteredHome = useMemo(() => filterCities(searchHome), [searchHome]);
+  const filteredWork = useMemo(() => filterCities(searchWork), [searchWork]);
 
   const signOut = async () => {
     await qc.cancelQueries();
