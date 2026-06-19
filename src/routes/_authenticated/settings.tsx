@@ -188,8 +188,14 @@ function SettingsPage() {
           onChange={(v) => setForm((f) => ({ ...f, notify_marine: v }))}
         />
         <ToggleRow
+          label="EAS / Emergency broadcasts"
+          desc="AMBER, civil emergency, evacuation, and EAS tests on the separate EAS ticker."
+          checked={form.notify_eas}
+          onChange={(v) => setForm((f) => ({ ...f, notify_eas: v }))}
+        />
+        <ToggleRow
           label="Only my area"
-          desc="Only get alert notifications when your home city or county is in the affected area."
+          desc="Only notify when your home or work city / county is in the affected area."
           checked={form.notify_only_my_area}
           onChange={(v) => setForm((f) => ({ ...f, notify_only_my_area: v }))}
         />
@@ -269,12 +275,91 @@ function SettingsPage() {
         </div>
       </section>
 
-      <div className="flex gap-2 justify-end">
-        <Button onClick={() => save.mutate(form)} disabled={save.isPending} size="lg">
-          <Save className="h-4 w-4 mr-2" /> {save.isPending ? "Saving…" : "Save changes"}
+      <div className="flex flex-wrap gap-2 justify-end">
+        <Button variant="outline" type="button" onClick={testNotification} size="lg">
+          <Bell className="h-4 w-4 mr-2" /> Send test notification
         </Button>
       </div>
       <Toaster />
+    </div>
+  );
+}
+
+async function testNotification() {
+  if (typeof window === "undefined" || !("Notification" in window)) {
+    toast.error("Your browser doesn't support notifications");
+    return;
+  }
+  let perm = Notification.permission;
+  if (perm === "default") perm = await Notification.requestPermission();
+  if (perm !== "granted") {
+    toast.error("Notifications are blocked by your browser");
+    return;
+  }
+  try {
+    const reg = "serviceWorker" in navigator ? await navigator.serviceWorker.getRegistration() : null;
+    const title = "MWA test notification";
+    const body = "If you can read this, your device is set up for MWA alerts.";
+    if (reg) reg.showNotification(title, { body, tag: "mwa-test", data: { url: "/" } });
+    else new Notification(title, { body, tag: "mwa-test" });
+    toast.success("Test notification sent");
+  } catch (e) {
+    toast.error((e as Error).message);
+  }
+}
+
+function filterCities(q: string) {
+  if (!q.trim()) return [];
+  const term = q.toLowerCase();
+  return MICHIGAN_CITIES.filter((c) =>
+    (c.name + " " + c.county + " " + c.zip).toLowerCase().includes(term),
+  ).slice(0, 8);
+}
+
+function CitySearchField({
+  label, saved, search, onSearch, results, onPick, onClear,
+}: {
+  label: string;
+  saved: string | null;
+  search: string;
+  onSearch: (v: string) => void;
+  results: ReturnType<typeof filterCities>;
+  onPick: (c: ReturnType<typeof filterCities>[number]) => void;
+  onClear: () => void;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-xs font-mono uppercase tracking-wider">{label}</Label>
+      <div className="flex gap-2">
+        <Input readOnly value={saved ?? "— none selected —"} />
+        {saved && (
+          <Button type="button" variant="ghost" size="sm" onClick={onClear}>Clear</Button>
+        )}
+      </div>
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+        <Input
+          value={search}
+          onChange={(e) => onSearch(e.target.value)}
+          placeholder="Type a Michigan city, ZIP, or county…"
+          className="pl-9"
+        />
+      </div>
+      {results.length > 0 && (
+        <div className="rounded-md border border-border bg-popover divide-y divide-border/60 max-h-64 overflow-y-auto">
+          {results.map((c) => (
+            <button
+              key={c.zip}
+              type="button"
+              onClick={() => onPick(c)}
+              className="w-full text-left px-3 py-2 text-sm hover:bg-accent/10 flex justify-between gap-2"
+            >
+              <span className="flex items-center gap-2"><MapPin className="h-3 w-3 text-muted-foreground" />{c.name}</span>
+              <span className="text-[10px] font-mono text-muted-foreground">{c.county} · {c.zip}</span>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
