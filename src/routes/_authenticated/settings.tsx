@@ -117,51 +117,44 @@ function SettingsPage() {
       <section className="rounded-xl border border-border bg-card p-5 space-y-4">
         <div className="flex items-center gap-2 text-accent">
           <MapPin className="h-4 w-4" />
-          <h2 className="font-display tracking-wider uppercase text-sm">Home Location</h2>
-        </div>
-
-        <div className="grid sm:grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label className="text-xs font-mono uppercase tracking-wider">Display name</Label>
-            <Input value={form.display_name} onChange={(e) => setForm((f) => ({ ...f, display_name: e.target.value }))} />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs font-mono uppercase tracking-wider">Saved city</Label>
-            <Input readOnly value={form.home_city ? `${form.home_city} (${form.home_zip})` : "— none selected —"} />
-          </div>
+          <h2 className="font-display tracking-wider uppercase text-sm">Your Locations</h2>
         </div>
 
         <div className="space-y-1.5">
-          <Label className="text-xs font-mono uppercase tracking-wider">Search & set your home city</Label>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Type a Michigan city, ZIP, or county…"
-              className="pl-9"
-            />
-          </div>
-          {filtered.length > 0 && (
-            <div className="rounded-md border border-border bg-popover divide-y divide-border/60 max-h-64 overflow-y-auto">
-              {filtered.map((c) => (
-                <button
-                  key={c.zip}
-                  type="button"
-                  onClick={() => {
-                    setForm((f) => ({ ...f, home_zip: c.zip, home_city: c.name, home_lat: c.lat, home_lon: c.lon }));
-                    setSearch("");
-                    toast.message(`${c.name} selected — click Save to remember it.`);
-                  }}
-                  className="w-full text-left px-3 py-2 text-sm hover:bg-accent/10 flex justify-between gap-2"
-                >
-                  <span className="flex items-center gap-2"><MapPin className="h-3 w-3 text-muted-foreground" />{c.name}</span>
-                  <span className="text-[10px] font-mono text-muted-foreground">{c.county} · {c.zip}</span>
-                </button>
-              ))}
-            </div>
-          )}
+          <Label className="text-xs font-mono uppercase tracking-wider">Display name</Label>
+          <Input value={form.display_name} onChange={(e) => setForm((f) => ({ ...f, display_name: e.target.value }))} />
         </div>
+
+        <CitySearchField
+          label="Home city"
+          saved={form.home_city ? `${form.home_city} (${form.home_zip})` : null}
+          search={searchHome}
+          onSearch={setSearchHome}
+          results={filteredHome}
+          onPick={(c) => {
+            setForm((f) => ({ ...f, home_zip: c.zip, home_city: c.name, home_lat: c.lat, home_lon: c.lon }));
+            setSearchHome("");
+            toast.message(`${c.name} set as home — click Save to remember it.`);
+          }}
+          onClear={() => setForm((f) => ({ ...f, home_zip: "", home_city: "", home_lat: null, home_lon: null }))}
+        />
+
+        <CitySearchField
+          label="Work city (optional)"
+          saved={form.work_city ? `${form.work_city} (${form.work_zip})` : null}
+          search={searchWork}
+          onSearch={setSearchWork}
+          results={filteredWork}
+          onPick={(c) => {
+            setForm((f) => ({ ...f, work_zip: c.zip, work_city: c.name, work_lat: c.lat, work_lon: c.lon }));
+            setSearchWork("");
+            toast.message(`${c.name} set as work — click Save to remember it.`);
+          }}
+          onClear={() => setForm((f) => ({ ...f, work_zip: "", work_city: "", work_lat: null, work_lon: null }))}
+        />
+        <p className="text-[10px] text-muted-foreground">
+          When "Only my area" is on, you get alerts for both your home and work city / county.
+        </p>
       </section>
 
       <section className="rounded-xl border border-border bg-card p-5 space-y-4">
