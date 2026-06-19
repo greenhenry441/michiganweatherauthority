@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface SharedAlert {
   id: string;
+  kind: "weather" | "eas" | "mwa-network";
   type_id: string | null;
   custom_name: string | null;
   category: "warning" | "watch" | "advisory" | "statement" | "extreme";

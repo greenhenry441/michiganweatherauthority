@@ -6,6 +6,7 @@ const ACCESS_CODE = "mwa-admin";
 const alertSchema = z
   .object({
     code: z.string(),
+    kind: z.enum(["weather", "eas", "mwa-network"]).default("weather"),
     typeId: z.string().nullable(),
     customName: z.string().nullable(),
     category: z.enum(["warning", "watch", "advisory", "statement", "extreme"]),
@@ -13,9 +14,8 @@ const alertSchema = z
     headline: z.string().min(3).max(200),
     description: z.string().min(3).max(4000),
     instruction: z.string().max(2000).nullable(),
-    areas: z.array(z.string().min(1).max(80)).max(50),
+    areas: z.array(z.string().min(1).max(80)).max(100),
     issuer: z.string().min(1).max(80),
-    // Either provide a duration (minutes) starting now, or explicit start/end ISO times.
     durationMinutes: z.number().int().min(1).max(7 * 24 * 60).nullable().optional(),
     startsAt: z.string().datetime().nullable().optional(),
     endsAt: z.string().datetime().nullable().optional(),
@@ -43,6 +43,7 @@ export const issueAlert = createServerFn({ method: "POST" })
     const { data: row, error } = await supabaseAdmin
       .from("alerts")
       .insert({
+        kind: data.kind,
         type_id: data.typeId,
         custom_name: data.customName,
         category: data.category,
