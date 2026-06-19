@@ -143,7 +143,7 @@ function HomePage() {
     (async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("home_zip, home_city, home_lat, home_lon, notify_alerts, notify_forecast, notify_hourly_forecast, notify_marine, notify_only_my_area, notify_categories, notify_event_types, min_severity")
+        .select("home_zip, home_city, home_lat, home_lon, work_zip, work_city, notify_alerts, notify_forecast, notify_hourly_forecast, notify_marine, notify_eas, notify_only_my_area, notify_categories, notify_event_types, min_severity")
         .eq("id", user.id)
         .maybeSingle();
       if (cancelled || !data) return;
@@ -152,15 +152,19 @@ function HomePage() {
         const match = MICHIGAN_CITIES.find((c) => c.zip === d.home_zip);
         if (match) setCity(match);
       }
+      const workMatch = d.work_zip ? MICHIGAN_CITIES.find((c) => c.zip === d.work_zip) : null;
       setPrefs({
         notify_alerts: !!d.notify_alerts,
         notify_forecast: !!d.notify_forecast,
         notify_hourly_forecast: !!d.notify_hourly_forecast,
         notify_marine: !!d.notify_marine,
+        notify_eas: d.notify_eas ?? true,
         notify_only_my_area: d.notify_only_my_area ?? true,
         notify_categories: d.notify_categories ?? ["warning", "watch", "advisory", "statement"],
         notify_event_types: d.notify_event_types ?? [],
         min_severity: d.min_severity ?? "moderate",
+        work_city: workMatch?.name ?? d.work_city ?? null,
+        work_county: workMatch?.county ?? null,
       });
     })();
     return () => { cancelled = true; };
