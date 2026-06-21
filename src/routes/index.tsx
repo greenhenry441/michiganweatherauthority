@@ -596,15 +596,17 @@ function NotifyToggle() {
     <button
       onClick={toggle}
       title={enabled ? "Disable alert notifications" : "Enable alert notifications"}
+      aria-label={enabled ? "Disable alert notifications" : "Enable alert notifications"}
       className={cn(
-        "inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider transition-colors",
+        "inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider transition-colors min-h-11 min-w-11 px-2 justify-center",
         enabled ? "text-accent" : "text-muted-foreground hover:text-accent",
       )}
     >
-      {enabled ? <Bell className="h-4 w-4" /> : <BellOff className="h-4 w-4" />}
+      {enabled ? <Bell className="h-5 w-5" /> : <BellOff className="h-5 w-5" />}
       <span className="hidden sm:inline">{enabled ? "Alerts on" : "Notify"}</span>
     </button>
   );
+
 }
 
 const SEV_RANK_LOCAL: Record<string, number> = { extreme: 4, severe: 3, moderate: 2, minor: 1 };
