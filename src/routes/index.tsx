@@ -917,14 +917,16 @@ function AllAlertsDialog({ entries, label, tickerStyle, city }: { entries: Alert
           className={cn(
             "inline-flex items-center gap-1.5 font-mono uppercase tracking-wider transition-colors",
             tickerStyle
-              ? "flex-none bg-card text-foreground hover:bg-muted border-l border-border px-3 text-[11px] font-bold"
-              : "text-accent hover:text-accent/80 text-xs",
+              ? "flex-none bg-card text-foreground hover:bg-muted border-l border-border px-3 text-[11px] font-bold min-h-11"
+              : "text-accent hover:text-accent/80 text-xs min-h-11 px-2",
           )}
         >
-          <ListOrdered className="h-3.5 w-3.5" />
-          {label}
+          <ListOrdered className="h-4 w-4" />
+          <span className="hidden sm:inline">{label}</span>
+          <span className="sm:hidden">All ({entries.length})</span>
         </button>
       </DialogTrigger>
+
       <DialogContent className="max-w-3xl bg-card border-border max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="font-display tracking-wider text-2xl flex items-center gap-2">
