@@ -98,14 +98,15 @@ function SettingsPage() {
 
   return (
     <div className="min-h-screen max-w-3xl mx-auto px-4 py-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <Link to="/" className="text-xs text-muted-foreground hover:text-accent inline-flex items-center gap-1">
-          <ArrowLeft className="h-3 w-3" /> Back to MWA
+      <div className="flex items-center justify-between gap-2">
+        <Link to="/" className="text-xs text-muted-foreground hover:text-accent inline-flex items-center gap-1.5 min-h-11 px-2">
+          <ArrowLeft className="h-4 w-4" /> Back to MWA
         </Link>
-        <Button variant="ghost" size="sm" onClick={signOut}>
-          <LogOut className="h-3.5 w-3.5 mr-1.5" /> Sign out
+        <Button variant="ghost" size="sm" onClick={signOut} className="min-h-11">
+          <LogOut className="h-4 w-4 mr-1.5" /> Sign out
         </Button>
       </div>
+
 
       <div>
         <h1 className="font-display text-3xl tracking-tight text-glow">Your Account</h1>
