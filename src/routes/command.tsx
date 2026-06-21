@@ -92,6 +92,8 @@ function CommandConsole({ code }: { code: string }) {
 
   const [kind, setKind] = useState<AlertKind>("weather");
   const [mode, setMode] = useState<"template" | "custom">("template");
+  const [easMode, setEasMode] = useState<"template" | "custom">("template");
+
   const [headline, setHeadline] = useState("");
   const [areas, setAreas] = useState<string[]>(["Statewide"]);
   const [description, setDescription] = useState("");
@@ -124,6 +126,13 @@ function CommandConsole({ code }: { code: string }) {
       toast.error("Custom alert name is required");
       return;
     }
+    if (kind === "eas" && easMode === "custom" && !customName.trim()) {
+      toast.error("Custom EAS alert name is required");
+      return;
+    }
+    if (kind === "mwa-network" && !customName.trim()) {
+      // OK — defaults handled below
+    }
     if (areas.length === 0) {
       toast.error("Select at least one area");
       return;
@@ -143,17 +152,23 @@ function CommandConsole({ code }: { code: string }) {
               category: customCategory, severity: customSeverity,
             };
       } else if (kind === "eas") {
-        payload = {
-          kind, code, typeId: easTypeId, customName: null,
-          category: (selectedEas?.category ?? "statement") as AlertCategory,
-          severity: (selectedEas?.severity ?? "minor") as AlertSeverity,
-        };
+        payload = easMode === "template"
+          ? {
+              kind, code, typeId: easTypeId, customName: null,
+              category: (selectedEas?.category ?? "statement") as AlertCategory,
+              severity: (selectedEas?.severity ?? "minor") as AlertSeverity,
+            }
+          : {
+              kind, code, typeId: null, customName: customName.trim(),
+              category: customCategory, severity: customSeverity,
+            };
       } else {
         payload = {
           kind, code, typeId: MWA_NETWORK_TYPE.id, customName: customName.trim() || "MWA Network Notification",
           category: customCategory, severity: customSeverity,
         };
       }
+
       const schedule =
         scheduleMode === "duration"
           ? { durationMinutes: Number(duration), startsImmediately: true, startsAt: null, endsAt: null }
@@ -285,25 +300,47 @@ function CommandConsole({ code }: { code: string }) {
           )}
 
           {kind === "eas" && (
-            <div className="space-y-1.5">
-              <Label>EAS Product</Label>
-              <Select value={easTypeId} onValueChange={setEasTypeId}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent className="max-h-[320px]">
-                  {EAS_ALERT_TYPES.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>{t.name} ({t.code})</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {selectedEas && (
-                <div className="flex items-center gap-2 pt-1">
-                  <Badge variant="outline" className="capitalize">{selectedEas.category}</Badge>
-                  <Badge variant="outline" className="capitalize">{selectedEas.severity}</Badge>
-                  <Badge variant="outline" className="font-mono">{selectedEas.code}</Badge>
+            <Tabs value={easMode} onValueChange={(v) => setEasMode(v as "template" | "custom")}>
+              <TabsList className="grid grid-cols-2 w-full">
+                <TabsTrigger value="template">EAS Template</TabsTrigger>
+                <TabsTrigger value="custom" className="gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5" /> Custom EAS
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="template" className="space-y-4 pt-4">
+                <div className="space-y-1.5">
+                  <Label>EAS Product</Label>
+                  <Select value={easTypeId} onValueChange={setEasTypeId}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent className="max-h-[320px]">
+                      {EAS_ALERT_TYPES.map((t) => (
+                        <SelectItem key={t.id} value={t.id}>{t.name} ({t.code})</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedEas && (
+                    <div className="flex items-center gap-2 pt-1">
+                      <Badge variant="outline" className="capitalize">{selectedEas.category}</Badge>
+                      <Badge variant="outline" className="capitalize">{selectedEas.severity}</Badge>
+                      <Badge variant="outline" className="font-mono">{selectedEas.code}</Badge>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              </TabsContent>
+
+              <TabsContent value="custom" className="space-y-4 pt-4">
+                <CustomFields
+                  name={customName} onName={setCustomName}
+                  cat={customCategory} onCat={setCustomCategory}
+                  sev={customSeverity} onSev={setCustomSeverity}
+                  namePlaceholder="e.g. County-wide Boil Water Order"
+                  hint="Broadcasts on the EAS / Emergency ticker."
+                />
+              </TabsContent>
+            </Tabs>
           )}
+
 
           {kind === "mwa-network" && (
             <CustomFields
