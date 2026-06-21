@@ -92,6 +92,8 @@ function CommandConsole({ code }: { code: string }) {
 
   const [kind, setKind] = useState<AlertKind>("weather");
   const [mode, setMode] = useState<"template" | "custom">("template");
+  const [easMode, setEasMode] = useState<"template" | "custom">("template");
+
   const [headline, setHeadline] = useState("");
   const [areas, setAreas] = useState<string[]>(["Statewide"]);
   const [description, setDescription] = useState("");
