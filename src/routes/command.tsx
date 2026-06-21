@@ -300,25 +300,47 @@ function CommandConsole({ code }: { code: string }) {
           )}
 
           {kind === "eas" && (
-            <div className="space-y-1.5">
-              <Label>EAS Product</Label>
-              <Select value={easTypeId} onValueChange={setEasTypeId}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent className="max-h-[320px]">
-                  {EAS_ALERT_TYPES.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>{t.name} ({t.code})</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {selectedEas && (
-                <div className="flex items-center gap-2 pt-1">
-                  <Badge variant="outline" className="capitalize">{selectedEas.category}</Badge>
-                  <Badge variant="outline" className="capitalize">{selectedEas.severity}</Badge>
-                  <Badge variant="outline" className="font-mono">{selectedEas.code}</Badge>
+            <Tabs value={easMode} onValueChange={(v) => setEasMode(v as "template" | "custom")}>
+              <TabsList className="grid grid-cols-2 w-full">
+                <TabsTrigger value="template">EAS Template</TabsTrigger>
+                <TabsTrigger value="custom" className="gap-1.5">
+                  <Sparkles className="h-3.5 w-3.5" /> Custom EAS
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="template" className="space-y-4 pt-4">
+                <div className="space-y-1.5">
+                  <Label>EAS Product</Label>
+                  <Select value={easTypeId} onValueChange={setEasTypeId}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent className="max-h-[320px]">
+                      {EAS_ALERT_TYPES.map((t) => (
+                        <SelectItem key={t.id} value={t.id}>{t.name} ({t.code})</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {selectedEas && (
+                    <div className="flex items-center gap-2 pt-1">
+                      <Badge variant="outline" className="capitalize">{selectedEas.category}</Badge>
+                      <Badge variant="outline" className="capitalize">{selectedEas.severity}</Badge>
+                      <Badge variant="outline" className="font-mono">{selectedEas.code}</Badge>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              </TabsContent>
+
+              <TabsContent value="custom" className="space-y-4 pt-4">
+                <CustomFields
+                  name={customName} onName={setCustomName}
+                  cat={customCategory} onCat={setCustomCategory}
+                  sev={customSeverity} onSev={setCustomSeverity}
+                  namePlaceholder="e.g. County-wide Boil Water Order"
+                  hint="Broadcasts on the EAS / Emergency ticker."
+                />
+              </TabsContent>
+            </Tabs>
           )}
+
 
           {kind === "mwa-network" && (
             <CustomFields
