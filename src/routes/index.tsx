@@ -701,12 +701,15 @@ function useAlertNotifications(entries: AlertEntry[], city: MichiganCity, prefs:
         } else {
           const marine = entryIsMarine(e);
           if (marine && !p.notify_marine) { seenSet.add(id); continue; }
-          if (p.notify_only_my_area && !marine && !entryMatchesArea(e, city, { name: p.work_city, county: p.work_county })) { seenSet.add(id); continue; }
+          // HARD RULE: weather alerts (including marine) must match the user's home or work area
+          // whenever "only my area" is on. No bypass.
+          if (p.notify_only_my_area && !entryMatchesArea(e, city, { name: p.work_city, county: p.work_county })) { seenSet.add(id); continue; }
           if (!p.notify_categories.includes(entryCategory(e))) { seenSet.add(id); continue; }
           if ((SEV_RANK_LOCAL[entrySeverity(e)] ?? 0) < minRank) { seenSet.add(id); continue; }
           const title = e.kind === "shared" ? alertTitle(e) : e.alert.properties.event;
           if (typeSet.size > 0 && !typeSet.has(title.toLowerCase())) { seenSet.add(id); continue; }
         }
+
 
         const title = e.kind === "shared" ? alertTitle(e) : e.alert.properties.event;
         const body = e.kind === "shared"
