@@ -126,6 +126,13 @@ function CommandConsole({ code }: { code: string }) {
       toast.error("Custom alert name is required");
       return;
     }
+    if (kind === "eas" && easMode === "custom" && !customName.trim()) {
+      toast.error("Custom EAS alert name is required");
+      return;
+    }
+    if (kind === "mwa-network" && !customName.trim()) {
+      // OK — defaults handled below
+    }
     if (areas.length === 0) {
       toast.error("Select at least one area");
       return;
@@ -145,17 +152,23 @@ function CommandConsole({ code }: { code: string }) {
               category: customCategory, severity: customSeverity,
             };
       } else if (kind === "eas") {
-        payload = {
-          kind, code, typeId: easTypeId, customName: null,
-          category: (selectedEas?.category ?? "statement") as AlertCategory,
-          severity: (selectedEas?.severity ?? "minor") as AlertSeverity,
-        };
+        payload = easMode === "template"
+          ? {
+              kind, code, typeId: easTypeId, customName: null,
+              category: (selectedEas?.category ?? "statement") as AlertCategory,
+              severity: (selectedEas?.severity ?? "minor") as AlertSeverity,
+            }
+          : {
+              kind, code, typeId: null, customName: customName.trim(),
+              category: customCategory, severity: customSeverity,
+            };
       } else {
         payload = {
           kind, code, typeId: MWA_NETWORK_TYPE.id, customName: customName.trim() || "MWA Network Notification",
           category: customCategory, severity: customSeverity,
         };
       }
+
       const schedule =
         scheduleMode === "duration"
           ? { durationMinutes: Number(duration), startsImmediately: true, startsAt: null, endsAt: null }
