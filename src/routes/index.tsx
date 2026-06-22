@@ -230,12 +230,6 @@ function HomePage() {
 
   return (
     <div className="min-h-screen">
-      <TickerBar entries={weatherAlerts} city={city} />
-      {easAlerts.length > 0 && <EasTickerBar entries={easAlerts} />}
-      <IosInstallBanner />
-
-
-
       {/* Header */}
       <header className="border-b border-border/60 backdrop-blur-md bg-card/80 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
@@ -280,6 +274,10 @@ function HomePage() {
           </nav>
         </div>
       </header>
+
+      <TickerBar entries={weatherAlerts} city={city} />
+      {easAlerts.length > 0 && <EasTickerBar entries={easAlerts} />}
+      <IosInstallBanner />
 
 
 
@@ -833,7 +831,7 @@ function EasTickerBar({ entries }: { entries: AlertEntry[] }) {
             <Megaphone className="h-3 w-3 alert-pulse" /> {label} · {entries.length}
           </span>
         </div>
-        <div className="overflow-hidden flex-1 group border-y bg-amber-alert/5 border-amber-alert/30">
+        <div className="overflow-hidden flex-1 min-w-0 group border-y bg-amber-alert/5 border-amber-alert/30">
           <div className="ticker-fast whitespace-nowrap flex gap-8 py-2 group-hover:[animation-play-state:paused]">
             {doubled.map((t, i) => (
               <span key={i} className="text-xs font-display tracking-wider font-semibold uppercase flex items-center gap-2">
@@ -890,7 +888,7 @@ function TickerBar({ entries, city }: { entries: AlertEntry[]; city?: MichiganCi
             <AlertTriangle className="h-3 w-3 alert-pulse" /> {tierLabel} · {items.length}
           </span>
         </div>
-        <div className={cn("overflow-hidden flex-1 group border-y", topRank >= 3 ? "bg-severe/5 border-severe/30" : topRank === 2 ? "bg-watch/10 border-watch/40" : topRank === 1 ? "bg-advisory/10 border-advisory/40" : "bg-accent/5 border-accent/20")}>
+        <div className={cn("overflow-hidden flex-1 min-w-0 group border-y", topRank >= 3 ? "bg-severe/5 border-severe/30" : topRank === 2 ? "bg-watch/10 border-watch/40" : topRank === 1 ? "bg-advisory/10 border-advisory/40" : "bg-accent/5 border-accent/20")}>
           <div className="ticker-fast whitespace-nowrap flex gap-8 py-2 group-hover:[animation-play-state:paused]">
             {doubled.map((t, i) => {
               const c =
@@ -923,7 +921,7 @@ function AllAlertsDialog({ entries, label, tickerStyle, city }: { entries: Alert
           className={cn(
             "inline-flex items-center gap-1.5 font-mono uppercase tracking-wider transition-colors",
             tickerStyle
-              ? "flex-none bg-card text-foreground hover:bg-muted border-l border-border px-3 text-[11px] font-bold min-h-11"
+              ? "relative z-10 flex-none bg-card text-foreground hover:bg-muted border-l border-border px-3 text-[11px] font-bold min-h-11 min-w-11 justify-center"
               : "text-accent hover:text-accent/80 text-xs min-h-11 px-2",
           )}
         >
