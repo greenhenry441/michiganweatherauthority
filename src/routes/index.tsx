@@ -238,41 +238,46 @@ function HomePage() {
 
       {/* Header */}
       <header className="border-b border-border/60 backdrop-blur-md bg-card/80 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 flex items-center justify-between gap-3 sm:gap-4 flex-wrap">
-          <Link to="/" className="flex items-center gap-2.5 min-w-0 flex-1 sm:flex-initial min-h-11 py-1">
-            <div className="relative h-10 w-10 rounded-full bg-accent/10 border border-accent/40 grid place-items-center overflow-hidden shrink-0">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
+          <Link to="/" className="flex min-w-0 items-center gap-2.5 min-h-11 py-1">
+            <div className="relative h-10 w-10 shrink-0 rounded-full bg-accent/10 border border-accent/40 grid place-items-center overflow-hidden">
               <Radio className="h-5 w-5 text-accent" />
               <div className="absolute inset-0 radar-sweep pointer-events-none" />
             </div>
             <div className="min-w-0">
-              <h1 className="font-display text-base md:text-lg font-bold tracking-wider leading-tight truncate">
-                MICHIGAN WEATHER AUTHORITY
+              <h1 className="font-display text-sm sm:text-base md:text-lg font-bold tracking-wider leading-tight truncate">
+                <span className="hidden sm:inline">MICHIGAN WEATHER AUTHORITY</span>
+                <span className="sm:hidden">MWA</span>
               </h1>
               <p className="text-[10px] md:text-[11px] text-muted-foreground tracking-[0.25em] uppercase truncate">
-                MWA • Live Ops Center
+                <span className="hidden sm:inline">MWA • Live Ops Center</span>
+                <span className="sm:hidden">Live Ops Center</span>
               </p>
             </div>
           </Link>
-          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
-            <Link to="/forecasts" className="hidden sm:inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-muted-foreground hover:text-accent min-h-11 px-2">
+          <nav className="flex items-center gap-1 sm:gap-2 shrink-0">
+            <Link to="/forecasts" className="hidden sm:inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-muted-foreground hover:text-accent min-h-11 px-2" aria-label="Forecasts">
               <FileText className="h-4 w-4" /> <span className="hidden md:inline">Forecasts</span>
+            </Link>
+            <Link to="/forecasts" className="sm:hidden inline-flex items-center justify-center text-muted-foreground hover:text-accent min-h-11 min-w-11" aria-label="Forecasts">
+              <FileText className="h-5 w-5" />
             </Link>
             <InstallAppButton />
             <NotifyToggle />
             {user ? (
               <Link to="/settings" className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-accent hover:opacity-80 min-h-11 min-w-11 px-2 justify-center" aria-label="Account">
-                <UserCircle2 className="h-5 w-5" /> <span className="hidden sm:inline">Account</span>
+                <UserCircle2 className="h-5 w-5" /> <span className="hidden md:inline">Account</span>
               </Link>
             ) : (
               <Link to="/auth" className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-accent hover:opacity-80 min-h-11 min-w-11 px-2 justify-center" aria-label="Sign in">
-                <LogIn className="h-5 w-5" /> <span className="hidden sm:inline">Sign in</span>
+                <LogIn className="h-5 w-5" /> <span className="hidden md:inline">Sign in</span>
               </Link>
             )}
-            <div className="hidden lg:flex items-center gap-2 text-xs text-muted-foreground font-mono shrink-0">
+            <div className="hidden xl:flex items-center gap-2 text-xs text-muted-foreground font-mono shrink-0">
               <span className="h-1.5 w-1.5 rounded-full bg-accent alert-pulse" />
               <span suppressHydrationWarning>{clock || "--:--"} ET</span>
             </div>
-          </div>
+          </nav>
         </div>
       </header>
 
