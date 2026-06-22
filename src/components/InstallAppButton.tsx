@@ -69,11 +69,11 @@ export function InstallAppButton() {
       <button
         onClick={onClick}
         title="Install MWA as an app"
-        className="inline-flex items-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-3 py-1 text-[11px] font-mono uppercase tracking-wider text-accent hover:bg-accent/20 transition-colors"
+        aria-label="Install MWA as an app"
+        className="inline-flex min-h-11 min-w-11 items-center justify-center gap-1.5 rounded-full border border-accent/40 bg-accent/10 px-2 sm:px-3 text-[11px] font-mono uppercase tracking-wider text-accent hover:bg-accent/20 transition-colors"
       >
-        <Download className="h-3.5 w-3.5" />
-        <span className="hidden sm:inline">Install app</span>
-        <span className="sm:hidden">Install</span>
+        <Download className="h-5 w-5 sm:h-3.5 sm:w-3.5" />
+        <span className="hidden md:inline">Install app</span>
       </button>
 
       {showIos && (
