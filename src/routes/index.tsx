@@ -82,6 +82,38 @@ function entrySevRank(e: AlertEntry): number {
   return SEV_RANK[s] ?? (e.alert.properties.event.toLowerCase().includes("warning") ? 3 : 2);
 }
 
+function entryEventName(e: AlertEntry): string {
+  if (e.kind === "shared") {
+    const id = e.alert.type_id;
+    if (id) {
+      const t = getAlertType(id) ?? getEasType(id);
+      if (t) return t.name;
+    }
+    return e.alert.custom_name ?? "Alert";
+  }
+  return e.alert.properties.event;
+}
+
+function entryCounties(e: AlertEntry): string[] {
+  const text = e.kind === "shared"
+    ? e.alert.areas.join(" ").toLowerCase()
+    : e.alert.properties.areaDesc.toLowerCase();
+  if (e.kind === "shared" && e.alert.areas.some((a) => a.toLowerCase() === "statewide")) {
+    return MICHIGAN_COUNTIES.slice();
+  }
+  return MICHIGAN_COUNTIES.filter((c) => text.includes(c.toLowerCase()));
+}
+
+function buildCountyAlerts(entries: AlertEntry[]) {
+  const out: Array<{ county: string; event: string; rank: number }> = [];
+  for (const e of entries) {
+    const ev = entryEventName(e);
+    const rank = entrySevRank(e);
+    for (const c of entryCounties(e)) out.push({ county: c, event: ev, rank });
+  }
+  return out;
+}
+
 function useClock() {
   const [t, setT] = useState<string>("");
   useEffect(() => {
