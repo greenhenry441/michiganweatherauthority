@@ -1064,16 +1064,19 @@ function GroupedAlerts({ entries, city }: { entries: AlertEntry[]; city?: Michig
 }
 
 function FullAlert({ entry }: { entry: AlertEntry }) {
+  const eventName = entryEventName(entry);
+  const bg = colorForEvent(eventName);
+  const fg = isLightColor(bg) ? "#000" : "#fff";
   if (entry.kind === "shared") {
     const a = entry.alert;
     const t = a.type_id ? getAlertType(a.type_id) : undefined;
     return (
       <div className="rounded-lg border border-border bg-storm/60 overflow-hidden">
-        <div className={cn("px-4 py-2 flex items-center justify-between", severityFromShared(a))}>
+        <div className="px-4 py-2 flex items-center justify-between" style={{ backgroundColor: bg, color: fg }}>
           <div className="flex items-center gap-2 font-display uppercase tracking-wider text-sm font-bold">
             <AlertTriangle className="h-4 w-4" />
             {t?.name ?? a.custom_name ?? "Weather Alert"}
-            <Badge variant="outline" className="border-current/40 text-[10px]">MWA Issued</Badge>
+            <Badge variant="outline" className="border-current/40 text-[10px]" style={{ color: fg, borderColor: fg }}>MWA Issued</Badge>
           </div>
           <span className="text-[10px] font-mono">until {new Date(a.expires_at).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}</span>
         </div>
@@ -1097,11 +1100,11 @@ function FullAlert({ entry }: { entry: AlertEntry }) {
   const p = entry.alert.properties;
   return (
     <div className="rounded-lg border border-border bg-storm/60 overflow-hidden">
-      <div className={cn("px-4 py-2 flex items-center justify-between", severityFromEvent(p.event))}>
+      <div className="px-4 py-2 flex items-center justify-between" style={{ backgroundColor: bg, color: fg }}>
         <div className="flex items-center gap-2 font-display uppercase tracking-wider text-sm font-bold">
           <AlertTriangle className="h-4 w-4" />
           {p.event}
-          <Badge variant="outline" className="border-current/40 text-[10px]">NWS</Badge>
+          <Badge variant="outline" className="text-[10px]" style={{ color: fg, borderColor: fg }}>NWS</Badge>
         </div>
         <span className="text-[10px] font-mono">until {new Date(p.expires).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}</span>
       </div>
