@@ -14,6 +14,10 @@ import {
 import { useSharedAlerts, type SharedAlert } from "@/lib/alerts-store";
 import { getAlertType } from "@/lib/nws-alert-types";
 import { getEasType, MWA_NETWORK_TYPE } from "@/lib/eas-alert-types";
+import { MICHIGAN_COUNTIES } from "@/lib/michigan-counties";
+import { colorForEvent, isLightColor } from "@/lib/nws-colors";
+import { MichiganAlertMap } from "@/components/MichiganAlertMap";
+import { RadarPanel } from "@/components/RadarPanel";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -76,6 +80,38 @@ function entrySevRank(e: AlertEntry): number {
   if (e.kind === "shared") return SEV_RANK[e.alert.severity] ?? 0;
   const s = (e.alert.properties.severity ?? "").toLowerCase();
   return SEV_RANK[s] ?? (e.alert.properties.event.toLowerCase().includes("warning") ? 3 : 2);
+}
+
+function entryEventName(e: AlertEntry): string {
+  if (e.kind === "shared") {
+    const id = e.alert.type_id;
+    if (id) {
+      const t = getAlertType(id) ?? getEasType(id);
+      if (t) return t.name;
+    }
+    return e.alert.custom_name ?? "Alert";
+  }
+  return e.alert.properties.event;
+}
+
+function entryCounties(e: AlertEntry): string[] {
+  const text = e.kind === "shared"
+    ? e.alert.areas.join(" ").toLowerCase()
+    : e.alert.properties.areaDesc.toLowerCase();
+  if (e.kind === "shared" && e.alert.areas.some((a) => a.toLowerCase() === "statewide")) {
+    return MICHIGAN_COUNTIES.slice();
+  }
+  return MICHIGAN_COUNTIES.filter((c) => text.includes(c.toLowerCase()));
+}
+
+function buildCountyAlerts(entries: AlertEntry[]) {
+  const out: Array<{ county: string; event: string; rank: number }> = [];
+  for (const e of entries) {
+    const ev = entryEventName(e);
+    const rank = entrySevRank(e);
+    for (const c of entryCounties(e)) out.push({ county: c, event: ev, rank });
+  }
+  return out;
 }
 
 function useClock() {
@@ -353,6 +389,14 @@ function HomePage() {
 
               <ExtraStatsPanel data={extra.data} loading={extra.isLoading} />
             </div>
+
+            {/* Radar + Statewide alert map */}
+            <div className="grid lg:grid-cols-2 gap-4">
+              <RadarPanel />
+              <MichiganAlertMap alertsByCounty={buildCountyAlerts(weatherAlerts)} />
+            </div>
+
+
 
 
             {/* Hourly + Extended */}
@@ -1020,16 +1064,19 @@ function GroupedAlerts({ entries, city }: { entries: AlertEntry[]; city?: Michig
 }
 
 function FullAlert({ entry }: { entry: AlertEntry }) {
+  const eventName = entryEventName(entry);
+  const bg = colorForEvent(eventName);
+  const fg = isLightColor(bg) ? "#000" : "#fff";
   if (entry.kind === "shared") {
     const a = entry.alert;
     const t = a.type_id ? getAlertType(a.type_id) : undefined;
     return (
       <div className="rounded-lg border border-border bg-storm/60 overflow-hidden">
-        <div className={cn("px-4 py-2 flex items-center justify-between", severityFromShared(a))}>
+        <div className="px-4 py-2 flex items-center justify-between" style={{ backgroundColor: bg, color: fg }}>
           <div className="flex items-center gap-2 font-display uppercase tracking-wider text-sm font-bold">
             <AlertTriangle className="h-4 w-4" />
             {t?.name ?? a.custom_name ?? "Weather Alert"}
-            <Badge variant="outline" className="border-current/40 text-[10px]">MWA Issued</Badge>
+            <Badge variant="outline" className="border-current/40 text-[10px]" style={{ color: fg, borderColor: fg }}>MWA Issued</Badge>
           </div>
           <span className="text-[10px] font-mono">until {new Date(a.expires_at).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}</span>
         </div>
@@ -1053,11 +1100,11 @@ function FullAlert({ entry }: { entry: AlertEntry }) {
   const p = entry.alert.properties;
   return (
     <div className="rounded-lg border border-border bg-storm/60 overflow-hidden">
-      <div className={cn("px-4 py-2 flex items-center justify-between", severityFromEvent(p.event))}>
+      <div className="px-4 py-2 flex items-center justify-between" style={{ backgroundColor: bg, color: fg }}>
         <div className="flex items-center gap-2 font-display uppercase tracking-wider text-sm font-bold">
           <AlertTriangle className="h-4 w-4" />
           {p.event}
-          <Badge variant="outline" className="border-current/40 text-[10px]">NWS</Badge>
+          <Badge variant="outline" className="text-[10px]" style={{ color: fg, borderColor: fg }}>NWS</Badge>
         </div>
         <span className="text-[10px] font-mono">until {new Date(p.expires).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}</span>
       </div>
