@@ -390,6 +390,14 @@ function HomePage() {
               <ExtraStatsPanel data={extra.data} loading={extra.isLoading} />
             </div>
 
+            {/* Radar + Statewide alert map */}
+            <div className="grid lg:grid-cols-2 gap-4">
+              <RadarPanel />
+              <MichiganAlertMap alertsByCounty={buildCountyAlerts(weatherAlerts)} />
+            </div>
+
+
+
 
             {/* Hourly + Extended */}
             <div className="grid xl:grid-cols-[1fr_320px] gap-4">
