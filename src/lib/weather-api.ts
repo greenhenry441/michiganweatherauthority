@@ -43,6 +43,10 @@ export interface Forecast {
 
 export interface NWSAlert {
   id: string;
+  geometry?: {
+    type: "Polygon" | "MultiPolygon";
+    coordinates: any;
+  } | null;
   properties: {
     id: string;
     event: string;
@@ -57,6 +61,8 @@ export interface NWSAlert {
     effective: string;
     expires: string;
     senderName: string;
+    geocode?: { SAME?: string[]; UGC?: string[] };
+    affectedZones?: string[];
   };
 }
 
