@@ -29,6 +29,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import { IosInstallBanner } from "@/components/IosInstallBanner";
 import { InstallAppButton } from "@/components/InstallAppButton";
+import mwaLogo from "@/assets/mwa-logo.png.asset.json";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
