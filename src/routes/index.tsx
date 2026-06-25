@@ -272,9 +272,8 @@ function HomePage() {
       <header className="border-b border-border/60 backdrop-blur-md bg-card/80 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
           <Link to="/" className="flex min-w-0 items-center gap-2.5 min-h-11 py-1">
-            <div className="relative h-10 w-10 shrink-0 rounded-full bg-accent/10 border border-accent/40 grid place-items-center overflow-hidden">
-              <Radio className="h-5 w-5 text-accent" />
-              <div className="absolute inset-0 radar-sweep pointer-events-none" />
+            <div className="relative h-10 w-10 shrink-0 grid place-items-center overflow-hidden">
+              <img src={mwaLogo.url} alt="MWA logo" className="h-10 w-10 object-contain" />
             </div>
             <div className="min-w-0">
               <h1 className="font-display text-sm sm:text-base md:text-lg font-bold tracking-wider leading-tight truncate">
