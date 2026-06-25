@@ -434,11 +434,16 @@ function HomePage() {
               <ExtraStatsPanel data={extra.data} loading={extra.isLoading} />
             </div>
 
-            {/* Radar + Statewide alert map */}
+            {/* Radar + Future Radar + Statewide alert map */}
             <div className="grid lg:grid-cols-2 gap-4">
               <RadarPanel />
-              <MichiganAlertMap alertsByCounty={buildCountyAlerts(weatherAlerts)} />
+              <FutureRadarPanel />
             </div>
+            <MichiganAlertMap
+              alertsByCounty={buildCountyAlerts(weatherAlerts)}
+              polygons={buildAlertPolygons(weatherAlerts)}
+            />
+
 
 
 
