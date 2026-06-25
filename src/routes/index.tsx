@@ -96,22 +96,64 @@ function entryEventName(e: AlertEntry): string {
   return e.alert.properties.event;
 }
 
-function entryCounties(e: AlertEntry): string[] {
-  const text = e.kind === "shared"
-    ? e.alert.areas.join(" ").toLowerCase()
-    : e.alert.properties.areaDesc.toLowerCase();
+function entryCounties(e: AlertEntry): Array<{ county: string; partial: boolean }> {
+  const raw = e.kind === "shared" ? e.alert.areas.join("; ") : e.alert.properties.areaDesc;
+  const text = raw.toLowerCase();
   if (e.kind === "shared" && e.alert.areas.some((a) => a.toLowerCase() === "statewide")) {
-    return MICHIGAN_COUNTIES.slice();
+    return MICHIGAN_COUNTIES.map((c) => ({ county: c, partial: false }));
   }
-  return MICHIGAN_COUNTIES.filter((c) => text.includes(c.toLowerCase()));
+  // Split by ';' or ',' so we can check each segment for partial keywords near a county name.
+  const segments = raw.split(/;|,/).map((s) => s.trim().toLowerCase()).filter(Boolean);
+  const partialKeywords = /(portion|portions of|part of|northern|southern|eastern|western|northeast|northwest|southeast|southwest|north central|south central|central)/;
+  const found = new Map<string, boolean>(); // name -> partial
+  for (const c of MICHIGAN_COUNTIES) {
+    const cl = c.toLowerCase();
+    let matched = false;
+    let partial = false;
+    for (const seg of segments) {
+      if (seg.includes(cl)) {
+        matched = true;
+        if (partialKeywords.test(seg)) partial = true;
+      }
+    }
+    if (!matched && text.includes(cl)) {
+      matched = true;
+      // Fall back to checking surrounding text for partial keywords.
+      const idx = text.indexOf(cl);
+      const window = text.slice(Math.max(0, idx - 40), idx);
+      if (partialKeywords.test(window)) partial = true;
+    }
+    if (matched) {
+      const prev = found.get(c);
+      // Any full-coverage instance wins over partial.
+      found.set(c, prev === false ? false : partial);
+    }
+  }
+  return Array.from(found.entries()).map(([county, partial]) => ({ county, partial }));
 }
 
 function buildCountyAlerts(entries: AlertEntry[]) {
-  const out: Array<{ county: string; event: string; rank: number }> = [];
+  const out: Array<{ county: string; event: string; rank: number; partial: boolean }> = [];
   for (const e of entries) {
     const ev = entryEventName(e);
     const rank = entrySevRank(e);
-    for (const c of entryCounties(e)) out.push({ county: c, event: ev, rank });
+    for (const c of entryCounties(e)) out.push({ county: c.county, event: ev, rank, partial: c.partial });
+  }
+  return out;
+}
+
+function buildAlertPolygons(entries: AlertEntry[]) {
+  const out: Array<{ event: string; rank: number; geometry: any; areaDesc?: string }> = [];
+  for (const e of entries) {
+    if (e.kind !== "nws") continue;
+    const g = (e.alert as any).geometry;
+    if (!g || (g.type !== "Polygon" && g.type !== "MultiPolygon")) continue;
+    out.push({
+      event: entryEventName(e),
+      rank: entrySevRank(e),
+      geometry: g,
+      areaDesc: e.alert.properties.areaDesc,
+    });
   }
   return out;
 }
