@@ -18,6 +18,7 @@ import { MICHIGAN_COUNTIES } from "@/lib/michigan-counties";
 import { colorForEvent, isLightColor } from "@/lib/nws-colors";
 import { MichiganAlertMap } from "@/components/MichiganAlertMap";
 import { RadarPanel } from "@/components/RadarPanel";
+import { FutureRadarPanel } from "@/components/FutureRadarPanel";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +30,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import { IosInstallBanner } from "@/components/IosInstallBanner";
 import { InstallAppButton } from "@/components/InstallAppButton";
+import mwaLogo from "@/assets/mwa-logo.png.asset.json";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -94,22 +97,64 @@ function entryEventName(e: AlertEntry): string {
   return e.alert.properties.event;
 }
 
-function entryCounties(e: AlertEntry): string[] {
-  const text = e.kind === "shared"
-    ? e.alert.areas.join(" ").toLowerCase()
-    : e.alert.properties.areaDesc.toLowerCase();
+function entryCounties(e: AlertEntry): Array<{ county: string; partial: boolean }> {
+  const raw = e.kind === "shared" ? e.alert.areas.join("; ") : e.alert.properties.areaDesc;
+  const text = raw.toLowerCase();
   if (e.kind === "shared" && e.alert.areas.some((a) => a.toLowerCase() === "statewide")) {
-    return MICHIGAN_COUNTIES.slice();
+    return MICHIGAN_COUNTIES.map((c) => ({ county: c, partial: false }));
   }
-  return MICHIGAN_COUNTIES.filter((c) => text.includes(c.toLowerCase()));
+  // Split by ';' or ',' so we can check each segment for partial keywords near a county name.
+  const segments = raw.split(/;|,/).map((s) => s.trim().toLowerCase()).filter(Boolean);
+  const partialKeywords = /(portion|portions of|part of|northern|southern|eastern|western|northeast|northwest|southeast|southwest|north central|south central|central)/;
+  const found = new Map<string, boolean>(); // name -> partial
+  for (const c of MICHIGAN_COUNTIES) {
+    const cl = c.toLowerCase();
+    let matched = false;
+    let partial = false;
+    for (const seg of segments) {
+      if (seg.includes(cl)) {
+        matched = true;
+        if (partialKeywords.test(seg)) partial = true;
+      }
+    }
+    if (!matched && text.includes(cl)) {
+      matched = true;
+      // Fall back to checking surrounding text for partial keywords.
+      const idx = text.indexOf(cl);
+      const window = text.slice(Math.max(0, idx - 40), idx);
+      if (partialKeywords.test(window)) partial = true;
+    }
+    if (matched) {
+      const prev = found.get(c);
+      // Any full-coverage instance wins over partial.
+      found.set(c, prev === false ? false : partial);
+    }
+  }
+  return Array.from(found.entries()).map(([county, partial]) => ({ county, partial }));
 }
 
 function buildCountyAlerts(entries: AlertEntry[]) {
-  const out: Array<{ county: string; event: string; rank: number }> = [];
+  const out: Array<{ county: string; event: string; rank: number; partial: boolean }> = [];
   for (const e of entries) {
     const ev = entryEventName(e);
     const rank = entrySevRank(e);
-    for (const c of entryCounties(e)) out.push({ county: c, event: ev, rank });
+    for (const c of entryCounties(e)) out.push({ county: c.county, event: ev, rank, partial: c.partial });
+  }
+  return out;
+}
+
+function buildAlertPolygons(entries: AlertEntry[]) {
+  const out: Array<{ event: string; rank: number; geometry: any; areaDesc?: string }> = [];
+  for (const e of entries) {
+    if (e.kind !== "nws") continue;
+    const g = (e.alert as any).geometry;
+    if (!g || (g.type !== "Polygon" && g.type !== "MultiPolygon")) continue;
+    out.push({
+      event: entryEventName(e),
+      rank: entrySevRank(e),
+      geometry: g,
+      areaDesc: e.alert.properties.areaDesc,
+    });
   }
   return out;
 }
@@ -270,9 +315,8 @@ function HomePage() {
       <header className="border-b border-border/60 backdrop-blur-md bg-card/80 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
           <Link to="/" className="flex min-w-0 items-center gap-2.5 min-h-11 py-1">
-            <div className="relative h-10 w-10 shrink-0 rounded-full bg-accent/10 border border-accent/40 grid place-items-center overflow-hidden">
-              <Radio className="h-5 w-5 text-accent" />
-              <div className="absolute inset-0 radar-sweep pointer-events-none" />
+            <div className="relative h-10 w-10 shrink-0 grid place-items-center overflow-hidden">
+              <img src={mwaLogo.url} alt="MWA logo" className="h-10 w-10 object-contain" />
             </div>
             <div className="min-w-0">
               <h1 className="font-display text-sm sm:text-base md:text-lg font-bold tracking-wider leading-tight truncate">
@@ -390,11 +434,16 @@ function HomePage() {
               <ExtraStatsPanel data={extra.data} loading={extra.isLoading} />
             </div>
 
-            {/* Radar + Statewide alert map */}
+            {/* Radar + Future Radar + Statewide alert map */}
             <div className="grid lg:grid-cols-2 gap-4">
               <RadarPanel />
-              <MichiganAlertMap alertsByCounty={buildCountyAlerts(weatherAlerts)} />
+              <FutureRadarPanel />
             </div>
+            <MichiganAlertMap
+              alertsByCounty={buildCountyAlerts(weatherAlerts)}
+              polygons={buildAlertPolygons(weatherAlerts)}
+            />
+
 
 
 
