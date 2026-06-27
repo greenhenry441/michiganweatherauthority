@@ -18,7 +18,10 @@ import { MICHIGAN_COUNTIES } from "@/lib/michigan-counties";
 import { colorForEvent, isLightColor } from "@/lib/nws-colors";
 import { MichiganAlertMap } from "@/components/MichiganAlertMap";
 import { RadarPanel } from "@/components/RadarPanel";
-import { FutureRadarPanel } from "@/components/FutureRadarPanel";
+import { LightningPanel } from "@/components/LightningPanel";
+import { SevereOutlookPanel } from "@/components/SevereOutlookPanel";
+import { HourlyMeteogram } from "@/components/HourlyMeteogram";
+import { AlertHistoryPanel } from "@/components/AlertHistoryPanel";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +33,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import { IosInstallBanner } from "@/components/IosInstallBanner";
 import { InstallAppButton } from "@/components/InstallAppButton";
-import mwaLogo from "@/assets/mwa-logo.png.asset.json";
+import mwaLogo from "@/assets/mwa-logo-new.png.asset.json";
 
 
 export const Route = createFileRoute("/")({
@@ -434,15 +437,24 @@ function HomePage() {
               <ExtraStatsPanel data={extra.data} loading={extra.isLoading} />
             </div>
 
-            {/* Radar + Future Radar + Statewide alert map */}
+            {/* Radar + Lightning */}
             <div className="grid lg:grid-cols-2 gap-4">
               <RadarPanel />
-              <FutureRadarPanel />
+              <LightningPanel />
             </div>
-            <MichiganAlertMap
-              alertsByCounty={buildCountyAlerts(weatherAlerts)}
-              polygons={buildAlertPolygons(weatherAlerts)}
-            />
+
+            {/* Statewide alert map + SPC outlook */}
+            <div className="grid lg:grid-cols-[1.2fr_1fr] gap-4">
+              <MichiganAlertMap
+                alertsByCounty={buildCountyAlerts(weatherAlerts)}
+                polygons={buildAlertPolygons(weatherAlerts)}
+              />
+              <SevereOutlookPanel />
+            </div>
+
+            {/* Hourly meteogram */}
+            <HourlyMeteogram periods={weather.data.hourly.properties.periods} hours={36} />
+
 
 
 
