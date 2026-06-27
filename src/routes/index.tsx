@@ -534,7 +534,7 @@ function HomePage() {
             >
               Status Page
             </a>
-            <span className="font-mono">MWA · MI · v1.1</span>
+            <span className="font-mono">MWA · Aurora · v2.0</span>
           </div>
         </div>
       </footer>
