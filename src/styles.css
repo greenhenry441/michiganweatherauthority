@@ -5,9 +5,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-display: "Space Grotesk", system-ui, sans-serif;
-  --font-mono: "Space Mono", ui-monospace, monospace;
-  --font-sans: "DM Sans", system-ui, sans-serif;
+  --font-display: "Instrument Serif", ui-serif, Georgia, serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-sans: "Work Sans", system-ui, sans-serif;
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -38,51 +38,54 @@
   --color-storm-deep: var(--storm-deep);
   --color-amber-alert: var(--amber-alert);
   --color-cyan-glow: var(--cyan-glow);
+  --color-violet-glow: var(--violet-glow);
   --color-severe: var(--severe);
   --color-watch: var(--watch);
   --color-warning: var(--warning);
   --color-advisory: var(--advisory);
   --color-statement: var(--statement);
 
-  --shadow-glow: 0 10px 40px -12px oklch(0.55 0.18 230 / 0.35);
-  --shadow-alert: 0 10px 32px -8px oklch(0.62 0.22 28 / 0.35);
+  --shadow-glow: 0 10px 50px -10px oklch(0.70 0.18 220 / 0.55);
+  --shadow-aurora: 0 30px 80px -20px oklch(0.55 0.25 290 / 0.45);
+  --shadow-alert: 0 10px 32px -8px oklch(0.62 0.22 28 / 0.45);
 }
 
 :root {
-  --radius: 0.875rem;
+  --radius: 1rem;
 
-  /* Light, airy sky-paper palette */
-  --background: oklch(0.985 0.005 240);
-  --foreground: oklch(0.18 0.03 250);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.18 0.03 250);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.18 0.03 250);
-  --primary: oklch(0.52 0.20 255);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.95 0.02 250);
-  --secondary-foreground: oklch(0.20 0.03 250);
-  --muted: oklch(0.96 0.012 250);
-  --muted-foreground: oklch(0.46 0.025 250);
-  --accent: oklch(0.55 0.20 255);
-  --accent-foreground: oklch(0.99 0 0);
-  --destructive: oklch(0.58 0.24 25);
+  /* Aurora Glass — deep midnight + aurora gradients */
+  --background: oklch(0.16 0.04 270);
+  --foreground: oklch(0.96 0.01 250);
+  --card: oklch(0.21 0.04 270 / 0.55);
+  --card-foreground: oklch(0.96 0.01 250);
+  --popover: oklch(0.18 0.04 270);
+  --popover-foreground: oklch(0.96 0.01 250);
+  --primary: oklch(0.80 0.16 200);
+  --primary-foreground: oklch(0.14 0.04 270);
+  --secondary: oklch(0.24 0.05 270);
+  --secondary-foreground: oklch(0.96 0.01 250);
+  --muted: oklch(0.23 0.04 270);
+  --muted-foreground: oklch(0.72 0.04 260);
+  --accent: oklch(0.80 0.16 200);
+  --accent-foreground: oklch(0.14 0.04 270);
+  --destructive: oklch(0.62 0.24 25);
   --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.90 0.015 250);
-  --input: oklch(0.97 0.01 250);
-  --ring: oklch(0.55 0.20 255);
+  --border: oklch(0.96 0.02 250 / 0.10);
+  --input: oklch(0.22 0.04 270);
+  --ring: oklch(0.80 0.16 200);
 
-  --storm: oklch(0.97 0.012 245);
-  --storm-deep: oklch(0.93 0.02 245);
-  --amber-alert: oklch(0.68 0.18 55);
-  --cyan-glow: oklch(0.62 0.14 220);
+  --storm: oklch(0.22 0.04 270 / 0.50);
+  --storm-deep: oklch(0.18 0.05 275);
+  --amber-alert: oklch(0.82 0.15 75);
+  --cyan-glow: oklch(0.85 0.16 200);
+  --violet-glow: oklch(0.75 0.18 305);
 
-  /* NWS-style alert severity colors (vivid on light) */
-  --severe: oklch(0.55 0.25 25);       /* tornado red */
-  --warning: oklch(0.62 0.22 40);      /* warning orange-red */
-  --watch: oklch(0.72 0.18 70);        /* watch amber */
-  --advisory: oklch(0.78 0.16 95);     /* advisory yellow */
-  --statement: oklch(0.55 0.16 230);   /* statement blue */
+  /* NWS-aligned alert chroma, tuned for dark glass */
+  --severe: oklch(0.62 0.24 25);
+  --warning: oklch(0.70 0.20 40);
+  --watch: oklch(0.80 0.18 70);
+  --advisory: oklch(0.85 0.16 95);
+  --statement: oklch(0.70 0.18 230);
 }
 
 @layer base {
@@ -96,10 +99,11 @@
   }
 
   body {
+    background-color: oklch(0.11 0.04 275);
     background-image:
-      radial-gradient(ellipse 70% 50% at 10% 0%, oklch(0.85 0.10 235 / 0.55), transparent 60%),
-      radial-gradient(ellipse 60% 45% at 95% 5%, oklch(0.88 0.08 60 / 0.45), transparent 60%),
-      radial-gradient(ellipse 90% 50% at 50% 100%, oklch(0.92 0.06 250 / 0.6), transparent 70%);
+      radial-gradient(ellipse 60% 50% at 8% 0%, oklch(0.55 0.22 200 / 0.35), transparent 60%),
+      radial-gradient(ellipse 55% 45% at 100% 10%, oklch(0.55 0.25 305 / 0.30), transparent 60%),
+      radial-gradient(ellipse 70% 50% at 50% 110%, oklch(0.45 0.22 270 / 0.45), transparent 70%);
     min-height: 100vh;
   }
 
@@ -109,22 +113,29 @@
     inset: 0;
     pointer-events: none;
     background-image:
-      linear-gradient(oklch(0.55 0.08 250 / 0.06) 1px, transparent 1px),
-      linear-gradient(90deg, oklch(0.55 0.08 250 / 0.06) 1px, transparent 1px);
-    background-size: 56px 56px;
+      linear-gradient(oklch(0.85 0.05 230 / 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, oklch(0.85 0.05 230 / 0.05) 1px, transparent 1px);
+    background-size: 64px 64px;
     mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
     z-index: 0;
   }
 
   h1, h2, h3, h4 {
     font-family: var(--font-display);
-    letter-spacing: -0.015em;
-    font-weight: 600;
+    letter-spacing: -0.01em;
+    font-weight: 400;
   }
 }
 
 @utility text-glow {
-  text-shadow: 0 1px 0 oklch(1 0 0 / 0.6), 0 8px 32px oklch(0.55 0.18 235 / 0.25);
+  text-shadow: 0 0 32px oklch(0.85 0.16 200 / 0.45), 0 0 60px oklch(0.65 0.22 290 / 0.25);
+}
+
+@utility text-aurora {
+  background: linear-gradient(120deg, oklch(0.88 0.16 200) 0%, oklch(0.72 0.20 280) 55%, oklch(0.78 0.20 320) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 @utility alert-pulse {
@@ -146,14 +157,28 @@
 }
 
 @utility glass {
-  background: linear-gradient(180deg, oklch(1 0 0 / 0.85), oklch(1 0 0 / 0.65));
-  backdrop-filter: blur(14px) saturate(140%);
-  -webkit-backdrop-filter: blur(14px) saturate(140%);
-  border: 1px solid oklch(0.85 0.02 250 / 0.6);
+  background: linear-gradient(180deg, oklch(0.24 0.05 270 / 0.55), oklch(0.18 0.05 275 / 0.45));
+  backdrop-filter: blur(20px) saturate(160%);
+  border: 1px solid oklch(0.96 0.02 250 / 0.10);
+  box-shadow: 0 1px 0 oklch(1 0 0 / 0.06) inset, 0 30px 80px -30px oklch(0.55 0.25 290 / 0.30);
+}
+
+@utility aurora-border {
+  position: relative;
+}
+.aurora-border::before {
+  content: "";
+  position: absolute; inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(120deg, oklch(0.85 0.16 200 / 0.55), oklch(0.70 0.20 280 / 0.45), oklch(0.78 0.20 320 / 0.55));
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+  pointer-events: none;
 }
 
 @utility hairline {
-  background-image: linear-gradient(90deg, transparent, oklch(0.55 0.08 250 / 0.4), transparent);
+  background-image: linear-gradient(90deg, transparent, oklch(0.85 0.16 200 / 0.45), transparent);
   height: 1px;
 }
 
@@ -175,6 +200,17 @@
 @keyframes radar-sweep {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+@keyframes aurora-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.aurora-bg {
+  background: linear-gradient(120deg, oklch(0.55 0.22 200), oklch(0.50 0.25 280), oklch(0.55 0.22 320));
+  background-size: 200% 200%;
+  animation: aurora-shift 12s ease infinite;
 }
 
 .radar-sweep::after {

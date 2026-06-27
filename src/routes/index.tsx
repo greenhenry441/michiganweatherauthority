@@ -18,7 +18,10 @@ import { MICHIGAN_COUNTIES } from "@/lib/michigan-counties";
 import { colorForEvent, isLightColor } from "@/lib/nws-colors";
 import { MichiganAlertMap } from "@/components/MichiganAlertMap";
 import { RadarPanel } from "@/components/RadarPanel";
-import { FutureRadarPanel } from "@/components/FutureRadarPanel";
+import { LightningPanel } from "@/components/LightningPanel";
+import { SevereOutlookPanel } from "@/components/SevereOutlookPanel";
+import { HourlyMeteogram } from "@/components/HourlyMeteogram";
+import { AlertHistoryPanel } from "@/components/AlertHistoryPanel";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +33,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import { IosInstallBanner } from "@/components/IosInstallBanner";
 import { InstallAppButton } from "@/components/InstallAppButton";
-import mwaLogo from "@/assets/mwa-logo.png.asset.json";
+import mwaLogo from "@/assets/mwa-logo-new.png.asset.json";
 
 
 export const Route = createFileRoute("/")({
@@ -312,20 +315,20 @@ function HomePage() {
   return (
     <div className="min-h-screen">
       {/* Header */}
-      <header className="border-b border-border/60 backdrop-blur-md bg-card/80 sticky top-0 z-50">
+      <header className="border-b border-border/60 backdrop-blur-xl bg-background/40 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
-          <Link to="/" className="flex min-w-0 items-center gap-2.5 min-h-11 py-1">
-            <div className="relative h-10 w-10 shrink-0 grid place-items-center overflow-hidden">
-              <img src={mwaLogo.url} alt="MWA logo" className="h-10 w-10 object-contain" />
+          <Link to="/" className="flex min-w-0 items-center gap-3 min-h-11 py-1">
+            <div className="relative h-11 w-11 shrink-0 grid place-items-center overflow-hidden rounded-xl">
+              <div className="absolute inset-0 aurora-bg opacity-30 blur-md" />
+              <img src={mwaLogo.url} alt="MWA logo" className="relative h-11 w-11 object-contain" />
             </div>
             <div className="min-w-0">
-              <h1 className="font-display text-sm sm:text-base md:text-lg font-bold tracking-wider leading-tight truncate">
-                <span className="hidden sm:inline">MICHIGAN WEATHER AUTHORITY</span>
-                <span className="sm:hidden">MWA</span>
+              <h1 className="font-display text-lg sm:text-xl md:text-2xl leading-none truncate">
+                <span className="hidden sm:inline text-aurora">Michigan Weather Authority</span>
+                <span className="sm:hidden text-aurora">MWA</span>
               </h1>
-              <p className="text-[10px] md:text-[11px] text-muted-foreground tracking-[0.25em] uppercase truncate">
-                <span className="hidden sm:inline">MWA • Live Ops Center</span>
-                <span className="sm:hidden">Live Ops Center</span>
+              <p className="text-[10px] md:text-[11px] text-muted-foreground tracking-[0.3em] uppercase truncate font-mono mt-1">
+                Aurora · Live Ops Center
               </p>
             </div>
           </Link>
@@ -379,10 +382,10 @@ function HomePage() {
         {/* Top control row */}
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div className="min-w-0">
-            <p className="text-[10px] font-mono uppercase tracking-[0.25em] text-muted-foreground">Now reporting</p>
-            <h2 className="font-display text-2xl md:text-3xl font-bold text-glow truncate">{city.name}, MI</h2>
+            <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-muted-foreground">Now reporting</p>
+            <h2 className="font-display text-4xl md:text-5xl leading-tight truncate text-aurora">{city.name}, MI</h2>
             <p className="text-[11px] text-muted-foreground font-mono truncate">
-              ZIP {city.zip} • {city.county} County • {MICHIGAN_CITIES.length.toLocaleString()} MI ZIPs indexed
+              ZIP {city.zip} · {city.county} County · {MICHIGAN_CITIES.length.toLocaleString()} MI ZIPs indexed
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -434,15 +437,24 @@ function HomePage() {
               <ExtraStatsPanel data={extra.data} loading={extra.isLoading} />
             </div>
 
-            {/* Radar + Future Radar + Statewide alert map */}
+            {/* Radar + Lightning */}
             <div className="grid lg:grid-cols-2 gap-4">
               <RadarPanel />
-              <FutureRadarPanel />
+              <LightningPanel />
             </div>
-            <MichiganAlertMap
-              alertsByCounty={buildCountyAlerts(weatherAlerts)}
-              polygons={buildAlertPolygons(weatherAlerts)}
-            />
+
+            {/* Statewide alert map + SPC outlook */}
+            <div className="grid lg:grid-cols-[1.2fr_1fr] gap-4">
+              <MichiganAlertMap
+                alertsByCounty={buildCountyAlerts(weatherAlerts)}
+                polygons={buildAlertPolygons(weatherAlerts)}
+              />
+              <SevereOutlookPanel />
+            </div>
+
+            {/* Hourly meteogram */}
+            <HourlyMeteogram periods={weather.data.hourly.properties.periods} hours={36} />
+
 
 
 
@@ -492,6 +504,9 @@ function HomePage() {
               </div>
             </div>
 
+            <AlertHistoryPanel />
+
+
             <div className="flex flex-wrap items-center gap-3 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
               <Eye className="h-3 w-3" />
               NOAA / NWS · Open-Meteo · Updated{" "}
@@ -519,7 +534,7 @@ function HomePage() {
             >
               Status Page
             </a>
-            <span className="font-mono">MWA · MI · v1.1</span>
+            <span className="font-mono">MWA · Aurora · v2.0</span>
           </div>
         </div>
       </footer>
