@@ -504,6 +504,9 @@ function HomePage() {
               </div>
             </div>
 
+            <AlertHistoryPanel />
+
+
             <div className="flex flex-wrap items-center gap-3 text-[10px] font-mono uppercase tracking-wider text-muted-foreground">
               <Eye className="h-3 w-3" />
               NOAA / NWS · Open-Meteo · Updated{" "}
