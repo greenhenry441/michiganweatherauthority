@@ -125,6 +125,10 @@ function RootShell({ children }: { children: ReactNode }) {
       <body>
         {children}
         <Scripts />
+        <script
+          src="https://api.dashboard.instatus.com/widget?host=mwa.instatus.com&code=b31c7503&locale=en"
+          async
+        />
       </body>
     </html>
   );
