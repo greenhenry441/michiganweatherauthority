@@ -525,7 +525,10 @@ function HomePage() {
       <footer className="border-t border-border/60 mt-6">
         <div className="max-w-7xl mx-auto px-4 py-3 text-[11px] text-muted-foreground flex flex-wrap items-center justify-between gap-3">
           <span>© Michigan Weather Authority — Unofficial. Source: NWS + Open-Meteo + MWA.</span>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
+            <Link to="/changelog" className="text-accent hover:underline">
+              Changelog
+            </Link>
             <a
               href="https://mwa.instatus.com"
               target="_blank"
@@ -534,7 +537,7 @@ function HomePage() {
             >
               Status Page
             </a>
-            <span className="font-mono">MWA · Aurora · v2.0</span>
+            <span className="font-mono">MWA · Noir · v3.0</span>
           </div>
         </div>
       </footer>
