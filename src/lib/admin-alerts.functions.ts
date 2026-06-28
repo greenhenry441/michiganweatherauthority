@@ -60,6 +60,39 @@ export const issueAlert = createServerFn({ method: "POST" })
       .select()
       .single();
     if (error) throw new Error(error.message);
+
+    // Fan out push notifications to all registered subscribers (best-effort).
+    try {
+      const { data: subs } = await supabaseAdmin
+        .from("push_subscriptions")
+        .select("endpoint, p256dh, auth, min_severity");
+      if (subs && subs.length) {
+        const SEV_RANK: Record<string, number> = { minor: 1, moderate: 2, severe: 3, extreme: 4 };
+        const sev = SEV_RANK[data.severity] ?? 2;
+        const filtered = subs.filter((s) => (SEV_RANK[s.min_severity ?? "moderate"] ?? 2) <= sev);
+        if (filtered.length) {
+          const { sendPushNotifications } = await import("@/lib/web-push.server");
+          const title =
+            data.customName ||
+            (data.kind === "eas"
+              ? "EAS Alert"
+              : data.kind === "mwa-network"
+                ? "MWA Network Notification"
+                : data.headline);
+          await sendPushNotifications(filtered, {
+            title,
+            body: `${(data.areas.length ? data.areas : ["Statewide"]).join(", ")} — ${data.headline}`,
+            url: "/",
+            id: row.id,
+            tag: `mwa-${row.id}`,
+            severity: data.severity,
+          });
+        }
+      }
+    } catch (e) {
+      console.error("[push] fanout failed", e);
+    }
+
     return row;
   });
 
