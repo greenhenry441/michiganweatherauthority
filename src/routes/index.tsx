@@ -33,7 +33,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import { IosInstallBanner } from "@/components/IosInstallBanner";
 import { InstallAppButton } from "@/components/InstallAppButton";
-import mwaLogo from "@/assets/mwa-logo-new.png.asset.json";
+import mwaLogo from "@/assets/mwa-logo-noir.png.asset.json";
 
 
 export const Route = createFileRoute("/")({
@@ -318,8 +318,7 @@ function HomePage() {
       <header className="border-b border-border/60 backdrop-blur-xl bg-background/40 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
           <Link to="/" className="flex min-w-0 items-center gap-3 min-h-11 py-1">
-            <div className="relative h-11 w-11 shrink-0 grid place-items-center overflow-hidden rounded-xl">
-              <div className="absolute inset-0 aurora-bg opacity-30 blur-md" />
+            <div className="relative h-11 w-11 shrink-0 grid place-items-center overflow-hidden">
               <img src={mwaLogo.url} alt="MWA logo" className="relative h-11 w-11 object-contain" />
             </div>
             <div className="min-w-0">
@@ -327,8 +326,8 @@ function HomePage() {
                 <span className="hidden sm:inline text-aurora">Michigan Weather Authority</span>
                 <span className="sm:hidden text-aurora">MWA</span>
               </h1>
-              <p className="text-[10px] md:text-[11px] text-muted-foreground tracking-[0.3em] uppercase truncate font-mono mt-1">
-                Aurora · Live Ops Center
+              <p className="text-[10px] md:text-[11px] text-muted-foreground tracking-[0.32em] uppercase truncate font-mono mt-1">
+                STORM NOIR
               </p>
             </div>
           </Link>
@@ -537,7 +536,7 @@ function HomePage() {
             >
               Status Page
             </a>
-            <span className="font-mono">MWA · Noir · v3.0</span>
+            <span className="font-mono">MWA · v3.1.0</span>
           </div>
         </div>
       </footer>

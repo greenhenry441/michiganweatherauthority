@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, MapPin, Bell, LogOut, Save, Search } from "lucide-react";
+import { ArrowLeft, MapPin, Bell, LogOut, Save, Search, Palette, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +15,7 @@ import { MICHIGAN_CITIES } from "@/lib/michigan-cities";
 import { NWS_ALERT_TYPES } from "@/lib/nws-alert-types";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
+import { THEMES, MODES, applyTheme, getTheme, getMode, type ThemeName, type ThemeMode } from "@/lib/theme";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [{ title: "Settings — MWA" }, { name: "robots", content: "noindex" }] }),
@@ -114,6 +115,8 @@ function SettingsPage() {
           {(profile.data as any)?.email ?? "Loading…"}
         </p>
       </div>
+
+      <AppearanceSection />
 
       <section className="rounded-xl border border-border bg-card p-5 space-y-4">
         <div className="flex items-center gap-2 text-accent">
@@ -377,5 +380,81 @@ function ToggleRow({ label, desc, checked, onChange }: { label: string; desc: st
       </div>
       <Switch checked={checked} onCheckedChange={onChange} />
     </div>
+  );
+}
+
+function AppearanceSection() {
+  const [theme, setThemeState] = useState<ThemeName>("noir");
+  const [mode, setModeState] = useState<ThemeMode>("dark");
+
+  useEffect(() => {
+    setThemeState(getTheme());
+    setModeState(getMode());
+  }, []);
+
+  const update = (t: ThemeName, m: ThemeMode) => {
+    setThemeState(t);
+    setModeState(m);
+    applyTheme(t, m);
+  };
+
+  return (
+    <section className="rounded-xl border border-border bg-card p-5 space-y-5">
+      <div className="flex items-center gap-2 text-accent">
+        <Palette className="h-4 w-4" />
+        <h2 className="font-display tracking-wider uppercase text-sm">Appearance</h2>
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-xs font-mono uppercase tracking-wider">Design</Label>
+        <div className="grid sm:grid-cols-3 gap-2">
+          {THEMES.map((t) => {
+            const active = theme === t.id;
+            return (
+              <button
+                key={t.id}
+                type="button"
+                onClick={() => update(t.id, mode)}
+                className={`text-left rounded-lg border p-3 transition-colors ${
+                  active
+                    ? "border-accent bg-accent/10"
+                    : "border-border hover:border-accent/60"
+                }`}
+              >
+                <div className="font-display text-lg leading-tight">{t.label}</div>
+                <div className="text-[11px] text-muted-foreground mt-1">{t.desc}</div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label className="text-xs font-mono uppercase tracking-wider">Mode</Label>
+        <div className="grid grid-cols-2 gap-2 max-w-xs">
+          {MODES.map((m) => {
+            const active = mode === m.id;
+            const Icon = m.id === "light" ? Sun : Moon;
+            return (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => update(theme, m.id)}
+                className={`inline-flex items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm transition-colors ${
+                  active
+                    ? "border-accent bg-accent text-accent-foreground"
+                    : "border-border hover:border-accent/60"
+                }`}
+              >
+                <Icon className="h-4 w-4" /> {m.label}
+              </button>
+            );
+          })}
+        </div>
+        <p className="text-[10px] text-muted-foreground">
+          Saved to this device. Applies instantly across MWA.
+        </p>
+      </div>
+    </section>
   );
 }
