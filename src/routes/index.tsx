@@ -16,10 +16,7 @@ import { getAlertType } from "@/lib/nws-alert-types";
 import { getEasType, MWA_NETWORK_TYPE } from "@/lib/eas-alert-types";
 import { MICHIGAN_COUNTIES } from "@/lib/michigan-counties";
 import { colorForEvent, isLightColor } from "@/lib/nws-colors";
-import { MichiganAlertMap } from "@/components/MichiganAlertMap";
 import { RadarPanel } from "@/components/RadarPanel";
-import { LightningPanel } from "@/components/LightningPanel";
-import { SevereOutlookPanel } from "@/components/SevereOutlookPanel";
 import { HourlyMeteogram } from "@/components/HourlyMeteogram";
 import { AlertHistoryPanel } from "@/components/AlertHistoryPanel";
 import { supabase } from "@/integrations/supabase/client";
@@ -436,20 +433,33 @@ function HomePage() {
               <ExtraStatsPanel data={extra.data} loading={extra.isLoading} />
             </div>
 
-            {/* Radar + Lightning */}
-            <div className="grid lg:grid-cols-2 gap-4">
-              <RadarPanel />
-              <LightningPanel />
-            </div>
+            {/* Radar */}
+            <RadarPanel />
 
-            {/* Statewide alert map + SPC outlook */}
-            <div className="grid lg:grid-cols-[1.2fr_1fr] gap-4">
-              <MichiganAlertMap
-                alertsByCounty={buildCountyAlerts(weatherAlerts)}
-                polygons={buildAlertPolygons(weatherAlerts)}
-              />
-              <SevereOutlookPanel />
-            </div>
+            {/* Tool shortcuts — full pages live under /tools */}
+            <section>
+              <div className="flex items-end justify-between mb-3 gap-3 flex-wrap">
+                <div>
+                  <h2 className="font-display text-3xl">Tools</h2>
+                  <p className="text-[11px] font-mono uppercase tracking-[0.25em] text-muted-foreground">
+                    Open any tool in its own page
+                  </p>
+                </div>
+                <Link to="/tools" className="text-[11px] font-mono uppercase tracking-[0.25em] text-accent hover:underline">
+                  See all →
+                </Link>
+              </div>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <ToolCard to="/alerts-map"    icon={AlertTriangle}    label="Alerts Map"     blurb="Counties shaded live." badge="Live" />
+                <ToolCard to="/outlook"       icon={Cloud}            label="Severe Outlook" blurb="SPC Days 1–8." />
+                <ToolCard to="/lightning"     icon={Activity}         label="Lightning"      blurb="Real-time strikes." badge="Live" />
+                <ToolCard to="/satellite"     icon={Eye}              label="Satellite"      blurb="GOES-19 over MI." badge="Live" />
+                <ToolCard to="/storm-reports" icon={ListOrdered}      label="Storm Reports"  blurb="Today / yesterday." />
+                <ToolCard to="/forecasts"     icon={FileText}         label="Forecasts"      blurb="Raw NWS products." />
+                <ToolCard to="/changelog"     icon={Megaphone}        label="Changelog"      blurb="What's new." />
+                <ToolCard to="/tools"         icon={Radio}            label="All tools"      blurb="Hub of everything." />
+              </div>
+            </section>
 
             {/* Hourly meteogram */}
             <HourlyMeteogram periods={weather.data.hourly.properties.periods} hours={36} />

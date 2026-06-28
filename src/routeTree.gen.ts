@@ -9,14 +9,45 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as ToolsRouteImport } from './routes/tools'
+import { Route as StormReportsRouteImport } from './routes/storm-reports'
+import { Route as SatelliteRouteImport } from './routes/satellite'
+import { Route as OutlookRouteImport } from './routes/outlook'
+import { Route as LightningRouteImport } from './routes/lightning'
 import { Route as ForecastsRouteImport } from './routes/forecasts'
 import { Route as CommandRouteImport } from './routes/command'
 import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AlertsMapRouteImport } from './routes/alerts-map'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 
+const ToolsRoute = ToolsRouteImport.update({
+  id: '/tools',
+  path: '/tools',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StormReportsRoute = StormReportsRouteImport.update({
+  id: '/storm-reports',
+  path: '/storm-reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SatelliteRoute = SatelliteRouteImport.update({
+  id: '/satellite',
+  path: '/satellite',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OutlookRoute = OutlookRouteImport.update({
+  id: '/outlook',
+  path: '/outlook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LightningRoute = LightningRouteImport.update({
+  id: '/lightning',
+  path: '/lightning',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ForecastsRoute = ForecastsRouteImport.update({
   id: '/forecasts',
   path: '/forecasts',
@@ -37,6 +68,11 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AlertsMapRoute = AlertsMapRouteImport.update({
+  id: '/alerts-map',
+  path: '/alerts-map',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
@@ -54,63 +90,146 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/alerts-map': typeof AlertsMapRoute
   '/auth': typeof AuthRoute
   '/changelog': typeof ChangelogRoute
   '/command': typeof CommandRoute
   '/forecasts': typeof ForecastsRoute
+  '/lightning': typeof LightningRoute
+  '/outlook': typeof OutlookRoute
+  '/satellite': typeof SatelliteRoute
+  '/storm-reports': typeof StormReportsRoute
+  '/tools': typeof ToolsRoute
   '/settings': typeof AuthenticatedSettingsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/alerts-map': typeof AlertsMapRoute
   '/auth': typeof AuthRoute
   '/changelog': typeof ChangelogRoute
   '/command': typeof CommandRoute
   '/forecasts': typeof ForecastsRoute
+  '/lightning': typeof LightningRoute
+  '/outlook': typeof OutlookRoute
+  '/satellite': typeof SatelliteRoute
+  '/storm-reports': typeof StormReportsRoute
+  '/tools': typeof ToolsRoute
   '/settings': typeof AuthenticatedSettingsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/alerts-map': typeof AlertsMapRoute
   '/auth': typeof AuthRoute
   '/changelog': typeof ChangelogRoute
   '/command': typeof CommandRoute
   '/forecasts': typeof ForecastsRoute
+  '/lightning': typeof LightningRoute
+  '/outlook': typeof OutlookRoute
+  '/satellite': typeof SatelliteRoute
+  '/storm-reports': typeof StormReportsRoute
+  '/tools': typeof ToolsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/alerts-map'
     | '/auth'
     | '/changelog'
     | '/command'
     | '/forecasts'
+    | '/lightning'
+    | '/outlook'
+    | '/satellite'
+    | '/storm-reports'
+    | '/tools'
     | '/settings'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/changelog' | '/command' | '/forecasts' | '/settings'
+  to:
+    | '/'
+    | '/alerts-map'
+    | '/auth'
+    | '/changelog'
+    | '/command'
+    | '/forecasts'
+    | '/lightning'
+    | '/outlook'
+    | '/satellite'
+    | '/storm-reports'
+    | '/tools'
+    | '/settings'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
+    | '/alerts-map'
     | '/auth'
     | '/changelog'
     | '/command'
     | '/forecasts'
+    | '/lightning'
+    | '/outlook'
+    | '/satellite'
+    | '/storm-reports'
+    | '/tools'
     | '/_authenticated/settings'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AlertsMapRoute: typeof AlertsMapRoute
   AuthRoute: typeof AuthRoute
   ChangelogRoute: typeof ChangelogRoute
   CommandRoute: typeof CommandRoute
   ForecastsRoute: typeof ForecastsRoute
+  LightningRoute: typeof LightningRoute
+  OutlookRoute: typeof OutlookRoute
+  SatelliteRoute: typeof SatelliteRoute
+  StormReportsRoute: typeof StormReportsRoute
+  ToolsRoute: typeof ToolsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/tools': {
+      id: '/tools'
+      path: '/tools'
+      fullPath: '/tools'
+      preLoaderRoute: typeof ToolsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/storm-reports': {
+      id: '/storm-reports'
+      path: '/storm-reports'
+      fullPath: '/storm-reports'
+      preLoaderRoute: typeof StormReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/satellite': {
+      id: '/satellite'
+      path: '/satellite'
+      fullPath: '/satellite'
+      preLoaderRoute: typeof SatelliteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/outlook': {
+      id: '/outlook'
+      path: '/outlook'
+      fullPath: '/outlook'
+      preLoaderRoute: typeof OutlookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lightning': {
+      id: '/lightning'
+      path: '/lightning'
+      fullPath: '/lightning'
+      preLoaderRoute: typeof LightningRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/forecasts': {
       id: '/forecasts'
       path: '/forecasts'
@@ -137,6 +256,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/alerts-map': {
+      id: '/alerts-map'
+      path: '/alerts-map'
+      fullPath: '/alerts-map'
+      preLoaderRoute: typeof AlertsMapRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -177,10 +303,16 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AlertsMapRoute: AlertsMapRoute,
   AuthRoute: AuthRoute,
   ChangelogRoute: ChangelogRoute,
   CommandRoute: CommandRoute,
   ForecastsRoute: ForecastsRoute,
+  LightningRoute: LightningRoute,
+  OutlookRoute: OutlookRoute,
+  SatelliteRoute: SatelliteRoute,
+  StormReportsRoute: StormReportsRoute,
+  ToolsRoute: ToolsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
