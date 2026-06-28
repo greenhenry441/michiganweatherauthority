@@ -461,6 +461,10 @@ function HomePage() {
                 <ToolCard to="/lightning"     icon={Activity}         label="Lightning"      blurb="Real-time strikes." badge="Live" />
                 <ToolCard to="/satellite"     icon={Eye}              label="Satellite"      blurb="GOES-19 over MI." badge="Live" />
                 <ToolCard to="/storm-reports" icon={ListOrdered}      label="Storm Reports"  blurb="Today / yesterday." />
+                <ToolCard to="/mesoscale"     icon={Cloud}            label="Mesoscale"      blurb="SPC short-fuse MDs." badge="New" />
+                <ToolCard to="/tropical"      icon={Activity}         label="Tropical"       blurb="NHC active systems." badge="New" />
+                <ToolCard to="/climate"       icon={Eye}              label="Climate"        blurb="Records & rolling stats." badge="New" />
+                <ToolCard to="/webcams"       icon={Eye}              label="Webcams"        blurb="Live cams across MI." badge="New" />
                 <ToolCard to="/forecasts"     icon={FileText}         label="Forecasts"      blurb="Raw NWS products." />
                 <ToolCard to="/changelog"     icon={Megaphone}        label="Changelog"      blurb="What's new." />
                 <ToolCard to="/tools"         icon={Radio}            label="All tools"      blurb="Hub of everything." />
