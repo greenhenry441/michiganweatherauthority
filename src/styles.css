@@ -1,13 +1,20 @@
 @import "tailwindcss" source(none);
-@source "../src";
 @import "tw-animate-css";
+@import "@fontsource/dm-serif-display/400.css";
+@import "@fontsource/dm-serif-display/400-italic.css";
+@import "@fontsource/fira-sans/300.css";
+@import "@fontsource/fira-sans/400.css";
+@import "@fontsource/fira-sans/500.css";
+@import "@fontsource/fira-sans/600.css";
+@import "@fontsource/fira-sans/700.css";
+@source "../src";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-display: "Instrument Serif", ui-serif, Georgia, serif;
-  --font-mono: "JetBrains Mono", ui-monospace, monospace;
-  --font-sans: "Work Sans", system-ui, sans-serif;
+  --font-display: "DM Serif Display", ui-serif, Georgia, serif;
+  --font-mono: ui-monospace, "SFMono-Regular", "JetBrains Mono", monospace;
+  --font-sans: "Fira Sans", system-ui, sans-serif;
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -45,42 +52,42 @@
   --color-advisory: var(--advisory);
   --color-statement: var(--statement);
 
-  --shadow-glow: 0 10px 50px -10px oklch(0.70 0.18 220 / 0.55);
-  --shadow-aurora: 0 30px 80px -20px oklch(0.55 0.25 290 / 0.45);
+  --shadow-glow: 0 10px 40px -10px oklch(0.78 0.13 85 / 0.45);
+  --shadow-aurora: 0 30px 80px -20px oklch(0 0 0 / 0.6);
   --shadow-alert: 0 10px 32px -8px oklch(0.62 0.22 28 / 0.45);
 }
 
 :root {
-  --radius: 1rem;
+  --radius: 0.5rem;
 
-  /* Aurora Glass — deep midnight + aurora gradients */
-  --background: oklch(0.16 0.04 270);
-  --foreground: oklch(0.96 0.01 250);
-  --card: oklch(0.21 0.04 270 / 0.55);
-  --card-foreground: oklch(0.96 0.01 250);
-  --popover: oklch(0.18 0.04 270);
-  --popover-foreground: oklch(0.96 0.01 250);
-  --primary: oklch(0.80 0.16 200);
-  --primary-foreground: oklch(0.14 0.04 270);
-  --secondary: oklch(0.24 0.05 270);
-  --secondary-foreground: oklch(0.96 0.01 250);
-  --muted: oklch(0.23 0.04 270);
-  --muted-foreground: oklch(0.72 0.04 260);
-  --accent: oklch(0.80 0.16 200);
-  --accent-foreground: oklch(0.14 0.04 270);
+  /* Storm Noir — black + gold editorial broadcast */
+  --background: oklch(0.10 0 0);
+  --foreground: oklch(0.96 0.005 85);
+  --card: oklch(0.13 0.005 60);
+  --card-foreground: oklch(0.96 0.005 85);
+  --popover: oklch(0.12 0.005 60);
+  --popover-foreground: oklch(0.96 0.005 85);
+  --primary: oklch(0.78 0.13 85);
+  --primary-foreground: oklch(0.10 0 0);
+  --secondary: oklch(0.16 0.005 60);
+  --secondary-foreground: oklch(0.96 0.005 85);
+  --muted: oklch(0.16 0.005 60);
+  --muted-foreground: oklch(0.68 0.02 80);
+  --accent: oklch(0.78 0.13 85);
+  --accent-foreground: oklch(0.10 0 0);
   --destructive: oklch(0.62 0.24 25);
   --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(0.96 0.02 250 / 0.10);
-  --input: oklch(0.22 0.04 270);
-  --ring: oklch(0.80 0.16 200);
+  --border: oklch(0.78 0.13 85 / 0.18);
+  --input: oklch(0.18 0.005 60);
+  --ring: oklch(0.78 0.13 85);
 
-  --storm: oklch(0.22 0.04 270 / 0.50);
-  --storm-deep: oklch(0.18 0.05 275);
+  --storm: oklch(0.13 0.005 60 / 0.85);
+  --storm-deep: oklch(0.08 0 0);
   --amber-alert: oklch(0.82 0.15 75);
   --cyan-glow: oklch(0.85 0.16 200);
   --violet-glow: oklch(0.75 0.18 305);
 
-  /* NWS-aligned alert chroma, tuned for dark glass */
+  /* NWS-aligned alert colors */
   --severe: oklch(0.62 0.24 25);
   --warning: oklch(0.70 0.20 40);
   --watch: oklch(0.80 0.18 70);
@@ -95,15 +102,13 @@
     background: var(--background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
-    font-feature-settings: "ss01", "cv11";
   }
 
   body {
-    background-color: oklch(0.11 0.04 275);
+    background-color: oklch(0.08 0 0);
     background-image:
-      radial-gradient(ellipse 60% 50% at 8% 0%, oklch(0.55 0.22 200 / 0.35), transparent 60%),
-      radial-gradient(ellipse 55% 45% at 100% 10%, oklch(0.55 0.25 305 / 0.30), transparent 60%),
-      radial-gradient(ellipse 70% 50% at 50% 110%, oklch(0.45 0.22 270 / 0.45), transparent 70%);
+      radial-gradient(ellipse 70% 50% at 10% -5%, oklch(0.78 0.13 85 / 0.10), transparent 60%),
+      radial-gradient(ellipse 55% 40% at 100% 0%, oklch(0.78 0.13 85 / 0.06), transparent 60%);
     min-height: 100vh;
   }
 
@@ -113,9 +118,9 @@
     inset: 0;
     pointer-events: none;
     background-image:
-      linear-gradient(oklch(0.85 0.05 230 / 0.05) 1px, transparent 1px),
-      linear-gradient(90deg, oklch(0.85 0.05 230 / 0.05) 1px, transparent 1px);
-    background-size: 64px 64px;
+      linear-gradient(oklch(0.78 0.13 85 / 0.04) 1px, transparent 1px),
+      linear-gradient(90deg, oklch(0.78 0.13 85 / 0.04) 1px, transparent 1px);
+    background-size: 80px 80px;
     mask-image: radial-gradient(ellipse at center, black 30%, transparent 80%);
     z-index: 0;
   }
@@ -128,11 +133,11 @@
 }
 
 @utility text-glow {
-  text-shadow: 0 0 32px oklch(0.85 0.16 200 / 0.45), 0 0 60px oklch(0.65 0.22 290 / 0.25);
+  text-shadow: 0 0 32px oklch(0.78 0.13 85 / 0.35);
 }
 
 @utility text-aurora {
-  background: linear-gradient(120deg, oklch(0.88 0.16 200) 0%, oklch(0.72 0.20 280) 55%, oklch(0.78 0.20 320) 100%);
+  background: linear-gradient(120deg, oklch(0.92 0.11 90) 0%, oklch(0.78 0.13 85) 60%, oklch(0.62 0.13 70) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -143,7 +148,7 @@
 }
 
 @utility scan-line {
-  background: linear-gradient(90deg, transparent, var(--cyan-glow), transparent);
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
   background-size: 200% 100%;
   animation: scan 3s linear infinite;
 }
@@ -157,10 +162,10 @@
 }
 
 @utility glass {
-  background: linear-gradient(180deg, oklch(0.24 0.05 270 / 0.55), oklch(0.18 0.05 275 / 0.45));
-  backdrop-filter: blur(20px) saturate(160%);
-  border: 1px solid oklch(0.96 0.02 250 / 0.10);
-  box-shadow: 0 1px 0 oklch(1 0 0 / 0.06) inset, 0 30px 80px -30px oklch(0.55 0.25 290 / 0.30);
+  background: linear-gradient(180deg, oklch(0.15 0.005 60 / 0.85), oklch(0.10 0 0 / 0.85));
+  backdrop-filter: blur(14px) saturate(140%);
+  border: 1px solid oklch(0.78 0.13 85 / 0.18);
+  box-shadow: 0 1px 0 oklch(0.78 0.13 85 / 0.08) inset, 0 24px 60px -28px oklch(0 0 0 / 0.7);
 }
 
 @utility aurora-border {
@@ -171,15 +176,19 @@
   position: absolute; inset: -1px;
   border-radius: inherit;
   padding: 1px;
-  background: linear-gradient(120deg, oklch(0.85 0.16 200 / 0.55), oklch(0.70 0.20 280 / 0.45), oklch(0.78 0.20 320 / 0.55));
+  background: linear-gradient(120deg, oklch(0.92 0.11 90 / 0.55), oklch(0.78 0.13 85 / 0.35), oklch(0.55 0.10 70 / 0.45));
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor; mask-composite: exclude;
   pointer-events: none;
 }
 
 @utility hairline {
-  background-image: linear-gradient(90deg, transparent, oklch(0.85 0.16 200 / 0.45), transparent);
+  background-image: linear-gradient(90deg, transparent, oklch(0.78 0.13 85 / 0.45), transparent);
   height: 1px;
+}
+
+@utility rule-gold {
+  border-top: 1px solid oklch(0.78 0.13 85 / 0.35);
 }
 
 @keyframes alert-pulse {
@@ -202,22 +211,11 @@
   100% { transform: rotate(360deg); }
 }
 
-@keyframes aurora-shift {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-
-.aurora-bg {
-  background: linear-gradient(120deg, oklch(0.55 0.22 200), oklch(0.50 0.25 280), oklch(0.55 0.22 320));
-  background-size: 200% 200%;
-  animation: aurora-shift 12s ease infinite;
-}
-
 .radar-sweep::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: conic-gradient(from 0deg, transparent 0deg, var(--cyan-glow) 30deg, transparent 60deg);
+  background: conic-gradient(from 0deg, transparent 0deg, var(--accent) 30deg, transparent 60deg);
   opacity: 0.45;
   animation: radar-sweep 4s linear infinite;
   border-radius: 50%;
