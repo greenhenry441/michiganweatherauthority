@@ -992,6 +992,14 @@ function CommandConsole({ code }: { code: string }) {
             </div>
           </section>
 
+          <CommandExtras
+            getSnapshot={buildSnapshot}
+            applySnapshot={applySnapshot}
+            issueRaw={issueRaw}
+          />
+
+
+
           <div className="flex items-center gap-3">
             <Button
               type="submit"
