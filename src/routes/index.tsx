@@ -329,6 +329,12 @@ function HomePage() {
             </div>
           </Link>
           <nav className="flex items-center gap-1 sm:gap-2 shrink-0">
+            <Link to="/tools" className="hidden sm:inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-muted-foreground hover:text-accent min-h-11 px-2" aria-label="Tools">
+              <Radio className="h-4 w-4" /> <span className="hidden md:inline">Tools</span>
+            </Link>
+            <Link to="/tools" className="sm:hidden inline-flex items-center justify-center text-muted-foreground hover:text-accent min-h-11 min-w-11" aria-label="Tools">
+              <Radio className="h-5 w-5" />
+            </Link>
             <Link to="/forecasts" className="hidden sm:inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-muted-foreground hover:text-accent min-h-11 px-2" aria-label="Forecasts">
               <FileText className="h-4 w-4" /> <span className="hidden md:inline">Forecasts</span>
             </Link>
@@ -1262,5 +1268,30 @@ function LoadingPanel() {
         <p className="text-xs font-mono uppercase tracking-[0.25em] text-muted-foreground">Polling NWS feed…</p>
       </div>
     </div>
+  );
+}
+
+function ToolCard({
+  to, icon: Icon, label, blurb, badge,
+}: {
+  to: string;
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  blurb: string;
+  badge?: string;
+}) {
+  return (
+    <Link to={to} className="glass aurora-border liquid rounded-2xl p-4 block group">
+      <div className="flex items-center justify-between mb-2">
+        <Icon className="h-5 w-5 text-accent" />
+        {badge && (
+          <span className="text-[9px] font-mono uppercase tracking-[0.2em] text-accent border border-accent/40 rounded-full px-1.5 py-0.5">
+            {badge}
+          </span>
+        )}
+      </div>
+      <div className="font-display text-lg leading-tight">{label}</div>
+      <div className="text-[11px] text-muted-foreground mt-1">{blurb}</div>
+    </Link>
   );
 }
