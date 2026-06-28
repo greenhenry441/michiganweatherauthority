@@ -565,6 +565,85 @@ function PreferencesSection() {
         />
       </div>
 
+      <div className="pt-4 border-t border-border/60 space-y-4">
+        <Label className="text-xs font-mono uppercase tracking-wider">Liquid Glass</Label>
+        <PrefRow label="Glass intensity">
+          <SegGroup
+            value={prefs.glassIntensity}
+            options={[{ v: "low", l: "Subtle" }, { v: "med", l: "Default" }, { v: "high", l: "Heavy" }]}
+            onChange={(v) => patch({ glassIntensity: v as any })}
+          />
+        </PrefRow>
+        <PrefRow label="Compact navigation">
+          <Switch checked={prefs.compactNav} onCheckedChange={(v) => patch({ compactNav: v })} />
+        </PrefRow>
+      </div>
+
+      <div className="pt-4 border-t border-border/60 space-y-4">
+        <Label className="text-xs font-mono uppercase tracking-wider">Alert sounds &amp; haptics</Label>
+        <PrefRow label="Warning tone">
+          <SegGroup
+            value={prefs.toneWarning}
+            options={[{ v: "siren", l: "Siren" }, { v: "chime", l: "Chime" }, { v: "blip", l: "Blip" }, { v: "duck", l: "Duck" }, { v: "off", l: "Off" }]}
+            onChange={(v) => { patch({ toneWarning: v as any }); import("@/lib/prefs").then((m) => m.playTone(v as any)); }}
+          />
+        </PrefRow>
+        <PrefRow label="EAS tone">
+          <SegGroup
+            value={prefs.toneEAS}
+            options={[{ v: "chime", l: "Chime" }, { v: "siren", l: "Siren" }, { v: "blip", l: "Blip" }, { v: "off", l: "Off" }]}
+            onChange={(v) => { patch({ toneEAS: v as any }); import("@/lib/prefs").then((m) => m.playTone(v as any)); }}
+          />
+        </PrefRow>
+        <PrefRow label="Test tone">
+          <SegGroup
+            value={prefs.toneTest}
+            options={[{ v: "blip", l: "Blip" }, { v: "chime", l: "Chime" }, { v: "duck", l: "Duck" }, { v: "off", l: "Off" }]}
+            onChange={(v) => { patch({ toneTest: v as any }); import("@/lib/prefs").then((m) => m.playTone(v as any)); }}
+          />
+        </PrefRow>
+        <PrefRow label="Haptics (mobile)">
+          <Switch checked={prefs.hapticsOn} onCheckedChange={(v) => patch({ hapticsOn: v })} />
+        </PrefRow>
+      </div>
+
+      <div className="pt-4 border-t border-border/60 space-y-4">
+        <Label className="text-xs font-mono uppercase tracking-wider">Quiet hours</Label>
+        <PrefRow label="Enable quiet hours">
+          <Switch checked={prefs.quiet.enabled} onCheckedChange={(v) => patch({ quiet: { ...prefs.quiet, enabled: v } })} />
+        </PrefRow>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label className="text-[10px] font-mono uppercase tracking-wider">From</Label>
+            <Input type="time" value={prefs.quiet.start} onChange={(e) => patch({ quiet: { ...prefs.quiet, start: e.target.value } })} />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-[10px] font-mono uppercase tracking-wider">Until</Label>
+            <Input type="time" value={prefs.quiet.end} onChange={(e) => patch({ quiet: { ...prefs.quiet, end: e.target.value } })} />
+          </div>
+        </div>
+        <PrefRow label="Allow extreme alerts to break quiet hours">
+          <Switch checked={prefs.quiet.allowExtreme} onCheckedChange={(v) => patch({ quiet: { ...prefs.quiet, allowExtreme: v } })} />
+        </PrefRow>
+      </div>
+
+      <div className="pt-4 border-t border-border/60 space-y-4">
+        <Label className="text-xs font-mono uppercase tracking-wider">Data</Label>
+        <PrefRow label="Refresh interval (seconds)">
+          <SegGroup
+            value={String(prefs.dataRefreshSec)}
+            options={[{ v: "0", l: "Auto" }, { v: "30", l: "30s" }, { v: "60", l: "1m" }, { v: "120", l: "2m" }, { v: "300", l: "5m" }]}
+            onChange={(v) => patch({ dataRefreshSec: Number(v) })}
+          />
+        </PrefRow>
+        <PrefRow label="Show storm reports banner">
+          <Switch checked={prefs.showStormReportsBanner} onCheckedChange={(v) => patch({ showStormReportsBanner: v })} />
+        </PrefRow>
+        <PrefRow label="Enable experimental features">
+          <Switch checked={prefs.experimentalFeatures} onCheckedChange={(v) => patch({ experimentalFeatures: v })} />
+        </PrefRow>
+      </div>
+
       <p className="text-[10px] text-muted-foreground">
         Preferences are saved to this device only. They apply instantly across MWA.
       </p>
