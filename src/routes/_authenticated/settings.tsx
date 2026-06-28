@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, MapPin, Bell, LogOut, Save, Search } from "lucide-react";
+import { ArrowLeft, MapPin, Bell, LogOut, Save, Search, Palette, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +15,7 @@ import { MICHIGAN_CITIES } from "@/lib/michigan-cities";
 import { NWS_ALERT_TYPES } from "@/lib/nws-alert-types";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
+import { THEMES, MODES, applyTheme, getTheme, getMode, type ThemeName, type ThemeMode } from "@/lib/theme";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [{ title: "Settings — MWA" }, { name: "robots", content: "noindex" }] }),
@@ -114,6 +115,8 @@ function SettingsPage() {
           {(profile.data as any)?.email ?? "Loading…"}
         </p>
       </div>
+
+      <AppearanceSection />
 
       <section className="rounded-xl border border-border bg-card p-5 space-y-4">
         <div className="flex items-center gap-2 text-accent">
