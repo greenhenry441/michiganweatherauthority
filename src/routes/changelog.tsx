@@ -52,7 +52,7 @@ const ENTRIES: Entry[] = [
   {
     version: "3.3.0",
     date: "Jun 28, 2026",
-    status: "minor",
+    status: "open-beta",
     title: "Tool pages + expanded preferences",
     bullets: [
       "Spun off Active Alerts Map, SPC Severe Outlook, and Live Lightning into dedicated pages.",
@@ -60,6 +60,7 @@ const ENTRIES: Entry[] = [
       "Added /storm-reports — SPC LSRs for today and yesterday (all / filtered).",
       "Added /tools — single hub linking every MWA tool.",
       "New Preferences submenu in Settings: temp/wind/pressure units, 12/24-hour clock, density, ticker speed, auto-refresh interval, reduced motion, and per-panel toggles for the home page.",
+      "Rollout: Open-Beta now → Release Candidate on Jun 29, 2026 → Stable on Jul 1, 2026.",
     ],
   },
   {
