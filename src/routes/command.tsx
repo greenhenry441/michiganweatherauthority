@@ -398,54 +398,88 @@ function CommandConsole({ code }: { code: string }) {
     return alerts.filter((a) => a.category === filter);
   }, [alerts, filter]);
 
+  const buildSnapshot = (): CommandSnapshot => ({
+    kind, mode, easMode, typeId, easTypeId, customName,
+    customCategory, customSeverity, headline, description, instruction,
+    areas, duration, issuer,
+  });
+
+  const applySnapshot = (s: CommandSnapshot) => {
+    setKind(s.kind); setMode(s.mode); setEasMode(s.easMode);
+    setTypeId(s.typeId); setEasTypeId(s.easTypeId);
+    setCustomName(s.customName); setCustomCategory(s.customCategory); setCustomSeverity(s.customSeverity);
+    setHeadline(s.headline); setDescription(s.description); setInstruction(s.instruction);
+    setAreas(s.areas); setDuration(s.duration); setIssuer(s.issuer);
+    setScheduleMode("duration");
+  };
+
+  // Fire an arbitrary snapshot (used by templates / batch / scheduler).
+  const issueRaw = async (s: CommandSnapshot) => {
+    if (!s.headline.trim() || !s.description.trim()) throw new Error("Headline and description required");
+    if (s.kind === "weather" && s.mode === "custom" && !s.customName.trim()) throw new Error("Custom name required");
+    if (s.areas.length === 0) throw new Error("At least one area required");
+    const t = s.kind === "weather" ? getAlertType(s.typeId) : s.kind === "eas" ? getEasType(s.easTypeId) : undefined;
+    let payload: any;
+    if (s.kind === "weather") {
+      payload = s.mode === "template"
+        ? { kind: s.kind, code, typeId: s.typeId, customName: null,
+            category: (t?.category ?? "statement") as AlertCategory,
+            severity: (t?.severity ?? "minor") as AlertSeverity }
+        : { kind: s.kind, code, typeId: null, customName: s.customName.trim(),
+            category: s.customCategory, severity: s.customSeverity };
+    } else if (s.kind === "eas") {
+      payload = s.easMode === "template"
+        ? { kind: s.kind, code, typeId: s.easTypeId, customName: null,
+            category: (t?.category ?? "statement") as AlertCategory,
+            severity: (t?.severity ?? "minor") as AlertSeverity }
+        : { kind: s.kind, code, typeId: null, customName: s.customName.trim(),
+            category: s.customCategory, severity: s.customSeverity };
+    } else {
+      payload = { kind: s.kind, code, typeId: MWA_NETWORK_TYPE.id,
+        customName: s.customName.trim() || "MWA Network Notification",
+        category: s.customCategory, severity: s.customSeverity };
+    }
+    await issueFn({
+      data: {
+        ...payload,
+        headline: s.headline.trim(),
+        description: s.description.trim(),
+        instruction: s.instruction.trim() || null,
+        areas: s.areas,
+        issuer: s.issuer.trim() || "MWA",
+        durationMinutes: Number(s.duration),
+        startsImmediately: true, startsAt: null, endsAt: null,
+      },
+    });
+  };
+
   const issue = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!headline.trim() || !description.trim()) {
-      toast.error("Headline and description are required");
-      return;
-    }
-    if (kind === "weather" && mode === "custom" && !customName.trim()) {
-      toast.error("Custom alert name is required");
-      return;
-    }
-    if (kind === "eas" && easMode === "custom" && !customName.trim()) {
-      toast.error("Custom EAS alert name is required");
-      return;
-    }
-    if (areas.length === 0) {
-      toast.error("Select at least one area");
-      return;
-    }
+    if (!headline.trim() || !description.trim()) { toast.error("Headline and description are required"); return; }
+    if (kind === "weather" && mode === "custom" && !customName.trim()) { toast.error("Custom alert name is required"); return; }
+    if (kind === "eas" && easMode === "custom" && !customName.trim()) { toast.error("Custom EAS alert name is required"); return; }
+    if (areas.length === 0) { toast.error("Select at least one area"); return; }
     setSubmitting(true);
     try {
       let payload: any;
       if (kind === "weather") {
         payload = mode === "template"
-          ? {
-              kind, code, typeId, customName: null,
+          ? { kind, code, typeId, customName: null,
               category: (selectedTemplate?.category ?? "statement") as AlertCategory,
-              severity: (selectedTemplate?.severity ?? "minor") as AlertSeverity,
-            }
-          : {
-              kind, code, typeId: null, customName: customName.trim(),
-              category: customCategory, severity: customSeverity,
-            };
+              severity: (selectedTemplate?.severity ?? "minor") as AlertSeverity }
+          : { kind, code, typeId: null, customName: customName.trim(),
+              category: customCategory, severity: customSeverity };
       } else if (kind === "eas") {
         payload = easMode === "template"
-          ? {
-              kind, code, typeId: easTypeId, customName: null,
+          ? { kind, code, typeId: easTypeId, customName: null,
               category: (selectedEas?.category ?? "statement") as AlertCategory,
-              severity: (selectedEas?.severity ?? "minor") as AlertSeverity,
-            }
-          : {
-              kind, code, typeId: null, customName: customName.trim(),
-              category: customCategory, severity: customSeverity,
-            };
+              severity: (selectedEas?.severity ?? "minor") as AlertSeverity }
+          : { kind, code, typeId: null, customName: customName.trim(),
+              category: customCategory, severity: customSeverity };
       } else {
-        payload = {
-          kind, code, typeId: MWA_NETWORK_TYPE.id, customName: customName.trim() || "MWA Network Notification",
-          category: customCategory, severity: customSeverity,
-        };
+        payload = { kind, code, typeId: MWA_NETWORK_TYPE.id,
+          customName: customName.trim() || "MWA Network Notification",
+          category: customCategory, severity: customSeverity };
       }
 
       const effDuration = testMode ? 5 : duration;
