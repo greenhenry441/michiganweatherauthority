@@ -1,4 +1,5 @@
 import type { NWSAlert } from "@/lib/weather-api";
+import type { SharedAlert } from "@/lib/alerts-store";
 import { MICHIGAN_COUNTIES } from "@/lib/michigan-counties";
 
 const SEV_RANK: Record<string, number> = { extreme: 4, severe: 3, moderate: 2, minor: 1 };
