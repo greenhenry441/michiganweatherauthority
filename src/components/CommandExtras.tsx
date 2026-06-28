@@ -20,7 +20,7 @@ export interface CommandSnapshot {
   typeId: string;
   easTypeId: string;
   customName: string;
-  customCategory: "warning" | "watch" | "advisory" | "statement" | "extreme";
+  customCategory: "warning" | "watch" | "advisory" | "statement";
   customSeverity: "extreme" | "severe" | "moderate" | "minor";
   headline: string;
   description: string;
