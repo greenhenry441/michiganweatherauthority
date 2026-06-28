@@ -25,6 +25,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AlertsMapRouteImport } from './routes/alerts-map'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthVerifyRouteImport } from './routes/auth.verify'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 
 const WebcamsRoute = WebcamsRouteImport.update({
@@ -106,6 +107,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthVerifyRoute = AuthVerifyRouteImport.update({
+  id: '/verify',
+  path: '/verify',
+  getParentRoute: () => AuthRoute,
+} as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -115,7 +121,7 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/alerts-map': typeof AlertsMapRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/changelog': typeof ChangelogRoute
   '/climate': typeof ClimateRoute
   '/command': typeof CommandRoute
@@ -129,11 +135,12 @@ export interface FileRoutesByFullPath {
   '/tropical': typeof TropicalRoute
   '/webcams': typeof WebcamsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/auth/verify': typeof AuthVerifyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/alerts-map': typeof AlertsMapRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/changelog': typeof ChangelogRoute
   '/climate': typeof ClimateRoute
   '/command': typeof CommandRoute
@@ -147,13 +154,14 @@ export interface FileRoutesByTo {
   '/tropical': typeof TropicalRoute
   '/webcams': typeof WebcamsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/auth/verify': typeof AuthVerifyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/alerts-map': typeof AlertsMapRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
   '/changelog': typeof ChangelogRoute
   '/climate': typeof ClimateRoute
   '/command': typeof CommandRoute
@@ -167,6 +175,7 @@ export interface FileRoutesById {
   '/tropical': typeof TropicalRoute
   '/webcams': typeof WebcamsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/auth/verify': typeof AuthVerifyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -187,6 +196,7 @@ export interface FileRouteTypes {
     | '/tropical'
     | '/webcams'
     | '/settings'
+    | '/auth/verify'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -205,6 +215,7 @@ export interface FileRouteTypes {
     | '/tropical'
     | '/webcams'
     | '/settings'
+    | '/auth/verify'
   id:
     | '__root__'
     | '/'
@@ -224,13 +235,14 @@ export interface FileRouteTypes {
     | '/tropical'
     | '/webcams'
     | '/_authenticated/settings'
+    | '/auth/verify'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AlertsMapRoute: typeof AlertsMapRoute
-  AuthRoute: typeof AuthRoute
+  AuthRoute: typeof AuthRouteWithChildren
   ChangelogRoute: typeof ChangelogRoute
   ClimateRoute: typeof ClimateRoute
   CommandRoute: typeof CommandRoute
@@ -359,6 +371,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth/verify': {
+      id: '/auth/verify'
+      path: '/verify'
+      fullPath: '/auth/verify'
+      preLoaderRoute: typeof AuthVerifyRouteImport
+      parentRoute: typeof AuthRoute
+    }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
       path: '/settings'
@@ -380,11 +399,21 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface AuthRouteChildren {
+  AuthVerifyRoute: typeof AuthVerifyRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthVerifyRoute: AuthVerifyRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AlertsMapRoute: AlertsMapRoute,
-  AuthRoute: AuthRoute,
+  AuthRoute: AuthRouteWithChildren,
   ChangelogRoute: ChangelogRoute,
   ClimateRoute: ClimateRoute,
   CommandRoute: CommandRoute,
