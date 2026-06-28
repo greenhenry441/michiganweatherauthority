@@ -1,0 +1,85 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowLeft, AlertTriangle } from "lucide-react";
+import { getMichiganAlerts } from "@/lib/weather-api";
+import { MichiganAlertMap } from "@/components/MichiganAlertMap";
+import { buildCountyAlertsFromNWS, buildPolygonsFromNWS } from "@/lib/alert-map-data";
+
+export const Route = createFileRoute("/alerts-map")({
+  head: () => ({
+    meta: [
+      { title: "Active Alerts Map — Michigan Weather Authority" },
+      { name: "description", content: "Live Michigan county map shaded by every active NWS watch, warning, and advisory." },
+      { property: "og:title", content: "Michigan Active Alerts Map" },
+      { property: "og:description", content: "Statewide map shaded by every active NWS alert." },
+    ],
+  }),
+  component: AlertsMapPage,
+});
+
+function AlertsMapPage() {
+  const alerts = useQuery({
+    queryKey: ["mi-alerts-map"],
+    queryFn: getMichiganAlerts,
+    refetchInterval: 60_000,
+  });
+  const countyData = alerts.data ? buildCountyAlertsFromNWS(alerts.data) : [];
+  const polys = alerts.data ? buildPolygonsFromNWS(alerts.data) : [];
+
+  return (
+    <ToolShell
+      icon={<AlertTriangle className="h-5 w-5" />}
+      eyebrow="Tool · Live"
+      title="Statewide alerts map"
+      blurb="Every active NWS alert for Michigan, shaded onto county and polygon geometry with corresponding NWS colors."
+    >
+      <div className="grid lg:grid-cols-[1.4fr_1fr] gap-6">
+        <MichiganAlertMap alertsByCounty={countyData} polygons={polys} width={620} height={680} />
+        <div className="space-y-3">
+          <h2 className="font-display text-2xl">Active alerts ({alerts.data?.length ?? 0})</h2>
+          <p className="text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
+            Auto-refresh · every 60s
+          </p>
+          <div className="space-y-2 max-h-[640px] overflow-y-auto pr-1">
+            {(alerts.data ?? []).map((a) => (
+              <div key={a.id} className="glass rounded-lg p-3">
+                <div className="text-sm font-medium">{a.properties.event}</div>
+                <div className="text-[11px] text-muted-foreground line-clamp-2">{a.properties.areaDesc}</div>
+              </div>
+            ))}
+            {alerts.data?.length === 0 && (
+              <div className="text-sm text-muted-foreground italic">No active alerts statewide.</div>
+            )}
+          </div>
+        </div>
+      </div>
+    </ToolShell>
+  );
+}
+
+export function ToolShell({ icon, eyebrow, title, blurb, children }: {
+  icon: React.ReactNode; eyebrow: string; title: string; blurb: string; children: React.ReactNode;
+}) {
+  return (
+    <div className="min-h-screen relative z-10">
+      <header className="border-b border-border/60">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
+          <Link to="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-accent">
+            <ArrowLeft className="w-4 h-4" /> Back to MWA
+          </Link>
+          <span className="text-[10px] uppercase tracking-[0.32em] text-muted-foreground font-mono inline-flex items-center gap-2">
+            {icon} {eyebrow}
+          </span>
+        </div>
+      </header>
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 py-10 space-y-8">
+        <div>
+          <h1 className="font-display text-5xl md:text-6xl leading-[0.95] text-aurora">{title}</h1>
+          <p className="mt-4 text-base text-muted-foreground max-w-2xl">{blurb}</p>
+          <div className="hairline mt-8" />
+        </div>
+        {children}
+      </main>
+    </div>
+  );
+}
