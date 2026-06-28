@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 
 export const Route = createFileRoute("/changelog")({
@@ -52,7 +53,7 @@ const ENTRIES: Entry[] = [
   {
     version: "3.3.0",
     date: "Jun 28, 2026",
-    status: "minor",
+    status: "open-beta",
     title: "Tool pages + expanded preferences",
     bullets: [
       "Spun off Active Alerts Map, SPC Severe Outlook, and Live Lightning into dedicated pages.",
@@ -60,6 +61,7 @@ const ENTRIES: Entry[] = [
       "Added /storm-reports — SPC LSRs for today and yesterday (all / filtered).",
       "Added /tools — single hub linking every MWA tool.",
       "New Preferences submenu in Settings: temp/wind/pressure units, 12/24-hour clock, density, ticker speed, auto-refresh interval, reduced motion, and per-panel toggles for the home page.",
+      "Rollout: Open-Beta now → Release Candidate on Jun 29, 2026 → Stable on Jul 1, 2026.",
     ],
   },
   {
@@ -133,35 +135,51 @@ const ENTRIES: Entry[] = [
   {
     version: "1.2.0",
     date: "Jun 06, 2026",
-    status: "minor",
+    status: "eol",
     title: "City forecasts + air quality",
     bullets: [
       "Per-city current conditions, hourly + 7-day forecasts.",
       "Air quality (AQI) and UV index with category labels.",
+      "End-of-life: superseded by 1.4.0+. Please upgrade.",
     ],
   },
   {
     version: "1.1.1",
     date: "Jun 01, 2026",
-    status: "patch",
+    status: "eol",
     title: "Stability polish",
     bullets: [
       "Fixed alert ticker pausing under low-power mode.",
       "Tightened map county hit-areas on mobile.",
+      "End-of-life: superseded by 1.4.0+. Please upgrade.",
     ],
   },
   {
     version: "1.0.0",
     date: "May 30, 2026",
-    status: "stable",
+    status: "eol",
     title: "Initial launch",
     bullets: [
       "Statewide NWS alert feed for Michigan.",
       "Searchable list of every Michigan city.",
       "Installable PWA with offline-friendly shell.",
+      "End-of-life: superseded by 1.4.0+. Please upgrade.",
     ],
   },
 ];
+
+// Versions <1.4.0 are EOL. 3.3.0 follows a rollout schedule:
+//   open-beta → Jun 29, 2026 release candidate → Jul 1, 2026 stable.
+function effectiveStatus(e: Entry, now: Date): StatusId {
+  if (e.version === "3.3.0") {
+    const rc = new Date(2026, 5, 29); // Jun 29, 2026 local
+    const stable = new Date(2026, 6, 1); // Jul 1, 2026 local
+    if (now >= stable) return "stable";
+    if (now >= rc) return "rc";
+    return "open-beta";
+  }
+  return e.status;
+}
 
 function StatusChip({ id, className = "" }: { id: StatusId; className?: string }) {
   const s = STATUS_MAP[id];
@@ -173,6 +191,11 @@ function StatusChip({ id, className = "" }: { id: StatusId; className?: string }
 }
 
 function ChangelogPage() {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(new Date()), 60_000);
+    return () => window.clearInterval(id);
+  }, []);
   return (
     <div className="min-h-screen relative z-10">
       <header className="border-b border-border/60">
@@ -218,13 +241,15 @@ function ChangelogPage() {
         </section>
 
         <ol className="space-y-14">
-          {ENTRIES.map((e) => (
+          {ENTRIES.map((e) => {
+            const status = effectiveStatus(e, now);
+            return (
             <li key={e.version} className="grid md:grid-cols-[160px_1fr] gap-6 md:gap-10">
               <div className="md:text-right">
                 <div className="font-display text-3xl text-foreground">v{e.version}</div>
                 <div className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground font-mono mt-1">{e.date}</div>
                 <div className="mt-3">
-                  <StatusChip id={e.status} />
+                  <StatusChip id={status} />
                 </div>
               </div>
               <article className="glass aurora-border rounded-lg p-6">
@@ -239,7 +264,8 @@ function ChangelogPage() {
                 </ul>
               </article>
             </li>
-          ))}
+            );
+          })}
         </ol>
 
         <div className="mt-20 text-center text-[11px] uppercase tracking-[0.3em] text-muted-foreground font-mono">
