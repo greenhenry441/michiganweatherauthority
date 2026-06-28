@@ -50,6 +50,19 @@ type Entry = {
 
 const ENTRIES: Entry[] = [
   {
+    version: "3.3.0",
+    date: "Jun 28, 2026",
+    status: "minor",
+    title: "Tool pages + expanded preferences",
+    bullets: [
+      "Spun off Active Alerts Map, SPC Severe Outlook, and Live Lightning into dedicated pages.",
+      "Added /satellite — GOES-19 GeoColor, IR, water vapor, visible loops.",
+      "Added /storm-reports — SPC LSRs for today and yesterday (all / filtered).",
+      "Added /tools — single hub linking every MWA tool.",
+      "New Preferences submenu in Settings: temp/wind/pressure units, 12/24-hour clock, density, ticker speed, auto-refresh interval, reduced motion, and per-panel toggles for the home page.",
+    ],
+  },
+  {
     version: "3.2.0",
     date: "Jun 28, 2026",
     status: "minor",

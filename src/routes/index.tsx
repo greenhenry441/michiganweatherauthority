@@ -16,10 +16,7 @@ import { getAlertType } from "@/lib/nws-alert-types";
 import { getEasType, MWA_NETWORK_TYPE } from "@/lib/eas-alert-types";
 import { MICHIGAN_COUNTIES } from "@/lib/michigan-counties";
 import { colorForEvent, isLightColor } from "@/lib/nws-colors";
-import { MichiganAlertMap } from "@/components/MichiganAlertMap";
 import { RadarPanel } from "@/components/RadarPanel";
-import { LightningPanel } from "@/components/LightningPanel";
-import { SevereOutlookPanel } from "@/components/SevereOutlookPanel";
 import { HourlyMeteogram } from "@/components/HourlyMeteogram";
 import { AlertHistoryPanel } from "@/components/AlertHistoryPanel";
 import { supabase } from "@/integrations/supabase/client";
@@ -332,6 +329,12 @@ function HomePage() {
             </div>
           </Link>
           <nav className="flex items-center gap-1 sm:gap-2 shrink-0">
+            <Link to="/tools" className="hidden sm:inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-muted-foreground hover:text-accent min-h-11 px-2" aria-label="Tools">
+              <Radio className="h-4 w-4" /> <span className="hidden md:inline">Tools</span>
+            </Link>
+            <Link to="/tools" className="sm:hidden inline-flex items-center justify-center text-muted-foreground hover:text-accent min-h-11 min-w-11" aria-label="Tools">
+              <Radio className="h-5 w-5" />
+            </Link>
             <Link to="/forecasts" className="hidden sm:inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-muted-foreground hover:text-accent min-h-11 px-2" aria-label="Forecasts">
               <FileText className="h-4 w-4" /> <span className="hidden md:inline">Forecasts</span>
             </Link>
@@ -436,20 +439,33 @@ function HomePage() {
               <ExtraStatsPanel data={extra.data} loading={extra.isLoading} />
             </div>
 
-            {/* Radar + Lightning */}
-            <div className="grid lg:grid-cols-2 gap-4">
-              <RadarPanel />
-              <LightningPanel />
-            </div>
+            {/* Radar */}
+            <RadarPanel />
 
-            {/* Statewide alert map + SPC outlook */}
-            <div className="grid lg:grid-cols-[1.2fr_1fr] gap-4">
-              <MichiganAlertMap
-                alertsByCounty={buildCountyAlerts(weatherAlerts)}
-                polygons={buildAlertPolygons(weatherAlerts)}
-              />
-              <SevereOutlookPanel />
-            </div>
+            {/* Tool shortcuts — full pages live under /tools */}
+            <section>
+              <div className="flex items-end justify-between mb-3 gap-3 flex-wrap">
+                <div>
+                  <h2 className="font-display text-3xl">Tools</h2>
+                  <p className="text-[11px] font-mono uppercase tracking-[0.25em] text-muted-foreground">
+                    Open any tool in its own page
+                  </p>
+                </div>
+                <Link to="/tools" className="text-[11px] font-mono uppercase tracking-[0.25em] text-accent hover:underline">
+                  See all →
+                </Link>
+              </div>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <ToolCard to="/alerts-map"    icon={AlertTriangle}    label="Alerts Map"     blurb="Counties shaded live." badge="Live" />
+                <ToolCard to="/outlook"       icon={Cloud}            label="Severe Outlook" blurb="SPC Days 1–8." />
+                <ToolCard to="/lightning"     icon={Activity}         label="Lightning"      blurb="Real-time strikes." badge="Live" />
+                <ToolCard to="/satellite"     icon={Eye}              label="Satellite"      blurb="GOES-19 over MI." badge="Live" />
+                <ToolCard to="/storm-reports" icon={ListOrdered}      label="Storm Reports"  blurb="Today / yesterday." />
+                <ToolCard to="/forecasts"     icon={FileText}         label="Forecasts"      blurb="Raw NWS products." />
+                <ToolCard to="/changelog"     icon={Megaphone}        label="Changelog"      blurb="What's new." />
+                <ToolCard to="/tools"         icon={Radio}            label="All tools"      blurb="Hub of everything." />
+              </div>
+            </section>
 
             {/* Hourly meteogram */}
             <HourlyMeteogram periods={weather.data.hourly.properties.periods} hours={36} />
@@ -536,7 +552,7 @@ function HomePage() {
             >
               Status Page
             </a>
-            <span className="font-mono">MWA · v3.2.0</span>
+            <span className="font-mono">MWA · v3.3.0</span>
           </div>
         </div>
       </footer>
@@ -1252,5 +1268,30 @@ function LoadingPanel() {
         <p className="text-xs font-mono uppercase tracking-[0.25em] text-muted-foreground">Polling NWS feed…</p>
       </div>
     </div>
+  );
+}
+
+function ToolCard({
+  to, icon: Icon, label, blurb, badge,
+}: {
+  to: string;
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  blurb: string;
+  badge?: string;
+}) {
+  return (
+    <Link to={to} className="glass aurora-border liquid rounded-2xl p-4 block group">
+      <div className="flex items-center justify-between mb-2">
+        <Icon className="h-5 w-5 text-accent" />
+        {badge && (
+          <span className="text-[9px] font-mono uppercase tracking-[0.2em] text-accent border border-accent/40 rounded-full px-1.5 py-0.5">
+            {badge}
+          </span>
+        )}
+      </div>
+      <div className="font-display text-lg leading-tight">{label}</div>
+      <div className="text-[11px] text-muted-foreground mt-1">{blurb}</div>
+    </Link>
   );
 }
