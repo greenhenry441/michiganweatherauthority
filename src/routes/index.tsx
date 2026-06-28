@@ -302,8 +302,8 @@ function HomePage() {
   useForecastNotifications(city, weather.data, prefs);
 
   const cityAlerts = useMemo(
-    () => weatherAlerts.filter((a) => entryMatchesArea(a, city)),
-    [weatherAlerts, city],
+    () => allAlerts.filter((a) => entryMatchesArea(a, city)),
+    [allAlerts, city],
   );
 
   const current = weather.data?.hourly.properties.periods[0];

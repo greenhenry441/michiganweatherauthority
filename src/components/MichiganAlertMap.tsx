@@ -105,15 +105,16 @@ export function MichiganAlertMap({ alertsByCounty, polygons = [], width = 520, h
           {geo.features.map((f) => {
             const name = f.properties.name;
             const info = countyMap.get(name.toLowerCase());
-            const baseFill = info ? colorForEvent(info.event) : "hsl(var(--storm))";
-            const fill = info?.partial ? "hsl(var(--storm))" : baseFill;
+            const baseFill = info ? colorForEvent(info.event) : "var(--card)";
+            const fill = info?.partial ? "var(--card)" : baseFill;
             return (
               <path
                 key={f.id}
                 d={path(f as any) || ""}
                 fill={fill}
-                stroke={info ? "#000" : "hsl(var(--border))"}
-                strokeWidth={info ? 0.6 : 0.4}
+                stroke={info ? "#000" : "var(--foreground)"}
+                strokeOpacity={info ? 1 : 0.45}
+                strokeWidth={info ? 0.6 : 0.5}
                 onMouseMove={(e) => {
                   const r = (e.currentTarget.ownerSVGElement!).getBoundingClientRect();
                   setHover({ name, event: info?.event, partial: info?.partial, x: e.clientX - r.left, y: e.clientY - r.top });
