@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 const DAYS = [
   { day: 1, label: "Day 1" },
@@ -7,12 +7,18 @@ const DAYS = [
   { day: 4, label: "Days 4-8" },
 ];
 
+// Bust SPC's aggressive CDN cache hourly so flipping tabs always pulls a fresh image.
+function spcSrc(day: number) {
+  const stamp = Math.floor(Date.now() / (1000 * 60 * 30));
+  if (day <= 3) {
+    return `https://www.spc.noaa.gov/products/outlook/day${day}otlk.gif?t=${stamp}`;
+  }
+  return `https://www.spc.noaa.gov/products/exper/day4-8/day48prob.gif?t=${stamp}`;
+}
+
 export function SevereOutlookPanel() {
   const [day, setDay] = useState(1);
-  const src =
-    day <= 3
-      ? `https://www.spc.noaa.gov/products/outlook/day${day}otlk.gif`
-      : `https://www.spc.noaa.gov/products/exper/day4-8/day48prob.gif`;
+  const src = useMemo(() => spcSrc(day), [day]);
   return (
     <div className="rounded-2xl glass aurora-border p-4">
       <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
@@ -39,9 +45,11 @@ export function SevereOutlookPanel() {
       </div>
       <div className="rounded-xl overflow-hidden border border-border bg-white/95 grid place-items-center">
         <img
+          key={src}
           src={src}
           alt={`SPC Day ${day} severe weather outlook`}
           loading="lazy"
+          referrerPolicy="no-referrer"
           className="w-full h-auto max-h-[480px] object-contain"
         />
       </div>
