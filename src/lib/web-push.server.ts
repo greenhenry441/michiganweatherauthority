@@ -129,7 +129,7 @@ async function encryptPayload(
   // Import UA public key
   const uaKey = await crypto.subtle.importKey(
     "raw",
-    uaPublic,
+    uaPublic as BufferSource,
     { name: "ECDH", namedCurve: "P-256" },
     false,
     [],
