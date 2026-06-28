@@ -29,6 +29,9 @@ import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import { CommandExtras, type CommandSnapshot } from "@/components/CommandExtras";
+import { CommandUnlock } from "@/components/CommandUnlock";
+import { isCommandUnlocked, lockCommand } from "@/lib/command-gate.functions";
+
 
 export const Route = createFileRoute("/command")({
   head: () => ({
