@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import type { SigninMfaSession } from "./session-config.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 type Purpose = "signin" | "command";
@@ -126,7 +127,7 @@ export const verifySigninMfa = createServerFn({ method: "POST" })
     if (!ok) return { ok: false as const, error: "invalid_code" };
 
     const { useSession } = await import("@tanstack/react-start/server");
-    const { SIGNIN_MFA_SESSION, type SigninMfaSession } = await import("./session-config.server");
+    const { SIGNIN_MFA_SESSION } = await import("./session-config.server");
     const session = await useSession<SigninMfaSession>(SIGNIN_MFA_SESSION);
     await session.update({ verifiedUserId: context.userId, verifiedAt: Date.now() });
 
@@ -145,7 +146,7 @@ export const isSigninMfaVerified = createServerFn({ method: "GET" })
     const enrolled = !!factor?.confirmed_at;
     if (!enrolled) return { enrolled: false, verified: true };
     const { useSession } = await import("@tanstack/react-start/server");
-    const { SIGNIN_MFA_SESSION, type SigninMfaSession } = await import("./session-config.server");
+    const { SIGNIN_MFA_SESSION } = await import("./session-config.server");
     const session = await useSession<SigninMfaSession>(SIGNIN_MFA_SESSION);
     return { enrolled: true, verified: session.data.verifiedUserId === context.userId };
   });

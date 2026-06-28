@@ -1,12 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import type { CommandSession } from "./session-config.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 export const isCommandUnlocked = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const { useSession } = await import("@tanstack/react-start/server");
-    const { COMMAND_SESSION, type CommandSession } = await import("./session-config.server");
+    const { COMMAND_SESSION } = await import("./session-config.server");
     const session = await useSession<CommandSession>(COMMAND_SESSION);
     return {
       unlocked: !!session.data.unlocked && session.data.userId === context.userId,
@@ -77,7 +78,7 @@ export const unlockCommand = createServerFn({ method: "POST" })
 
     // 5. set session
     const { useSession } = await import("@tanstack/react-start/server");
-    const { COMMAND_SESSION, type CommandSession } = await import("./session-config.server");
+    const { COMMAND_SESSION } = await import("./session-config.server");
     const session = await useSession<CommandSession>(COMMAND_SESSION);
     await session.update({ unlocked: true, userId, unlockedAt: Date.now() });
 
@@ -92,7 +93,7 @@ export const lockCommand = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async () => {
     const { useSession } = await import("@tanstack/react-start/server");
-    const { COMMAND_SESSION, type CommandSession } = await import("./session-config.server");
+    const { COMMAND_SESSION } = await import("./session-config.server");
     const session = await useSession<CommandSession>(COMMAND_SESSION);
     await session.clear();
     return { ok: true };
