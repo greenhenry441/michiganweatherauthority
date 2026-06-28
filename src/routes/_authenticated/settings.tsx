@@ -17,6 +17,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { THEMES, MODES, applyTheme, getTheme, getMode, type ThemeName, type ThemeMode } from "@/lib/theme";
 import { usePrefs } from "@/lib/prefs";
+import { MfaManager } from "@/components/MfaManager";
+
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [{ title: "Settings — MWA" }, { name: "robots", content: "noindex" }] }),
@@ -280,6 +282,10 @@ function SettingsPage() {
           </p>
         </div>
       </section>
+
+      <MfaManager />
+
+
 
       <div className="flex flex-wrap gap-2 justify-end">
         <Button variant="outline" type="button" onClick={testNotification} size="lg">
