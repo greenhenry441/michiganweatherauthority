@@ -117,6 +117,7 @@ function SettingsPage() {
       </div>
 
       <AppearanceSection />
+      <PreferencesSection />
 
       <section className="rounded-xl border border-border bg-card p-5 space-y-4">
         <div className="flex items-center gap-2 text-accent">
