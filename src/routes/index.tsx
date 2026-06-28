@@ -1161,13 +1161,14 @@ function FullAlert({ entry }: { entry: AlertEntry }) {
   const fg = isLightColor(bg) ? "#000" : "#fff";
   if (entry.kind === "shared") {
     const a = entry.alert;
-    const t = a.type_id ? getAlertType(a.type_id) : undefined;
+    const t = a.type_id ? (getAlertType(a.type_id) ?? getEasType(a.type_id)) : undefined;
+    const fallbackName = a.kind === "eas" ? "EAS Alert" : a.kind === "mwa-network" ? "MWA Network Notification" : "Weather Alert";
     return (
       <div className="rounded-lg border border-border bg-storm/60 overflow-hidden">
         <div className="px-4 py-2 flex items-center justify-between" style={{ backgroundColor: bg, color: fg }}>
           <div className="flex items-center gap-2 font-display uppercase tracking-wider text-sm font-bold">
             <AlertTriangle className="h-4 w-4" />
-            {t?.name ?? a.custom_name ?? "Weather Alert"}
+            {t?.name ?? a.custom_name ?? fallbackName}
             <Badge variant="outline" className="border-current/40 text-[10px]" style={{ color: fg, borderColor: fg }}>MWA Issued</Badge>
           </div>
           <span className="text-[10px] font-mono">until {new Date(a.expires_at).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}</span>
