@@ -4,8 +4,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle, MapPin, Radio, RefreshCw, Search, Wind, Droplets,
   Thermometer, Sunrise, Eye, Gauge, Megaphone, ListOrdered,
-  Sun, Activity, UserCircle2, FileText, LogIn, Sunset, Cloud, Bell, BellOff,
+  Sun, Activity, UserCircle2, FileText, LogIn, Sunset, Cloud, Bell, BellOff, ShieldAlert,
 } from "lucide-react";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
+
 import { MICHIGAN_CITIES, type MichiganCity } from "@/lib/michigan-cities";
 import {
   getCityWeather, getMichiganAlerts, getExtraStats,
@@ -202,6 +204,8 @@ const LS_CITY = "mwa.home.city";
 
 function HomePage() {
   const user = useAuthUser();
+  const { isAdmin } = useIsAdmin();
+
 
   // Hydrate from localStorage on mount; profile load (below) overrides.
   const [city, setCity] = useState<MichiganCity>(MICHIGAN_CITIES[0]);
@@ -341,8 +345,19 @@ function HomePage() {
             <Link to="/forecasts" className="sm:hidden inline-flex items-center justify-center text-muted-foreground hover:text-accent min-h-11 min-w-11" aria-label="Forecasts">
               <FileText className="h-5 w-5" />
             </Link>
+            {isAdmin && (
+              <>
+                <Link to="/command" className="hidden sm:inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-destructive hover:opacity-80 min-h-11 px-2" aria-label="Command">
+                  <ShieldAlert className="h-4 w-4" /> <span className="hidden md:inline">Command</span>
+                </Link>
+                <Link to="/command" className="sm:hidden inline-flex items-center justify-center text-destructive hover:opacity-80 min-h-11 min-w-11" aria-label="Command">
+                  <ShieldAlert className="h-5 w-5" />
+                </Link>
+              </>
+            )}
             <InstallAppButton />
             <NotifyToggle />
+
             {user ? (
               <Link to="/settings" className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-accent hover:opacity-80 min-h-11 min-w-11 px-2 justify-center" aria-label="Account">
                 <UserCircle2 className="h-5 w-5" /> <span className="hidden md:inline">Account</span>

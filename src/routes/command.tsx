@@ -29,6 +29,9 @@ import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import { CommandExtras, type CommandSnapshot } from "@/components/CommandExtras";
+import { CommandUnlock } from "@/components/CommandUnlock";
+import { isCommandUnlocked, lockCommand } from "@/lib/command-gate.functions";
+
 
 export const Route = createFileRoute("/command")({
   head: () => ({
@@ -146,80 +149,38 @@ interface Draft {
 }
 
 function CommandPage() {
-  const [unlocked, setUnlocked] = useState(false);
-  const [code, setCode] = useState("");
+  const [unlocked, setUnlocked] = useState<boolean | null>(null);
+  const checkUnlock = useServerFn(isCommandUnlocked);
+  const lockFn = useServerFn(lockCommand);
 
-  if (!unlocked) {
+  useEffect(() => {
+    let cancelled = false;
+    checkUnlock()
+      .then((r) => { if (!cancelled) setUnlocked(r.unlocked); })
+      .catch(() => { if (!cancelled) setUnlocked(false); });
+    return () => { cancelled = true; };
+  }, [checkUnlock]);
+
+  if (unlocked === null) {
     return (
-      <div className="min-h-screen relative overflow-hidden grid place-items-center px-4">
-        <div
-          aria-hidden
-          className="absolute inset-0 -z-10"
-          style={{
-            background:
-              "radial-gradient(1000px 600px at 20% 10%, color-mix(in oklab, var(--severe) 18%, transparent), transparent 60%), radial-gradient(800px 500px at 80% 90%, color-mix(in oklab, var(--amber-alert) 14%, transparent), transparent 60%)",
-          }}
-        />
-        <div className="absolute inset-0 -z-10 opacity-[0.04] [background-image:linear-gradient(var(--foreground)_1px,transparent_1px),linear-gradient(90deg,var(--foreground)_1px,transparent_1px)] [background-size:32px_32px]" />
-
-        <div className="w-full max-w-md glass liquid rounded-2xl p-7 space-y-5">
-          <div className="flex items-center gap-2">
-            <span className="relative flex h-2.5 w-2.5">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-severe opacity-60 animate-ping" />
-              <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-severe" />
-            </span>
-            <span className="font-mono uppercase tracking-[0.3em] text-[10px] text-severe">
-              Restricted Channel
-            </span>
-          </div>
-          <div className="space-y-1">
-            <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-muted-foreground">
-              MWA / Operations
-            </p>
-            <h1 className="font-display text-3xl leading-tight">Command Center</h1>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Operator credentials required to broadcast manual alerts across the network.
-          </p>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              if (code === ACCESS_CODE) setUnlocked(true);
-              else toast.error("Invalid access code");
-            }}
-            className="space-y-3"
-          >
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-              <Input
-                type="password"
-                placeholder="Access code"
-                value={code}
-                onChange={(e) => setCode(e.target.value)}
-                className="pl-9"
-                autoFocus
-              />
-            </div>
-            <Button type="submit" className="w-full font-display tracking-wider">
-              Authenticate
-            </Button>
-          </form>
-          <div className="flex items-center justify-between pt-2 border-t border-border/40">
-            <p className="text-[10px] font-mono text-muted-foreground">
-              Default: <span className="text-accent">mwa-admin</span>
-            </p>
-            <Link to="/" className="text-xs text-muted-foreground hover:text-accent inline-flex items-center gap-1">
-              <ArrowLeft className="h-3 w-3" /> Public site
-            </Link>
-          </div>
-        </div>
-        <Toaster />
+      <div className="min-h-screen grid place-items-center text-muted-foreground text-sm">
+        <span className="font-mono uppercase tracking-[0.3em] text-[10px]">Checking authorization…</span>
       </div>
     );
   }
+  if (!unlocked) return <CommandUnlock onUnlocked={() => setUnlocked(true)} />;
 
-  return <CommandConsole code={code} />;
+  return (
+    <CommandConsole
+      code={ACCESS_CODE}
+      onLock={async () => {
+        try { await lockFn(); } catch {}
+        setUnlocked(false);
+      }}
+    />
+  );
 }
+
 
 function playBeep() {
   try {
@@ -237,7 +198,7 @@ function playBeep() {
   } catch {}
 }
 
-function CommandConsole({ code }: { code: string }) {
+function CommandConsole({ code, onLock }: { code: string; onLock?: () => void }) {
   const { alerts } = useSharedAlerts();
   const issueFn = useServerFn(issueAlert);
   const cancelFn = useServerFn(cancelAlert);
@@ -626,6 +587,12 @@ function CommandConsole({ code }: { code: string }) {
             <span>operator: {issuer}</span>
           </div>
           <div className="flex items-center gap-1">
+            {onLock && (
+              <Button variant="outline" size="sm" onClick={onLock} className="h-9 text-xs border-destructive/40 text-destructive hover:bg-destructive/10">
+                <Lock className="h-3.5 w-3.5 mr-1.5" /> Lock
+              </Button>
+            )}
+
             <Button
               variant={testMode ? "default" : "ghost"}
               size="sm"
