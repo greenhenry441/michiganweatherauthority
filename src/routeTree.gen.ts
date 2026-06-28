@@ -9,13 +9,17 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WebcamsRouteImport } from './routes/webcams'
+import { Route as TropicalRouteImport } from './routes/tropical'
 import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as StormReportsRouteImport } from './routes/storm-reports'
 import { Route as SatelliteRouteImport } from './routes/satellite'
 import { Route as OutlookRouteImport } from './routes/outlook'
+import { Route as MesoscaleRouteImport } from './routes/mesoscale'
 import { Route as LightningRouteImport } from './routes/lightning'
 import { Route as ForecastsRouteImport } from './routes/forecasts'
 import { Route as CommandRouteImport } from './routes/command'
+import { Route as ClimateRouteImport } from './routes/climate'
 import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AlertsMapRouteImport } from './routes/alerts-map'
@@ -23,6 +27,16 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 
+const WebcamsRoute = WebcamsRouteImport.update({
+  id: '/webcams',
+  path: '/webcams',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TropicalRoute = TropicalRouteImport.update({
+  id: '/tropical',
+  path: '/tropical',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ToolsRoute = ToolsRouteImport.update({
   id: '/tools',
   path: '/tools',
@@ -43,6 +57,11 @@ const OutlookRoute = OutlookRouteImport.update({
   path: '/outlook',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MesoscaleRoute = MesoscaleRouteImport.update({
+  id: '/mesoscale',
+  path: '/mesoscale',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LightningRoute = LightningRouteImport.update({
   id: '/lightning',
   path: '/lightning',
@@ -56,6 +75,11 @@ const ForecastsRoute = ForecastsRouteImport.update({
 const CommandRoute = CommandRouteImport.update({
   id: '/command',
   path: '/command',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClimateRoute = ClimateRouteImport.update({
+  id: '/climate',
+  path: '/climate',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChangelogRoute = ChangelogRouteImport.update({
@@ -93,13 +117,17 @@ export interface FileRoutesByFullPath {
   '/alerts-map': typeof AlertsMapRoute
   '/auth': typeof AuthRoute
   '/changelog': typeof ChangelogRoute
+  '/climate': typeof ClimateRoute
   '/command': typeof CommandRoute
   '/forecasts': typeof ForecastsRoute
   '/lightning': typeof LightningRoute
+  '/mesoscale': typeof MesoscaleRoute
   '/outlook': typeof OutlookRoute
   '/satellite': typeof SatelliteRoute
   '/storm-reports': typeof StormReportsRoute
   '/tools': typeof ToolsRoute
+  '/tropical': typeof TropicalRoute
+  '/webcams': typeof WebcamsRoute
   '/settings': typeof AuthenticatedSettingsRoute
 }
 export interface FileRoutesByTo {
@@ -107,13 +135,17 @@ export interface FileRoutesByTo {
   '/alerts-map': typeof AlertsMapRoute
   '/auth': typeof AuthRoute
   '/changelog': typeof ChangelogRoute
+  '/climate': typeof ClimateRoute
   '/command': typeof CommandRoute
   '/forecasts': typeof ForecastsRoute
   '/lightning': typeof LightningRoute
+  '/mesoscale': typeof MesoscaleRoute
   '/outlook': typeof OutlookRoute
   '/satellite': typeof SatelliteRoute
   '/storm-reports': typeof StormReportsRoute
   '/tools': typeof ToolsRoute
+  '/tropical': typeof TropicalRoute
+  '/webcams': typeof WebcamsRoute
   '/settings': typeof AuthenticatedSettingsRoute
 }
 export interface FileRoutesById {
@@ -123,13 +155,17 @@ export interface FileRoutesById {
   '/alerts-map': typeof AlertsMapRoute
   '/auth': typeof AuthRoute
   '/changelog': typeof ChangelogRoute
+  '/climate': typeof ClimateRoute
   '/command': typeof CommandRoute
   '/forecasts': typeof ForecastsRoute
   '/lightning': typeof LightningRoute
+  '/mesoscale': typeof MesoscaleRoute
   '/outlook': typeof OutlookRoute
   '/satellite': typeof SatelliteRoute
   '/storm-reports': typeof StormReportsRoute
   '/tools': typeof ToolsRoute
+  '/tropical': typeof TropicalRoute
+  '/webcams': typeof WebcamsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
 }
 export interface FileRouteTypes {
@@ -139,13 +175,17 @@ export interface FileRouteTypes {
     | '/alerts-map'
     | '/auth'
     | '/changelog'
+    | '/climate'
     | '/command'
     | '/forecasts'
     | '/lightning'
+    | '/mesoscale'
     | '/outlook'
     | '/satellite'
     | '/storm-reports'
     | '/tools'
+    | '/tropical'
+    | '/webcams'
     | '/settings'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -153,13 +193,17 @@ export interface FileRouteTypes {
     | '/alerts-map'
     | '/auth'
     | '/changelog'
+    | '/climate'
     | '/command'
     | '/forecasts'
     | '/lightning'
+    | '/mesoscale'
     | '/outlook'
     | '/satellite'
     | '/storm-reports'
     | '/tools'
+    | '/tropical'
+    | '/webcams'
     | '/settings'
   id:
     | '__root__'
@@ -168,13 +212,17 @@ export interface FileRouteTypes {
     | '/alerts-map'
     | '/auth'
     | '/changelog'
+    | '/climate'
     | '/command'
     | '/forecasts'
     | '/lightning'
+    | '/mesoscale'
     | '/outlook'
     | '/satellite'
     | '/storm-reports'
     | '/tools'
+    | '/tropical'
+    | '/webcams'
     | '/_authenticated/settings'
   fileRoutesById: FileRoutesById
 }
@@ -184,17 +232,35 @@ export interface RootRouteChildren {
   AlertsMapRoute: typeof AlertsMapRoute
   AuthRoute: typeof AuthRoute
   ChangelogRoute: typeof ChangelogRoute
+  ClimateRoute: typeof ClimateRoute
   CommandRoute: typeof CommandRoute
   ForecastsRoute: typeof ForecastsRoute
   LightningRoute: typeof LightningRoute
+  MesoscaleRoute: typeof MesoscaleRoute
   OutlookRoute: typeof OutlookRoute
   SatelliteRoute: typeof SatelliteRoute
   StormReportsRoute: typeof StormReportsRoute
   ToolsRoute: typeof ToolsRoute
+  TropicalRoute: typeof TropicalRoute
+  WebcamsRoute: typeof WebcamsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/webcams': {
+      id: '/webcams'
+      path: '/webcams'
+      fullPath: '/webcams'
+      preLoaderRoute: typeof WebcamsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tropical': {
+      id: '/tropical'
+      path: '/tropical'
+      fullPath: '/tropical'
+      preLoaderRoute: typeof TropicalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/tools': {
       id: '/tools'
       path: '/tools'
@@ -223,6 +289,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OutlookRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mesoscale': {
+      id: '/mesoscale'
+      path: '/mesoscale'
+      fullPath: '/mesoscale'
+      preLoaderRoute: typeof MesoscaleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lightning': {
       id: '/lightning'
       path: '/lightning'
@@ -242,6 +315,13 @@ declare module '@tanstack/react-router' {
       path: '/command'
       fullPath: '/command'
       preLoaderRoute: typeof CommandRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/climate': {
+      id: '/climate'
+      path: '/climate'
+      fullPath: '/climate'
+      preLoaderRoute: typeof ClimateRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/changelog': {
@@ -306,13 +386,17 @@ const rootRouteChildren: RootRouteChildren = {
   AlertsMapRoute: AlertsMapRoute,
   AuthRoute: AuthRoute,
   ChangelogRoute: ChangelogRoute,
+  ClimateRoute: ClimateRoute,
   CommandRoute: CommandRoute,
   ForecastsRoute: ForecastsRoute,
   LightningRoute: LightningRoute,
+  MesoscaleRoute: MesoscaleRoute,
   OutlookRoute: OutlookRoute,
   SatelliteRoute: SatelliteRoute,
   StormReportsRoute: StormReportsRoute,
   ToolsRoute: ToolsRoute,
+  TropicalRoute: TropicalRoute,
+  WebcamsRoute: WebcamsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

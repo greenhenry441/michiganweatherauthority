@@ -1,14 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowLeft, AlertTriangle, CloudLightning, Zap, Satellite,
-  FileSpreadsheet, Radio, History, FileText, BookOpen,
+  FileSpreadsheet, Radio, FileText, BookOpen, Wind, ThermometerSun, Camera, Cloud,
 } from "lucide-react";
 
 export const Route = createFileRoute("/tools")({
   head: () => ({
     meta: [
       { title: "Tools — Michigan Weather Authority" },
-      { name: "description", content: "Every MWA tool: alerts map, severe outlook, lightning, satellite, storm reports, and more." },
+      { name: "description", content: "Every MWA tool: alerts map, severe outlook, lightning, satellite, storm reports, tropical, climate, webcams, and more." },
       { property: "og:title", content: "MWA Tools" },
       { property: "og:description", content: "Every Michigan Weather Authority tool in one place." },
     ],
@@ -27,9 +27,13 @@ type Tool = {
 const TOOLS: Tool[] = [
   { to: "/alerts-map",    label: "Active Alerts Map",  blurb: "Statewide county map shaded by every active NWS alert.",       icon: AlertTriangle, badge: "Live" },
   { to: "/outlook",       label: "SPC Severe Outlook", blurb: "Convective risk maps for Day 1, 2, 3, and the 4–8 outlook.",   icon: CloudLightning },
+  { to: "/mesoscale",     label: "Mesoscale Discussions", blurb: "Short-fuse SPC MDs about developing convection.",            icon: Cloud, badge: "New" },
   { to: "/lightning",     label: "Live Lightning",     blurb: "Real-time strike map from the Blitzortung community network.", icon: Zap, badge: "Live" },
   { to: "/satellite",     label: "GOES Satellite",     blurb: "Live GOES-19 imagery — GeoColor, IR, water vapor, visible.",   icon: Satellite, badge: "Live" },
   { to: "/storm-reports", label: "Storm Reports",      blurb: "Today and yesterday's tornado, wind, and hail reports.",       icon: FileSpreadsheet },
+  { to: "/tropical",      label: "Tropical Tracker",   blurb: "NHC active named systems — Atlantic & East Pacific.",          icon: Wind, badge: "New" },
+  { to: "/climate",       label: "Climate & Records",  blurb: "Highs, lows, precip, snow — 12-month rolling stats.",          icon: ThermometerSun, badge: "New" },
+  { to: "/webcams",       label: "Michigan Webcams",   blurb: "Live cameras: bridges, harbors, dunes, capitol.",              icon: Camera, badge: "New" },
   { to: "/forecasts",     label: "Forecast Discussion",blurb: "Raw text forecast discussions from MI NWS offices.",           icon: FileText },
   { to: "/changelog",     label: "Changelog",          blurb: "Versioned release history with status tags.",                  icon: BookOpen },
 ];
