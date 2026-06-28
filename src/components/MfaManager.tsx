@@ -10,7 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { listMyFactors, startTotpEnroll, confirmTotpEnroll, disableFactor, startEmailEnroll, confirmEmailEnroll } from "@/lib/mfa.functions";
-import { getMyRoles } from "@/lib/role.functions";
+import { getMyRoles, claimFirstAdmin } from "@/lib/role.functions";
+
 import QRCode from "qrcode";
 
 type Purpose = "signin" | "command";
@@ -55,11 +56,36 @@ export function MfaManager() {
       )}
 
       {role.data && !role.data.isAdmin && (
-        <p className="text-[11px] text-muted-foreground font-mono">Command 2FA is only shown for admin accounts.</p>
+        <ClaimAdminCard onClaimed={() => role.refetch()} />
       )}
     </section>
   );
 }
+
+function ClaimAdminCard({ onClaimed }: { onClaimed: () => void }) {
+  const claim = useServerFn(claimFirstAdmin);
+  const [busy, setBusy] = useState(false);
+  return (
+    <div className="rounded-xl border border-dashed border-border/60 bg-background/30 p-4 text-xs space-y-2">
+      <p className="text-muted-foreground">
+        Command 2FA is admin-only. If no admin has been set yet on this project, you can claim the first admin role.
+      </p>
+      <Button
+        size="sm" variant="outline" disabled={busy}
+        onClick={async () => {
+          setBusy(true);
+          try {
+            const r = await claim();
+            if (!r.ok && r.reason === "admin_exists") toast.error("An admin already exists — ask them to grant you the role.");
+            else if (!r.ok) toast.error(r.reason);
+            else { toast.success("You are now an admin. Refreshing…"); onClaimed(); }
+          } finally { setBusy(false); }
+        }}
+      >Claim first admin role</Button>
+    </div>
+  );
+}
+
 
 function FactorCard({ purpose, title, description, allowEmail, factor, onChanged }: {
   purpose: Purpose;
