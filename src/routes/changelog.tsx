@@ -241,13 +241,15 @@ function ChangelogPage() {
         </section>
 
         <ol className="space-y-14">
-          {ENTRIES.map((e) => (
+          {ENTRIES.map((e) => {
+            const status = effectiveStatus(e, now);
+            return (
             <li key={e.version} className="grid md:grid-cols-[160px_1fr] gap-6 md:gap-10">
               <div className="md:text-right">
                 <div className="font-display text-3xl text-foreground">v{e.version}</div>
                 <div className="text-[11px] uppercase tracking-[0.25em] text-muted-foreground font-mono mt-1">{e.date}</div>
                 <div className="mt-3">
-                  <StatusChip id={e.status} />
+                  <StatusChip id={status} />
                 </div>
               </div>
               <article className="glass aurora-border rounded-lg p-6">
