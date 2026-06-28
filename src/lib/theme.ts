@@ -36,7 +36,10 @@ export function applyTheme(theme: ThemeName, mode: ThemeMode) {
     window.localStorage.setItem(THEME_KEY, theme);
     window.localStorage.setItem(MODE_KEY, mode);
   } catch {}
+  // Swap favicon to match theme/mode
+  import("./favicon").then(({ updateFavicon }) => updateFavicon(theme, mode)).catch(() => {});
 }
+
 
 // Inline script string injected pre-paint to avoid FOUC.
 export const THEME_BOOT_SCRIPT = `
