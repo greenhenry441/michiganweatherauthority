@@ -47,9 +47,9 @@ function concatBytes(...arrs: Uint8Array[]): Uint8Array {
 }
 
 async function hkdf(salt: Uint8Array, ikm: Uint8Array, info: Uint8Array, length: number): Promise<Uint8Array> {
-  const key = await crypto.subtle.importKey("raw", ikm, "HKDF", false, ["deriveBits"]);
+  const key = await crypto.subtle.importKey("raw", ikm as BufferSource, "HKDF", false, ["deriveBits"]);
   const bits = await crypto.subtle.deriveBits(
-    { name: "HKDF", hash: "SHA-256", salt, info },
+    { name: "HKDF", hash: "SHA-256", salt: salt as BufferSource, info: info as BufferSource },
     key,
     length * 8,
   );
@@ -170,9 +170,9 @@ async function encryptPayload(
   // Pad: plaintext || 0x02 (last record delimiter)
   const padded = concatBytes(plaintext, new Uint8Array([0x02]));
 
-  const aesKey = await crypto.subtle.importKey("raw", cek, "AES-GCM", false, ["encrypt"]);
+  const aesKey = await crypto.subtle.importKey("raw", cek as BufferSource, "AES-GCM", false, ["encrypt"]);
   const ciphertext = new Uint8Array(
-    await crypto.subtle.encrypt({ name: "AES-GCM", iv: nonce }, aesKey, padded),
+    await crypto.subtle.encrypt({ name: "AES-GCM", iv: nonce as BufferSource }, aesKey, padded as BufferSource),
   );
 
   // Build aes128gcm header: salt(16) || rs(4, big-endian, e.g. 4096) || idlen(1) || keyid(idlen)
@@ -218,7 +218,7 @@ export async function sendPushNotifications(
             Urgency: payload.severity === "extreme" || payload.severity === "severe" ? "high" : "normal",
             Authorization: `vapid t=${jwt}, k=${process.env.VAPID_PUBLIC_KEY}`,
           },
-          body: enc.body,
+          body: enc.body as BodyInit,
         });
 
         if (res.status === 404 || res.status === 410) {
