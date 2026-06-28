@@ -3,7 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, AlertTriangle } from "lucide-react";
 import { getMichiganAlerts } from "@/lib/weather-api";
 import { MichiganAlertMap } from "@/components/MichiganAlertMap";
-import { buildCountyAlertsFromNWS, buildPolygonsFromNWS } from "@/lib/alert-map-data";
+import { buildCountyAlertsFromNWS, buildPolygonsFromNWS, buildCountyAlertsFromShared } from "@/lib/alert-map-data";
+import { useSharedAlerts } from "@/lib/alerts-store";
 
 export const Route = createFileRoute("/alerts-map")({
   head: () => ({
@@ -23,31 +24,53 @@ function AlertsMapPage() {
     queryFn: getMichiganAlerts,
     refetchInterval: 60_000,
   });
-  const countyData = alerts.data ? buildCountyAlertsFromNWS(alerts.data) : [];
+  const { alerts: shared } = useSharedAlerts();
+  const nwsCounty = alerts.data ? buildCountyAlertsFromNWS(alerts.data) : [];
+  const sharedCounty = buildCountyAlertsFromShared(shared);
+  const countyData = [...nwsCounty, ...sharedCounty];
   const polys = alerts.data ? buildPolygonsFromNWS(alerts.data) : [];
+  const sharedWeather = shared.filter((a) => a.kind === "weather");
+  const sharedOther = shared.filter((a) => a.kind !== "weather");
+  const totalCount = (alerts.data?.length ?? 0) + shared.length;
 
   return (
     <ToolShell
       icon={<AlertTriangle className="h-5 w-5" />}
       eyebrow="Tool · Live"
       title="Statewide alerts map"
-      blurb="Every active NWS alert for Michigan, shaded onto county and polygon geometry with corresponding NWS colors."
+      blurb="Every active NWS alert plus MWA-issued alerts for Michigan, shaded onto county and polygon geometry with corresponding NWS colors."
     >
       <div className="grid lg:grid-cols-[1.4fr_1fr] gap-6">
         <MichiganAlertMap alertsByCounty={countyData} polygons={polys} width={620} height={680} />
         <div className="space-y-3">
-          <h2 className="font-display text-2xl">Active alerts ({alerts.data?.length ?? 0})</h2>
+          <h2 className="font-display text-2xl">Active alerts ({totalCount})</h2>
           <p className="text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
             Auto-refresh · every 60s
           </p>
           <div className="space-y-2 max-h-[640px] overflow-y-auto pr-1">
+            {sharedOther.map((a) => (
+              <div key={a.id} className="glass rounded-lg p-3 border border-accent/40">
+                <div className="text-[10px] font-mono uppercase tracking-wider text-accent">
+                  {a.kind === "eas" ? "EAS" : "MWA Network"}
+                </div>
+                <div className="text-sm font-medium">{a.custom_name ?? a.headline}</div>
+                <div className="text-[11px] text-muted-foreground line-clamp-2">{a.areas.join(", ")}</div>
+              </div>
+            ))}
+            {sharedWeather.map((a) => (
+              <div key={a.id} className="glass rounded-lg p-3 border border-amber-alert/40">
+                <div className="text-[10px] font-mono uppercase tracking-wider text-amber-alert">MWA Issued</div>
+                <div className="text-sm font-medium">{a.custom_name ?? a.headline}</div>
+                <div className="text-[11px] text-muted-foreground line-clamp-2">{a.areas.join(", ")}</div>
+              </div>
+            ))}
             {(alerts.data ?? []).map((a) => (
               <div key={a.id} className="glass rounded-lg p-3">
                 <div className="text-sm font-medium">{a.properties.event}</div>
                 <div className="text-[11px] text-muted-foreground line-clamp-2">{a.properties.areaDesc}</div>
               </div>
             ))}
-            {alerts.data?.length === 0 && (
+            {totalCount === 0 && (
               <div className="text-sm text-muted-foreground italic">No active alerts statewide.</div>
             )}
           </div>
