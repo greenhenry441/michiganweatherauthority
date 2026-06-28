@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, MapPin, Bell, LogOut, Save, Search, Palette, Sun, Moon } from "lucide-react";
+import { ArrowLeft, MapPin, Bell, LogOut, Save, Search, Palette, Sun, Moon, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +16,7 @@ import { NWS_ALERT_TYPES } from "@/lib/nws-alert-types";
 import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { THEMES, MODES, applyTheme, getTheme, getMode, type ThemeName, type ThemeMode } from "@/lib/theme";
+import { usePrefs } from "@/lib/prefs";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({ meta: [{ title: "Settings — MWA" }, { name: "robots", content: "noindex" }] }),
@@ -457,5 +458,151 @@ function AppearanceSection() {
         </p>
       </div>
     </section>
+  );
+}
+
+function PreferencesSection() {
+  const [prefs, patch] = usePrefs();
+
+  return (
+    <section className="rounded-xl border border-border bg-card p-5 space-y-5">
+      <div className="flex items-center gap-2 text-accent">
+        <Settings2 className="h-4 w-4" />
+        <h2 className="font-display tracking-wider uppercase text-sm">Preferences</h2>
+      </div>
+
+      <PrefRow label="Temperature">
+        <SegGroup
+          value={prefs.tempUnit}
+          options={[{ v: "F", l: "°F" }, { v: "C", l: "°C" }]}
+          onChange={(v) => patch({ tempUnit: v as any })}
+        />
+      </PrefRow>
+
+      <PrefRow label="Wind speed">
+        <SegGroup
+          value={prefs.windUnit}
+          options={[{ v: "mph", l: "mph" }, { v: "kph", l: "kph" }, { v: "knots", l: "kt" }]}
+          onChange={(v) => patch({ windUnit: v as any })}
+        />
+      </PrefRow>
+
+      <PrefRow label="Pressure">
+        <SegGroup
+          value={prefs.pressureUnit}
+          options={[{ v: "inHg", l: "inHg" }, { v: "mb", l: "mb" }]}
+          onChange={(v) => patch({ pressureUnit: v as any })}
+        />
+      </PrefRow>
+
+      <PrefRow label="Clock">
+        <SegGroup
+          value={prefs.show24Hour ? "24" : "12"}
+          options={[{ v: "12", l: "12-hour" }, { v: "24", l: "24-hour" }]}
+          onChange={(v) => patch({ show24Hour: v === "24" })}
+        />
+      </PrefRow>
+
+      <PrefRow label="Density">
+        <SegGroup
+          value={prefs.density}
+          options={[{ v: "comfortable", l: "Comfortable" }, { v: "compact", l: "Compact" }]}
+          onChange={(v) => patch({ density: v as any })}
+        />
+      </PrefRow>
+
+      <PrefRow label="Ticker speed">
+        <SegGroup
+          value={prefs.tickerSpeed}
+          options={[
+            { v: "off", l: "Off" },
+            { v: "slow", l: "Slow" },
+            { v: "normal", l: "Normal" },
+            { v: "fast", l: "Fast" },
+          ]}
+          onChange={(v) => patch({ tickerSpeed: v as any })}
+        />
+      </PrefRow>
+
+      <PrefRow label="Auto-refresh">
+        <SegGroup
+          value={String(prefs.autoRefreshMin)}
+          options={[
+            { v: "0", l: "Off" },
+            { v: "1", l: "1m" },
+            { v: "5", l: "5m" },
+            { v: "15", l: "15m" },
+          ]}
+          onChange={(v) => patch({ autoRefreshMin: Number(v) })}
+        />
+      </PrefRow>
+
+      <div className="pt-2 space-y-3">
+        <Label className="text-xs font-mono uppercase tracking-wider">Home page panels</Label>
+        <ToggleRow
+          label="Show radar"
+          desc="Display the live radar panel on the home page."
+          checked={prefs.showRadarOnHome}
+          onChange={(v) => patch({ showRadarOnHome: v })}
+        />
+        <ToggleRow
+          label="Show hourly meteogram"
+          desc="Show the 36-hour temperature and precipitation chart."
+          checked={prefs.showMeteogramOnHome}
+          onChange={(v) => patch({ showMeteogramOnHome: v })}
+        />
+        <ToggleRow
+          label="Show alert history"
+          desc="Show the last 30 days of Michigan alerts on the home page."
+          checked={prefs.showAlertHistoryOnHome}
+          onChange={(v) => patch({ showAlertHistoryOnHome: v })}
+        />
+        <ToggleRow
+          label="Reduce motion"
+          desc="Pause tickers, sweeps, and aurora animations."
+          checked={prefs.reduceMotion}
+          onChange={(v) => patch({ reduceMotion: v })}
+        />
+      </div>
+
+      <p className="text-[10px] text-muted-foreground">
+        Preferences are saved to this device only. They apply instantly across MWA.
+      </p>
+    </section>
+  );
+}
+
+function PrefRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <Label className="text-xs font-mono uppercase tracking-wider">{label}</Label>
+      <div>{children}</div>
+    </div>
+  );
+}
+
+function SegGroup({
+  value, options, onChange,
+}: {
+  value: string;
+  options: { v: string; l: string }[];
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div className="inline-flex rounded-full border border-border bg-storm/60 p-1">
+      {options.map((o) => (
+        <button
+          key={o.v}
+          type="button"
+          onClick={() => onChange(o.v)}
+          className={
+            "px-3 py-1 text-[11px] font-mono uppercase tracking-wider rounded-full transition-colors " +
+            (value === o.v ? "bg-accent text-accent-foreground" : "text-muted-foreground hover:text-foreground")
+          }
+        >
+          {o.l}
+        </button>
+      ))}
+    </div>
   );
 }
