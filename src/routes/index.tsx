@@ -552,7 +552,7 @@ function HomePage() {
             >
               Status Page
             </a>
-            <span className="font-mono">MWA · v3.2.0</span>
+            <span className="font-mono">MWA · v3.3.0</span>
           </div>
         </div>
       </footer>
