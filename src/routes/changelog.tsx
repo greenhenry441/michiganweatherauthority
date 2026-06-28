@@ -50,6 +50,17 @@ type Entry = {
 
 const ENTRIES: Entry[] = [
   {
+    version: "3.2.0",
+    date: "Jun 28, 2026",
+    status: "minor",
+    title: "Liquid Glass surfaces + SPC outlook fix",
+    bullets: [
+      "Refined every panel onto a Liquid Glass surface: deeper translucency, top-edge sheen, soft accent glow at the base.",
+      "Stronger backdrop blur and saturation so colors behind the glass bleed through as light.",
+      "Fixed the SPC Severe Outlook tabs — Day 1, Day 2, and Day 3 now load correctly with cache-busted images.",
+    ],
+  },
+  {
     version: "3.1.0",
     date: "Jun 28, 2026",
     status: "minor",
