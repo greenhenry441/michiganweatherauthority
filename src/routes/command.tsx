@@ -198,7 +198,7 @@ function playBeep() {
   } catch {}
 }
 
-function CommandConsole({ code }: { code: string }) {
+function CommandConsole({ code, onLock }: { code: string; onLock?: () => void }) {
   const { alerts } = useSharedAlerts();
   const issueFn = useServerFn(issueAlert);
   const cancelFn = useServerFn(cancelAlert);
