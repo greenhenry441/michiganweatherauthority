@@ -317,11 +317,49 @@
   animation: ticker 9s linear infinite;
 }
 
+/* ---------- Liquid Glass ----------
+   Layered translucency, soft inner sheen along the top edge, refractive
+   shadow at the bottom, and a strong saturated blur so anything behind
+   the panel bleeds through as colored light. Used as the base "glass"
+   surface across every panel. */
 @utility glass {
-  background: var(--glass-grad);
-  backdrop-filter: blur(14px) saturate(140%);
+  position: relative;
+  background:
+    radial-gradient(120% 80% at 50% -10%, oklch(1 0 0 / 0.08), transparent 60%),
+    linear-gradient(180deg, oklch(1 0 0 / 0.06), transparent 35%),
+    var(--glass-grad);
+  backdrop-filter: blur(28px) saturate(180%);
   border: 1px solid var(--border);
-  box-shadow: 0 1px 0 oklch(1 0 0 / 0.05) inset, 0 24px 60px -28px oklch(0 0 0 / 0.6);
+  box-shadow:
+    0 1px 0 oklch(1 0 0 / 0.10) inset,
+    0 -1px 0 oklch(0 0 0 / 0.30) inset,
+    0 1px 1px oklch(0 0 0 / 0.20),
+    0 24px 60px -28px oklch(0 0 0 / 0.65);
+  transition: transform 220ms cubic-bezier(.2,.8,.2,1), box-shadow 220ms ease;
+}
+.glass::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, oklch(1 0 0 / 0.08) 0%, transparent 18%),
+    radial-gradient(80% 40% at 50% 105%, var(--accent) 0%, transparent 70%);
+  opacity: 0.10;
+  mix-blend-mode: screen;
+}
+
+@utility liquid {
+  transition: transform 220ms cubic-bezier(.2,.8,.2,1), box-shadow 220ms ease;
+}
+.liquid:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 1px 0 oklch(1 0 0 / 0.14) inset,
+    0 -1px 0 oklch(0 0 0 / 0.30) inset,
+    0 30px 70px -28px oklch(0 0 0 / 0.7),
+    0 0 0 1px var(--accent);
 }
 
 @utility aurora-border {
