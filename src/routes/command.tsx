@@ -587,6 +587,12 @@ function CommandConsole({ code, onLock }: { code: string; onLock?: () => void })
             <span>operator: {issuer}</span>
           </div>
           <div className="flex items-center gap-1">
+            {onLock && (
+              <Button variant="outline" size="sm" onClick={onLock} className="h-9 text-xs border-destructive/40 text-destructive hover:bg-destructive/10">
+                <Lock className="h-3.5 w-3.5 mr-1.5" /> Lock
+              </Button>
+            )}
+
             <Button
               variant={testMode ? "default" : "ghost"}
               size="sm"
