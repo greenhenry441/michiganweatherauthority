@@ -28,6 +28,7 @@ import { issueAlert, cancelAlert } from "@/lib/admin-alerts.functions";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
+import { CommandExtras, type CommandSnapshot } from "@/components/CommandExtras";
 
 export const Route = createFileRoute("/command")({
   head: () => ({
