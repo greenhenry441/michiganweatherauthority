@@ -1216,13 +1216,14 @@ function FullAlert({ entry }: { entry: AlertEntry }) {
 function AlertCard({ entry }: { entry: AlertEntry }) {
   if (entry.kind === "shared") {
     const a = entry.alert;
-    const t = a.type_id ? getAlertType(a.type_id) : undefined;
+    const t = a.type_id ? (getAlertType(a.type_id) ?? getEasType(a.type_id)) : undefined;
+    const fallbackName = a.kind === "eas" ? "EAS Alert" : a.kind === "mwa-network" ? "MWA Network Notification" : "Weather Alert";
     return (
       <div className={cn("rounded-md p-3 flex items-start gap-3", severityFromShared(a))}>
         <AlertTriangle className="h-5 w-5 flex-none mt-0.5" />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-display font-bold uppercase tracking-wider text-sm">{t?.name ?? a.custom_name ?? "Weather Alert"}</span>
+            <span className="font-display font-bold uppercase tracking-wider text-sm">{t?.name ?? a.custom_name ?? fallbackName}</span>
             <Badge variant="outline" className="text-[10px] border-current/40">MWA</Badge>
             <span className="text-[10px] opacity-80 font-mono">Until {new Date(a.expires_at).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}</span>
           </div>
