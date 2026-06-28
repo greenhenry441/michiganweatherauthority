@@ -693,6 +693,7 @@ function NotifyToggle() {
   const [mounted, setMounted] = useState(false);
   const [supported, setSupported] = useState(false);
   const [enabled, setEnabled] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -704,50 +705,68 @@ function NotifyToggle() {
   }, []);
 
   if (!mounted || !supported) {
-    // Stable SSR/first-paint placeholder so hydration matches.
     return <span className="inline-block w-[68px] h-4" aria-hidden />;
   }
 
-
   const toggle = async () => {
-    if (enabled) {
-      localStorage.setItem(LS_NOTIFY, "0");
-      setEnabled(false);
-      toast.message("Alert notifications turned off");
-      return;
-    }
-    const perm = Notification.permission === "granted"
-      ? "granted"
-      : await Notification.requestPermission();
-    if (perm !== "granted") {
-      toast.error("Notifications were blocked by your browser");
-      return;
-    }
-    localStorage.setItem(LS_NOTIFY, "1");
-    setEnabled(true);
-    toast.success("You'll be notified of new Michigan alerts");
+    if (busy) return;
+    setBusy(true);
     try {
-      const reg = "serviceWorker" in navigator ? await navigator.serviceWorker.getRegistration() : null;
-      if (reg) {
-        reg.showNotification("MWA notifications enabled", { body: "You'll get a ping for new Michigan alerts.", tag: "mwa-welcome" });
-      } else {
-        new Notification("MWA notifications enabled", { body: "You'll get a ping for new MI alerts while this tab is open." });
+      if (enabled) {
+        localStorage.setItem(LS_NOTIFY, "0");
+        setEnabled(false);
+        try {
+          const { unsubscribeFromPush } = await import("@/lib/push");
+          await unsubscribeFromPush();
+        } catch {}
+        toast.message("Alert notifications turned off");
+        return;
       }
-    } catch {}
+      const perm = Notification.permission === "granted"
+        ? "granted"
+        : await Notification.requestPermission();
+      if (perm !== "granted") {
+        toast.error("Notifications were blocked by your browser");
+        return;
+      }
+      localStorage.setItem(LS_NOTIFY, "1");
+      setEnabled(true);
+
+      // Register background push so alerts arrive when the app is closed.
+      let pushOk = false;
+      try {
+        const { subscribeToPush, pushSupported } = await import("@/lib/push");
+        if (pushSupported()) {
+          await subscribeToPush();
+          pushOk = true;
+        }
+      } catch (err) {
+        console.warn("[push] subscribe failed", err);
+      }
+
+      toast.success(
+        pushOk
+          ? "Push alerts on — you'll be notified even when the app is closed"
+          : "Alerts on for this tab (background push unsupported on this browser)",
+      );
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
     <button
       onClick={toggle}
+      disabled={busy}
       title={enabled ? "Disable alert notifications" : "Enable alert notifications"}
       aria-label={enabled ? "Disable alert notifications" : "Enable alert notifications"}
       className={cn(
-        "inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider transition-colors min-h-11 min-w-11 px-2 justify-center",
+        "inline-flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider transition-colors min-h-11 min-w-11 px-2 justify-center disabled:opacity-50",
         enabled ? "text-accent" : "text-muted-foreground hover:text-accent",
       )}
     >
       {enabled ? <Bell className="h-5 w-5" /> : <BellOff className="h-5 w-5" />}
-      <span className="hidden sm:inline">{enabled ? "Alerts on" : "Notify"}</span>
+      <span className="hidden sm:inline">{enabled ? "Push on" : "Notify"}</span>
     </button>
   );
 
