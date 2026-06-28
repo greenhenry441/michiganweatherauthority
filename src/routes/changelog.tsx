@@ -134,35 +134,51 @@ const ENTRIES: Entry[] = [
   {
     version: "1.2.0",
     date: "Jun 06, 2026",
-    status: "minor",
+    status: "eol",
     title: "City forecasts + air quality",
     bullets: [
       "Per-city current conditions, hourly + 7-day forecasts.",
       "Air quality (AQI) and UV index with category labels.",
+      "End-of-life: superseded by 1.4.0+. Please upgrade.",
     ],
   },
   {
     version: "1.1.1",
     date: "Jun 01, 2026",
-    status: "patch",
+    status: "eol",
     title: "Stability polish",
     bullets: [
       "Fixed alert ticker pausing under low-power mode.",
       "Tightened map county hit-areas on mobile.",
+      "End-of-life: superseded by 1.4.0+. Please upgrade.",
     ],
   },
   {
     version: "1.0.0",
     date: "May 30, 2026",
-    status: "stable",
+    status: "eol",
     title: "Initial launch",
     bullets: [
       "Statewide NWS alert feed for Michigan.",
       "Searchable list of every Michigan city.",
       "Installable PWA with offline-friendly shell.",
+      "End-of-life: superseded by 1.4.0+. Please upgrade.",
     ],
   },
 ];
+
+// Versions <1.4.0 are EOL. 3.3.0 follows a rollout schedule:
+//   open-beta → Jun 29, 2026 release candidate → Jul 1, 2026 stable.
+function effectiveStatus(e: Entry, now: Date): StatusId {
+  if (e.version === "3.3.0") {
+    const rc = new Date(2026, 5, 29); // Jun 29, 2026 local
+    const stable = new Date(2026, 6, 1); // Jul 1, 2026 local
+    if (now >= stable) return "stable";
+    if (now >= rc) return "rc";
+    return "open-beta";
+  }
+  return e.status;
+}
 
 function StatusChip({ id, className = "" }: { id: StatusId; className?: string }) {
   const s = STATUS_MAP[id];
