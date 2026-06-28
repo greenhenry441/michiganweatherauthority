@@ -1338,23 +1338,56 @@ function CustomFields({
   );
 }
 
+const MARINE_ZONES: string[] = [
+  "Lake Superior – Whitefish Bay",
+  "Lake Superior – Eastern (Munising → Whitefish Pt)",
+  "Lake Superior – Central (Marquette → Munising)",
+  "Lake Superior – Western (Ontonagon → Marquette)",
+  "Lake Superior – Keweenaw nearshore",
+  "Lake Michigan – Green Bay south of Sturgeon Bay",
+  "Lake Michigan – North (Seul Choix Pt → Sleeping Bear)",
+  "Lake Michigan – Grand Traverse Bay",
+  "Lake Michigan – Central (Sleeping Bear → Pt Betsie)",
+  "Lake Michigan – South-central (Pt Betsie → Holland)",
+  "Lake Michigan – Southern (Holland → St. Joseph)",
+  "Lake Huron – Straits of Mackinac",
+  "Lake Huron – Northern (DeTour → Presque Isle)",
+  "Lake Huron – Saginaw Bay",
+  "Lake Huron – Central (Presque Isle → Harbor Beach)",
+  "Lake Huron – Southern (Harbor Beach → Port Huron)",
+  "St. Marys River",
+  "St. Clair River",
+  "Lake St. Clair",
+  "Detroit River",
+  "Lake Erie – Western basin (off MI)",
+];
+
+const MARINE_GROUPS: Record<string, string[]> = {
+  "All Great Lakes (MI)": MARINE_ZONES,
+  "Lake Superior": MARINE_ZONES.filter((z) => z.startsWith("Lake Superior")),
+  "Lake Michigan": MARINE_ZONES.filter((z) => z.startsWith("Lake Michigan")),
+  "Lake Huron": MARINE_ZONES.filter((z) => z.startsWith("Lake Huron") || z === "Saginaw Bay"),
+  "Lake Erie": MARINE_ZONES.filter((z) => z.startsWith("Lake Erie")),
+};
+
 function AreaPicker({ areas, onChange }: { areas: string[]; onChange: (v: string[]) => void }) {
   const [q, setQ] = useState("");
+  const [tab, setTab] = useState<"land" | "marine">("land");
   const isStatewide = areas.includes("Statewide");
   const selected = new Set(areas);
 
   const matches = useMemo(() => {
-    if (!q.trim()) return MICHIGAN_COUNTIES.slice(0, 12);
+    const pool = tab === "land" ? MICHIGAN_COUNTIES : MARINE_ZONES;
+    if (!q.trim()) return pool.slice(0, tab === "land" ? 12 : MARINE_ZONES.length);
     const term = q.toLowerCase();
-    return MICHIGAN_COUNTIES.filter((c) => c.toLowerCase().includes(term)).slice(0, 20);
-  }, [q]);
+    return pool.filter((c) => c.toLowerCase().includes(term)).slice(0, 25);
+  }, [q, tab]);
 
-  const toggle = (county: string) => {
-    if (selected.has(county)) onChange(areas.filter((a) => a !== county));
-    else onChange([...areas.filter((a) => a !== "Statewide"), county]);
+  const toggle = (name: string) => {
+    if (selected.has(name)) onChange(areas.filter((a) => a !== name));
+    else onChange([...areas.filter((a) => a !== "Statewide"), name]);
   };
 
-  // Quick region presets
   const REGIONS: Record<string, string[]> = {
     "SE Michigan": ["Wayne", "Oakland", "Macomb", "Washtenaw", "Monroe", "Livingston", "St. Clair"],
     "West MI": ["Kent", "Ottawa", "Muskegon", "Allegan", "Kalamazoo", "Berrien"],
@@ -1376,20 +1409,41 @@ function AreaPicker({ areas, onChange }: { areas: string[]; onChange: (v: string
 
       {!isStatewide && (
         <>
+          <Tabs value={tab} onValueChange={(v) => { setTab(v as "land" | "marine"); setQ(""); }}>
+            <TabsList className="h-8">
+              <TabsTrigger value="land" className="text-xs h-7">Land · counties</TabsTrigger>
+              <TabsTrigger value="marine" className="text-xs h-7">Marine · Great Lakes</TabsTrigger>
+            </TabsList>
+          </Tabs>
+
           <div className="flex flex-wrap gap-1.5">
-            {Object.entries(REGIONS).map(([name, list]) => (
-              <button
-                key={name}
-                type="button"
-                onClick={() => {
-                  const merged = Array.from(new Set([...areas.filter((a) => a !== "Statewide"), ...list]));
-                  onChange(merged);
-                }}
-                className="text-[10px] font-mono uppercase px-2 py-0.5 rounded border border-border/60 text-muted-foreground hover:border-accent hover:text-accent transition-colors"
-              >
-                + {name}
-              </button>
-            ))}
+            {tab === "land"
+              ? Object.entries(REGIONS).map(([name, list]) => (
+                  <button
+                    key={name}
+                    type="button"
+                    onClick={() => {
+                      const merged = Array.from(new Set([...areas.filter((a) => a !== "Statewide"), ...list]));
+                      onChange(merged);
+                    }}
+                    className="text-[10px] font-mono uppercase px-2 py-0.5 rounded border border-border/60 text-muted-foreground hover:border-accent hover:text-accent transition-colors"
+                  >
+                    + {name}
+                  </button>
+                ))
+              : Object.entries(MARINE_GROUPS).map(([name, list]) => (
+                  <button
+                    key={name}
+                    type="button"
+                    onClick={() => {
+                      const merged = Array.from(new Set([...areas.filter((a) => a !== "Statewide"), ...list]));
+                      onChange(merged);
+                    }}
+                    className="text-[10px] font-mono uppercase px-2 py-0.5 rounded border border-watch/40 text-watch hover:border-watch hover:bg-watch/10 transition-colors"
+                  >
+                    + {name}
+                  </button>
+                ))}
             {areas.length > 0 && (
               <button
                 type="button"
@@ -1406,34 +1460,42 @@ function AreaPicker({ areas, onChange }: { areas: string[]; onChange: (v: string
             <Input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Search Michigan counties…"
+              placeholder={tab === "land" ? "Search Michigan counties…" : "Search Great Lakes marine zones…"}
               className="pl-9"
             />
           </div>
 
           {areas.length > 0 && (
             <div className="flex flex-wrap gap-1.5">
-              {areas.map((a) => (
-                <button
-                  key={a}
-                  type="button"
-                  onClick={() => onChange(areas.filter((x) => x !== a))}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-accent/60 bg-accent/10 text-accent text-[11px] font-mono hover:bg-accent/20"
-                >
-                  {a} <X className="h-3 w-3" />
-                </button>
-              ))}
+              {areas.map((a) => {
+                const isMarine = MARINE_ZONES.includes(a);
+                return (
+                  <button
+                    key={a}
+                    type="button"
+                    onClick={() => onChange(areas.filter((x) => x !== a))}
+                    className={cn(
+                      "inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[11px] font-mono",
+                      isMarine
+                        ? "border-watch/60 bg-watch/10 text-watch hover:bg-watch/20"
+                        : "border-accent/60 bg-accent/10 text-accent hover:bg-accent/20",
+                    )}
+                  >
+                    {a} <X className="h-3 w-3" />
+                  </button>
+                );
+              })}
             </div>
           )}
 
-          <div className="max-h-48 overflow-y-auto rounded-md border border-border/60 divide-y divide-border/40">
+          <div className="max-h-56 overflow-y-auto rounded-md border border-border/60 divide-y divide-border/40">
             {matches.map((c) => (
               <label
                 key={c}
                 className="flex items-center gap-2 px-2 py-1.5 text-xs cursor-pointer hover:bg-accent/10"
               >
                 <Checkbox checked={selected.has(c)} onCheckedChange={() => toggle(c)} />
-                <span className="flex-1">{c} County</span>
+                <span className="flex-1">{tab === "land" ? `${c} County` : c}</span>
               </label>
             ))}
             {matches.length === 0 && (
@@ -1441,7 +1503,9 @@ function AreaPicker({ areas, onChange }: { areas: string[]; onChange: (v: string
             )}
           </div>
           <p className="text-[10px] text-muted-foreground">
-            Selected counties appear as chips above. Pick as many as you need.
+            {tab === "marine"
+              ? "Marine zones cover Great Lakes waters touching Michigan. Use for marine warnings, small craft advisories, gales, etc."
+              : "Selected counties appear as chips above. Pick as many as you need."}
           </p>
         </>
       )}
