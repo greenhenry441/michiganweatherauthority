@@ -191,6 +191,11 @@ function StatusChip({ id, className = "" }: { id: StatusId; className?: string }
 }
 
 function ChangelogPage() {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(new Date()), 60_000);
+    return () => window.clearInterval(id);
+  }, []);
   return (
     <div className="min-h-screen relative z-10">
       <header className="border-b border-border/60">
