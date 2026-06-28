@@ -264,7 +264,8 @@ function ChangelogPage() {
                 </ul>
               </article>
             </li>
-          ))}
+            );
+          })}
         </ol>
 
         <div className="mt-20 text-center text-[11px] uppercase tracking-[0.3em] text-muted-foreground font-mono">
