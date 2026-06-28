@@ -1,9 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import {
   Radio, Send, Trash2, Lock, AlertTriangle, ArrowLeft, Sparkles, Search, X,
   ShieldAlert, Megaphone, Network, Clock, MapPin, Eye, Activity,
+  Save, History, Zap, CheckCircle2, Circle, Keyboard, FlaskConical,
+  Copy, ListFilter, BarChart3, RefreshCw, Volume2, VolumeX, BookMarked,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,7 +23,7 @@ import {
 import { NWS_ALERT_TYPES, getAlertType, type AlertCategory, type AlertSeverity } from "@/lib/nws-alert-types";
 import { EAS_ALERT_TYPES, MWA_NETWORK_TYPE, getEasType } from "@/lib/eas-alert-types";
 import { MICHIGAN_COUNTIES } from "@/lib/michigan-counties";
-import { useSharedAlerts } from "@/lib/alerts-store";
+import { useSharedAlerts, type SharedAlert } from "@/lib/alerts-store";
 import { issueAlert, cancelAlert } from "@/lib/admin-alerts.functions";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
@@ -40,6 +42,108 @@ export const Route = createFileRoute("/command")({
 const ACCESS_CODE = "mwa-admin";
 type AlertKind = "weather" | "eas" | "mwa-network";
 
+// ---------- Quick-fill presets ----------
+interface QuickPreset {
+  id: string;
+  label: string;
+  kind: AlertKind;
+  typeId?: string;
+  headline: string;
+  description: string;
+  instruction?: string;
+  durationMinutes: number;
+}
+const QUICK_PRESETS: QuickPreset[] = [
+  {
+    id: "tor-warn",
+    label: "Tornado Warning",
+    kind: "weather",
+    typeId: "tornado-warning",
+    headline: "Tornado Warning in effect — TAKE COVER NOW",
+    description: "A tornado has been reported by trained spotters. Significant damage to mobile homes, roofs, windows, and vehicles is possible. Flying debris will be life-threatening to anyone caught without shelter.",
+    instruction: "TAKE COVER NOW! Move to a basement or an interior room on the lowest floor of a sturdy building. Avoid windows. If outdoors or in a vehicle, abandon for the closest substantial shelter.",
+    durationMinutes: 45,
+  },
+  {
+    id: "svr-warn",
+    label: "Severe T-Storm",
+    kind: "weather",
+    typeId: "severe-thunderstorm-warning",
+    headline: "Severe Thunderstorm Warning",
+    description: "Damaging winds in excess of 60 mph and quarter-size hail are expected with this storm. Trees and large branches may fall. Sporadic power outages possible.",
+    instruction: "Move indoors to an interior room on the lowest floor. Stay away from windows.",
+    durationMinutes: 60,
+  },
+  {
+    id: "ff-warn",
+    label: "Flash Flood",
+    kind: "weather",
+    typeId: "flash-flood-warning",
+    headline: "Flash Flood Warning",
+    description: "Heavy rainfall is producing dangerous flash flooding. Low-lying roads and underpasses are flooding rapidly.",
+    instruction: "Turn around, don't drown. Move to higher ground. Do not drive through flooded roadways.",
+    durationMinutes: 180,
+  },
+  {
+    id: "wsw",
+    label: "Winter Storm",
+    kind: "weather",
+    typeId: "winter-storm-warning",
+    headline: "Winter Storm Warning — heavy snow & blowing snow",
+    description: "Heavy snow accumulations of 6 to 12 inches expected with wind gusts to 35 mph causing blowing and drifting snow and near-zero visibility.",
+    instruction: "Travel is strongly discouraged. If you must travel, keep an emergency kit in your vehicle.",
+    durationMinutes: 720,
+  },
+  {
+    id: "rmt",
+    label: "Required Monthly Test",
+    kind: "eas",
+    typeId: "rmt",
+    headline: "This is a Required Monthly Test of the Emergency Alert System",
+    description: "This is a test of the MWA emergency notification system. This is only a test. No action is required.",
+    durationMinutes: 5,
+  },
+  {
+    id: "amber",
+    label: "AMBER Alert",
+    kind: "eas",
+    typeId: "amber",
+    headline: "AMBER Alert — child abduction in progress",
+    description: "Law enforcement is searching for a missing child believed to be in imminent danger. Vehicle and suspect details to follow.",
+    instruction: "Do not approach. Call 911 with any information.",
+    durationMinutes: 360,
+  },
+  {
+    id: "maint",
+    label: "Network Maintenance",
+    kind: "mwa-network",
+    headline: "Scheduled maintenance window",
+    description: "MWA will perform scheduled maintenance. Brief interruptions to live data feeds and the alert ticker may occur.",
+    durationMinutes: 60,
+  },
+];
+
+const DRAFT_KEY = "mwa-command-draft-v1";
+const HISTORY_KEY = "mwa-command-history-v1";
+const SOUND_KEY = "mwa-command-sound-v1";
+
+interface Draft {
+  kind: AlertKind;
+  mode: "template" | "custom";
+  easMode: "template" | "custom";
+  typeId: string;
+  easTypeId: string;
+  customName: string;
+  customCategory: AlertCategory;
+  customSeverity: AlertSeverity;
+  headline: string;
+  description: string;
+  instruction: string;
+  areas: string[];
+  duration: number;
+  issuer: string;
+}
+
 function CommandPage() {
   const [unlocked, setUnlocked] = useState(false);
   const [code, setCode] = useState("");
@@ -47,7 +151,6 @@ function CommandPage() {
   if (!unlocked) {
     return (
       <div className="min-h-screen relative overflow-hidden grid place-items-center px-4">
-        {/* Ambient backdrop */}
         <div
           aria-hidden
           className="absolute inset-0 -z-10"
@@ -117,6 +220,22 @@ function CommandPage() {
   return <CommandConsole code={code} />;
 }
 
+function playBeep() {
+  try {
+    const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type = "sine"; o.frequency.value = 880;
+    g.gain.setValueAtTime(0.0001, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.35);
+    o.start();
+    o.stop(ctx.currentTime + 0.36);
+    setTimeout(() => ctx.close(), 500);
+  } catch {}
+}
+
 function CommandConsole({ code }: { code: string }) {
   const { alerts } = useSharedAlerts();
   const issueFn = useServerFn(issueAlert);
@@ -137,6 +256,10 @@ function CommandConsole({ code }: { code: string }) {
   const [endsAtLocal, setEndsAtLocal] = useState("");
   const [issuer, setIssuer] = useState("MWA Operations");
   const [submitting, setSubmitting] = useState(false);
+  const [testMode, setTestMode] = useState(false);
+  const [soundOn, setSoundOn] = useState(true);
+  const [filter, setFilter] = useState<"all" | "warning" | "watch" | "advisory" | "statement">("all");
+  const [showShortcuts, setShowShortcuts] = useState(false);
 
   const [typeId, setTypeId] = useState(NWS_ALERT_TYPES[0].id);
   const [easTypeId, setEasTypeId] = useState(EAS_ALERT_TYPES[0].id);
@@ -145,8 +268,81 @@ function CommandConsole({ code }: { code: string }) {
   const [customCategory, setCustomCategory] = useState<AlertCategory>("statement");
   const [customSeverity, setCustomSeverity] = useState<AlertSeverity>("moderate");
 
+  const [history, setHistory] = useState<Array<{ id: string; at: string; payload: Draft & { headline: string } }>>([]);
+  const [hasDraft, setHasDraft] = useState(false);
+  const draftRestoredRef = useRef(false);
+
   const selectedTemplate = getAlertType(typeId);
   const selectedEas = getEasType(easTypeId);
+
+  // Load sound pref + history + draft on mount
+  useEffect(() => {
+    try {
+      const s = localStorage.getItem(SOUND_KEY);
+      if (s != null) setSoundOn(s === "1");
+      const h = localStorage.getItem(HISTORY_KEY);
+      if (h) setHistory(JSON.parse(h));
+      const d = localStorage.getItem(DRAFT_KEY);
+      if (d) setHasDraft(true);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    try { localStorage.setItem(SOUND_KEY, soundOn ? "1" : "0"); } catch {}
+  }, [soundOn]);
+
+  // Autosave draft (debounced)
+  useEffect(() => {
+    const t = setTimeout(() => {
+      try {
+        const draft: Draft = {
+          kind, mode, easMode, typeId, easTypeId, customName,
+          customCategory, customSeverity, headline, description, instruction,
+          areas, duration, issuer,
+        };
+        if (headline || description || instruction) {
+          localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+          setHasDraft(true);
+        }
+      } catch {}
+    }, 600);
+    return () => clearTimeout(t);
+  }, [kind, mode, easMode, typeId, easTypeId, customName, customCategory, customSeverity, headline, description, instruction, areas, duration, issuer]);
+
+  const restoreDraft = () => {
+    try {
+      const raw = localStorage.getItem(DRAFT_KEY);
+      if (!raw) return;
+      const d = JSON.parse(raw) as Draft;
+      setKind(d.kind); setMode(d.mode); setEasMode(d.easMode);
+      setTypeId(d.typeId); setEasTypeId(d.easTypeId);
+      setCustomName(d.customName); setCustomCategory(d.customCategory); setCustomSeverity(d.customSeverity);
+      setHeadline(d.headline); setDescription(d.description); setInstruction(d.instruction);
+      setAreas(d.areas); setDuration(d.duration); setIssuer(d.issuer);
+      toast.success("Draft restored");
+      draftRestoredRef.current = true;
+    } catch { toast.error("Could not restore draft"); }
+  };
+  const clearDraft = () => {
+    try { localStorage.removeItem(DRAFT_KEY); setHasDraft(false); toast.message("Draft cleared"); } catch {}
+  };
+  const resetForm = () => {
+    setHeadline(""); setDescription(""); setInstruction("");
+    setCustomName(""); setAreas(["Statewide"]); setDuration(60);
+    setTestMode(false);
+  };
+
+  const applyPreset = (p: QuickPreset) => {
+    setKind(p.kind);
+    if (p.kind === "weather") { setMode("template"); if (p.typeId) setTypeId(p.typeId); }
+    else if (p.kind === "eas") { setEasMode("template"); if (p.typeId) setEasTypeId(p.typeId); }
+    else { setCustomName(p.label); setCustomCategory("statement"); setCustomSeverity("minor"); }
+    setHeadline(p.headline); setDescription(p.description);
+    setInstruction(p.instruction ?? "");
+    setDuration(p.durationMinutes);
+    setScheduleMode("duration");
+    toast.message(`Loaded preset: ${p.label}`);
+  };
 
   // ---------- live preview values ----------
   const previewName = useMemo(() => {
@@ -167,17 +363,42 @@ function CommandConsole({ code }: { code: string }) {
     return customSeverity;
   }, [kind, mode, easMode, selectedTemplate, selectedEas, customSeverity]);
 
-  const formProgress = useMemo(() => {
-    let s = 0;
-    if (headline.trim()) s++;
-    if (description.trim()) s++;
-    if (areas.length > 0) s++;
-    if (issuer.trim()) s++;
-    return Math.round((s / 4) * 100);
-  }, [headline, description, areas, issuer]);
+  // Pre-flight checks
+  const checks = useMemo(() => {
+    const list = [
+      { ok: headline.trim().length >= 8, label: "Headline (≥ 8 chars)" },
+      { ok: description.trim().length >= 20, label: "Description (≥ 20 chars)" },
+      { ok: areas.length > 0, label: "Area selected" },
+      { ok: issuer.trim().length > 0, label: "Issuer set" },
+      { ok: kind !== "weather" || mode !== "custom" || !!customName.trim(), label: "Custom name (if custom)" },
+      { ok: scheduleMode === "duration" ? duration >= 5 : !!endsAtLocal, label: "Schedule valid" },
+    ];
+    return list;
+  }, [headline, description, areas, issuer, kind, mode, customName, scheduleMode, duration, endsAtLocal]);
+  const checkPass = checks.filter((c) => c.ok).length;
+  const formProgress = Math.round((checkPass / checks.length) * 100);
 
-  const issue = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Stats
+  const stats = useMemo(() => {
+    const byCat = { warning: 0, watch: 0, advisory: 0, statement: 0, extreme: 0 } as Record<string, number>;
+    const byKind = { weather: 0, eas: 0, "mwa-network": 0 } as Record<string, number>;
+    let expiringSoon = 0;
+    const now = Date.now();
+    for (const a of alerts) {
+      byCat[a.category] = (byCat[a.category] ?? 0) + 1;
+      byKind[a.kind] = (byKind[a.kind] ?? 0) + 1;
+      if (new Date(a.expires_at).getTime() - now < 15 * 60_000) expiringSoon++;
+    }
+    return { byCat, byKind, expiringSoon, total: alerts.length };
+  }, [alerts]);
+
+  const filteredAlerts = useMemo(() => {
+    if (filter === "all") return alerts;
+    return alerts.filter((a) => a.category === filter);
+  }, [alerts, filter]);
+
+  const issue = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!headline.trim() || !description.trim()) {
       toast.error("Headline and description are required");
       return;
@@ -226,16 +447,19 @@ function CommandConsole({ code }: { code: string }) {
         };
       }
 
+      const effDuration = testMode ? 5 : duration;
+      const effHeadline = testMode ? `[TEST] ${headline.trim()}` : headline.trim();
+
       const schedule =
-        scheduleMode === "duration"
-          ? { durationMinutes: Number(duration), startsImmediately: true, startsAt: null, endsAt: null }
+        scheduleMode === "duration" || testMode
+          ? { durationMinutes: Number(effDuration), startsImmediately: true, startsAt: null, endsAt: null }
           : {
               startsImmediately,
               startsAt: startsImmediately || !startsAtLocal ? null : new Date(startsAtLocal).toISOString(),
               endsAt: endsAtLocal ? new Date(endsAtLocal).toISOString() : null,
               durationMinutes: null,
             };
-      if (scheduleMode === "window" && !endsAtLocal) {
+      if (scheduleMode === "window" && !testMode && !endsAtLocal) {
         toast.error("Pick an end date/time, or switch to Duration mode");
         setSubmitting(false);
         return;
@@ -243,7 +467,7 @@ function CommandConsole({ code }: { code: string }) {
       await issueFn({
         data: {
           ...payload,
-          headline: headline.trim(),
+          headline: effHeadline,
           description: description.trim(),
           instruction: instruction.trim() || null,
           areas,
@@ -251,8 +475,28 @@ function CommandConsole({ code }: { code: string }) {
           ...schedule,
         },
       });
-      toast.success("Alert broadcast to all visitors");
-      setHeadline(""); setDescription(""); setInstruction("");
+      toast.success(testMode ? "TEST broadcast sent (5min expiry)" : "Alert broadcast to all visitors");
+      if (soundOn) playBeep();
+
+      // Save to history
+      try {
+        const entry = {
+          id: crypto.randomUUID(),
+          at: new Date().toISOString(),
+          payload: {
+            kind, mode, easMode, typeId, easTypeId, customName,
+            customCategory, customSeverity,
+            headline: effHeadline, description: description.trim(),
+            instruction: instruction.trim(), areas, duration: effDuration, issuer,
+          },
+        };
+        const next = [entry, ...history].slice(0, 25);
+        setHistory(next);
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(next));
+      } catch {}
+
+      resetForm();
+      try { localStorage.removeItem(DRAFT_KEY); setHasDraft(false); } catch {}
     } catch (err) {
       toast.error((err as Error).message || "Failed to issue alert");
     } finally {
@@ -269,15 +513,59 @@ function CommandConsole({ code }: { code: string }) {
     }
   };
 
+  const copyAsJson = async (a: SharedAlert) => {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(a, null, 2));
+      toast.success("Alert JSON copied");
+    } catch { toast.error("Copy failed"); }
+  };
+
+  const replayHistory = (h: typeof history[number]) => {
+    const p = h.payload;
+    setKind(p.kind); setMode(p.mode); setEasMode(p.easMode);
+    setTypeId(p.typeId); setEasTypeId(p.easTypeId);
+    setCustomName(p.customName); setCustomCategory(p.customCategory); setCustomSeverity(p.customSeverity);
+    setHeadline(p.headline.replace(/^\[TEST\]\s*/, "")); setDescription(p.description); setInstruction(p.instruction);
+    setAreas(p.areas); setDuration(p.duration); setIssuer(p.issuer);
+    setScheduleMode("duration");
+    toast.message("Loaded from history — review & broadcast");
+  };
+
+  const clearHistory = () => {
+    setHistory([]);
+    try { localStorage.removeItem(HISTORY_KEY); } catch {}
+    toast.message("History cleared");
+  };
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      const meta = e.metaKey || e.ctrlKey;
+      if (meta && e.key === "Enter") { e.preventDefault(); issue(); }
+      else if (meta && e.key.toLowerCase() === "k") { e.preventDefault(); setTestMode((v) => !v); }
+      else if (meta && e.key === "/") { e.preventDefault(); setShowShortcuts((v) => !v); }
+      else if (e.key === "Escape") { setShowShortcuts(false); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [headline, description, areas, kind, mode, easMode, typeId, easTypeId, customName, customCategory, customSeverity, instruction, duration, scheduleMode, startsImmediately, startsAtLocal, endsAtLocal, issuer, testMode]);
+
+  const allReady = checks.every((c) => c.ok);
+
   return (
     <div className="min-h-screen relative">
-      {/* Ambient backdrop */}
+      {/* Ambient backdrop, tinted by current severity */}
       <div
         aria-hidden
-        className="fixed inset-0 -z-10 pointer-events-none"
+        className="fixed inset-0 -z-10 pointer-events-none transition-all duration-700"
         style={{
           background:
-            "radial-gradient(1100px 700px at 10% -10%, color-mix(in oklab, var(--severe) 14%, transparent), transparent 60%), radial-gradient(900px 600px at 110% 110%, color-mix(in oklab, var(--accent) 10%, transparent), transparent 60%)",
+            previewCategory === "warning"
+              ? "radial-gradient(1100px 700px at 10% -10%, color-mix(in oklab, var(--warning) 18%, transparent), transparent 60%), radial-gradient(900px 600px at 110% 110%, color-mix(in oklab, var(--severe) 14%, transparent), transparent 60%)"
+              : previewCategory === "watch"
+              ? "radial-gradient(1100px 700px at 10% -10%, color-mix(in oklab, var(--watch) 16%, transparent), transparent 60%), radial-gradient(900px 600px at 110% 110%, color-mix(in oklab, var(--accent) 10%, transparent), transparent 60%)"
+              : "radial-gradient(1100px 700px at 10% -10%, color-mix(in oklab, var(--accent) 12%, transparent), transparent 60%), radial-gradient(900px 600px at 110% 110%, color-mix(in oklab, var(--statement) 10%, transparent), transparent 60%)",
         }}
       />
 
@@ -302,11 +590,38 @@ function CommandConsole({ code }: { code: string }) {
             <span className="text-border">/</span>
             <span>operator: {issuer}</span>
           </div>
-          <Link to="/">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" /> Public site
+          <div className="flex items-center gap-1">
+            <Button
+              variant={testMode ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setTestMode((v) => !v)}
+              className={cn("gap-1.5", testMode && "bg-amber-alert text-background hover:bg-amber-alert/90")}
+              title="Toggle TEST mode (⌘K) — adds [TEST] prefix and 5-minute expiry"
+            >
+              <FlaskConical className="h-3.5 w-3.5" /> {testMode ? "TEST" : "Test"}
             </Button>
-          </Link>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSoundOn((v) => !v)}
+              title={soundOn ? "Sound on" : "Sound off"}
+            >
+              {soundOn ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowShortcuts((v) => !v)}
+              title="Keyboard shortcuts (⌘/)"
+            >
+              <Keyboard className="h-4 w-4" />
+            </Button>
+            <Link to="/">
+              <Button variant="ghost" size="sm">
+                <ArrowLeft className="h-4 w-4 mr-2" /> Public
+              </Button>
+            </Link>
+          </div>
         </div>
         {/* Progress bar */}
         <div className="h-px bg-border/40 relative overflow-hidden">
@@ -315,12 +630,53 @@ function CommandConsole({ code }: { code: string }) {
             style={{ width: `${formProgress}%` }}
           />
         </div>
+        {/* Stats strip */}
+        <div className="max-w-7xl mx-auto px-4 py-2 flex items-center gap-2 flex-wrap text-[10px] font-mono uppercase tracking-wider">
+          <span className="inline-flex items-center gap-1 text-muted-foreground">
+            <BarChart3 className="h-3 w-3" /> live
+          </span>
+          <StatPill label="Total" value={stats.total} />
+          <StatPill label="Warn" value={stats.byCat.warning ?? 0} tone="warning" />
+          <StatPill label="Watch" value={stats.byCat.watch ?? 0} tone="watch" />
+          <StatPill label="Advisory" value={stats.byCat.advisory ?? 0} tone="advisory" />
+          <StatPill label="Stmt" value={stats.byCat.statement ?? 0} tone="statement" />
+          <span className="text-border">·</span>
+          <StatPill label="WX" value={stats.byKind.weather ?? 0} />
+          <StatPill label="EAS" value={stats.byKind.eas ?? 0} />
+          <StatPill label="NET" value={stats.byKind["mwa-network"] ?? 0} />
+          {stats.expiringSoon > 0 && (
+            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-amber-alert/60 bg-amber-alert/10 text-amber-alert">
+              <Clock className="h-3 w-3" /> {stats.expiringSoon} expiring &lt;15m
+            </span>
+          )}
+        </div>
       </header>
+
+      {/* Shortcuts overlay */}
+      {showShortcuts && (
+        <div
+          onClick={() => setShowShortcuts(false)}
+          className="fixed inset-0 z-40 bg-background/60 backdrop-blur-sm grid place-items-center px-4"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="glass liquid rounded-2xl p-6 max-w-sm w-full space-y-3"
+          >
+            <h3 className="font-display tracking-wider uppercase text-sm flex items-center gap-2">
+              <Keyboard className="h-4 w-4 text-accent" /> Shortcuts
+            </h3>
+            <KbdRow keys={["⌘", "Enter"]} label="Broadcast alert" />
+            <KbdRow keys={["⌘", "K"]} label="Toggle TEST mode" />
+            <KbdRow keys={["⌘", "/"]} label="Show this overlay" />
+            <KbdRow keys={["Esc"]} label="Close overlay" />
+          </div>
+        </div>
+      )}
 
       <main className="max-w-7xl mx-auto px-4 py-8 grid lg:grid-cols-[1fr_380px] gap-6">
         <form onSubmit={issue} className="space-y-6">
           {/* Editorial title */}
-          <div className="flex items-end justify-between border-b border-border/60 pb-4">
+          <div className="flex items-end justify-between border-b border-border/60 pb-4 gap-4">
             <div>
               <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-muted-foreground">
                 Section 01 — Compose
@@ -330,10 +686,39 @@ function CommandConsole({ code }: { code: string }) {
                 Issue Alert
               </h2>
             </div>
-            <Badge variant="outline" className="text-[10px] font-mono hidden sm:inline-flex">
-              Broadcasts live · all visitors
-            </Badge>
+            <div className="flex items-center gap-1.5 flex-wrap justify-end">
+              {hasDraft && (
+                <>
+                  <Button type="button" variant="outline" size="sm" onClick={restoreDraft} className="gap-1.5">
+                    <Save className="h-3.5 w-3.5" /> Restore draft
+                  </Button>
+                  <Button type="button" variant="ghost" size="sm" onClick={clearDraft} className="text-muted-foreground">
+                    <X className="h-3.5 w-3.5" />
+                  </Button>
+                </>
+              )}
+              <Button type="button" variant="ghost" size="sm" onClick={resetForm} className="gap-1.5 text-muted-foreground">
+                <RefreshCw className="h-3.5 w-3.5" /> Reset
+              </Button>
+            </div>
           </div>
+
+          {/* Quick presets */}
+          <section className="glass liquid rounded-2xl p-5 space-y-3">
+            <SectionLabel n="00" title="Quick Presets" hint="One-click templates for common alerts" icon={<Zap className="h-3.5 w-3.5" />} />
+            <div className="flex flex-wrap gap-1.5">
+              {QUICK_PRESETS.map((p) => (
+                <button
+                  key={p.id}
+                  type="button"
+                  onClick={() => applyPreset(p)}
+                  className="text-[11px] font-mono px-2.5 py-1 rounded-md border border-border/60 hover:border-accent hover:bg-accent/10 transition-colors"
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+          </section>
 
           {/* Channel selector */}
           <section className="glass liquid rounded-2xl p-5 space-y-4">
@@ -463,7 +848,7 @@ function CommandConsole({ code }: { code: string }) {
                     onChange={(e) => setDuration(Number(e.target.value))}
                   />
                   <div className="flex flex-wrap gap-1.5 pt-1">
-                    {[15, 30, 60, 120, 360].map((m) => (
+                    {[15, 30, 60, 120, 360, 720].map((m) => (
                       <button
                         key={m}
                         type="button"
@@ -541,6 +926,7 @@ function CommandConsole({ code }: { code: string }) {
                 placeholder="e.g. Tornado spotted near Pontiac, take shelter immediately"
                 maxLength={200}
               />
+              <CharBar value={headline.length} max={200} />
             </div>
 
             <div className="space-y-1.5">
@@ -554,6 +940,7 @@ function CommandConsole({ code }: { code: string }) {
                 placeholder="At 4:32 PM EDT, a severe thunderstorm capable of producing a tornado was located..."
                 maxLength={4000}
               />
+              <CharBar value={description.length} max={4000} />
             </div>
 
             <div className="space-y-1.5">
@@ -570,18 +957,55 @@ function CommandConsole({ code }: { code: string }) {
             </div>
           </section>
 
-          <Button
-            type="submit"
-            size="lg"
-            disabled={submitting}
-            className="w-full font-display tracking-wider h-12 text-base bg-gradient-to-r from-severe via-amber-alert to-severe bg-[length:200%_100%] hover:bg-[position:100%_0] transition-all"
-          >
-            <Send className="h-4 w-4 mr-2" /> {submitting ? "Broadcasting…" : "Broadcast Alert"}
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button
+              type="submit"
+              size="lg"
+              disabled={submitting || !allReady}
+              className={cn(
+                "flex-1 font-display tracking-wider h-12 text-base transition-all",
+                testMode
+                  ? "bg-amber-alert text-background hover:bg-amber-alert/90"
+                  : "bg-gradient-to-r from-severe via-amber-alert to-severe bg-[length:200%_100%] hover:bg-[position:100%_0]",
+              )}
+              title="Broadcast (⌘+Enter)"
+            >
+              <Send className="h-4 w-4 mr-2" />
+              {submitting ? "Broadcasting…" : testMode ? "Broadcast TEST" : "Broadcast Alert"}
+              <span className="ml-3 hidden sm:inline opacity-70 font-mono text-[10px]">⌘↵</span>
+            </Button>
+          </div>
+          {!allReady && (
+            <p className="text-[11px] text-muted-foreground text-center">
+              {checks.length - checkPass} pre-flight check{checks.length - checkPass === 1 ? "" : "s"} remaining
+            </p>
+          )}
         </form>
 
         {/* Sidebar */}
-        <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+        <aside className="space-y-4 lg:sticky lg:top-32 lg:self-start lg:max-h-[calc(100vh-9rem)] lg:overflow-y-auto pr-1 -mr-1">
+          {/* Pre-flight checklist */}
+          <div className="glass liquid rounded-2xl p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="font-display tracking-wider text-xs uppercase text-muted-foreground flex items-center gap-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5 text-accent" /> Pre-flight
+              </h3>
+              <span className="text-[10px] font-mono text-muted-foreground">
+                {checkPass}/{checks.length}
+              </span>
+            </div>
+            <ul className="space-y-1">
+              {checks.map((c) => (
+                <li key={c.label} className="flex items-center gap-2 text-xs">
+                  {c.ok
+                    ? <CheckCircle2 className="h-3.5 w-3.5 text-accent" />
+                    : <Circle className="h-3.5 w-3.5 text-muted-foreground" />}
+                  <span className={cn(c.ok ? "" : "text-muted-foreground")}>{c.label}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
           {/* Live preview */}
           <div className="glass liquid rounded-2xl p-4 space-y-3">
             <div className="flex items-center gap-2">
@@ -611,6 +1035,7 @@ function CommandConsole({ code }: { code: string }) {
               <div className="p-3 pl-4 space-y-1.5">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="font-display font-bold uppercase tracking-wider text-xs">
+                    {testMode && <span className="text-amber-alert">[TEST] </span>}
                     {previewName}
                   </span>
                   <Badge variant="outline" className="text-[9px] font-mono uppercase">
@@ -644,21 +1069,39 @@ function CommandConsole({ code }: { code: string }) {
                 Active Broadcasts
               </h3>
               <Badge variant="outline" className="text-[10px] font-mono">
-                {alerts.length}
+                {filteredAlerts.length}/{alerts.length}
               </Badge>
             </div>
-            {alerts.length === 0 ? (
+            <div className="flex items-center gap-1 mb-3 flex-wrap">
+              <ListFilter className="h-3 w-3 text-muted-foreground" />
+              {(["all", "warning", "watch", "advisory", "statement"] as const).map((f) => (
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() => setFilter(f)}
+                  className={cn(
+                    "text-[10px] font-mono uppercase px-2 py-0.5 rounded border transition-colors",
+                    filter === f
+                      ? "border-accent bg-accent/15 text-accent"
+                      : "border-border/60 text-muted-foreground hover:border-accent/60",
+                  )}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+            {filteredAlerts.length === 0 ? (
               <div className="py-8 text-center space-y-2">
                 <div className="mx-auto h-10 w-10 rounded-full glass grid place-items-center">
                   <Radio className="h-4 w-4 text-muted-foreground" />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  No manual alerts active.
+                  {alerts.length === 0 ? "No manual alerts active." : "None match this filter."}
                 </p>
               </div>
             ) : (
               <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1 -mr-1">
-                {alerts.map((a) => {
+                {filteredAlerts.map((a) => {
                   const t = a.type_id
                     ? (getAlertType(a.type_id) ?? getEasType(a.type_id))
                     : undefined;
@@ -691,13 +1134,26 @@ function CommandConsole({ code }: { code: string }) {
                             {a.kind === "eas" ? "EAS" : a.kind === "mwa-network" ? "NET" : "WX"}
                           </Badge>
                         </div>
-                        <button
-                          onClick={() => remove(a.id)}
-                          className="text-muted-foreground hover:text-destructive opacity-60 group-hover:opacity-100 transition-opacity"
-                          aria-label="Cancel alert"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
+                        <div className="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                          <button
+                            type="button"
+                            onClick={() => copyAsJson(a)}
+                            className="text-muted-foreground hover:text-accent"
+                            aria-label="Copy as JSON"
+                            title="Copy JSON"
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => remove(a.id)}
+                            className="text-muted-foreground hover:text-destructive"
+                            aria-label="Cancel alert"
+                            title="Cancel"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       </div>
                       <p className="font-medium">{a.headline}</p>
                       <p className="text-muted-foreground line-clamp-2">{a.description}</p>
@@ -711,9 +1167,99 @@ function CommandConsole({ code }: { code: string }) {
               </div>
             )}
           </div>
+
+          {/* Broadcast history */}
+          <div className="glass liquid rounded-2xl p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-display tracking-wider text-xs uppercase text-muted-foreground flex items-center gap-1.5">
+                <History className="h-3.5 w-3.5 text-accent" /> Recent Broadcasts
+              </h3>
+              {history.length > 0 && (
+                <button
+                  type="button"
+                  onClick={clearHistory}
+                  className="text-[10px] font-mono text-muted-foreground hover:text-destructive"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            {history.length === 0 ? (
+              <p className="text-xs text-muted-foreground text-center py-4">
+                Your last 25 sent alerts will appear here.
+              </p>
+            ) : (
+              <div className="space-y-1.5 max-h-[280px] overflow-y-auto pr-1 -mr-1">
+                {history.map((h) => (
+                  <button
+                    key={h.id}
+                    type="button"
+                    onClick={() => replayHistory(h)}
+                    className="w-full text-left rounded-md border border-border/60 p-2 hover:border-accent hover:bg-accent/5 transition-colors group"
+                    title="Load into form to re-broadcast"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-[10px] font-mono uppercase text-muted-foreground">
+                        {h.payload.kind === "eas" ? "EAS" : h.payload.kind === "mwa-network" ? "NET" : "WX"} · {new Date(h.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </span>
+                      <BookMarked className="h-3 w-3 text-muted-foreground group-hover:text-accent" />
+                    </div>
+                    <p className="text-xs font-medium line-clamp-1">{h.payload.headline}</p>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </aside>
       </main>
       <Toaster />
+    </div>
+  );
+}
+
+function StatPill({ label, value, tone }: { label: string; value: number; tone?: "warning" | "watch" | "advisory" | "statement" }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 px-1.5 py-0.5 rounded border",
+        tone === "warning" && "border-warning/60 bg-warning/10 text-warning",
+        tone === "watch" && "border-watch/60 bg-watch/10 text-watch",
+        tone === "advisory" && "border-advisory/60 bg-advisory/10",
+        tone === "statement" && "border-statement/60 bg-statement/10",
+        !tone && "border-border/60 text-muted-foreground",
+      )}
+    >
+      {label}: <span className="text-foreground font-bold">{value}</span>
+    </span>
+  );
+}
+
+function CharBar({ value, max }: { value: number; max: number }) {
+  const pct = Math.min(100, (value / max) * 100);
+  return (
+    <div className="h-0.5 rounded-full bg-border/40 overflow-hidden">
+      <div
+        className={cn(
+          "h-full transition-all",
+          pct > 90 ? "bg-severe" : pct > 70 ? "bg-amber-alert" : "bg-accent",
+        )}
+        style={{ width: `${pct}%` }}
+      />
+    </div>
+  );
+}
+
+function KbdRow({ keys, label }: { keys: string[]; label: string }) {
+  return (
+    <div className="flex items-center justify-between">
+      <span className="text-sm">{label}</span>
+      <span className="flex items-center gap-1">
+        {keys.map((k) => (
+          <kbd key={k} className="px-1.5 py-0.5 rounded border border-border/60 bg-muted/40 text-[10px] font-mono">
+            {k}
+          </kbd>
+        ))}
+      </span>
     </div>
   );
 }
@@ -808,6 +1354,15 @@ function AreaPicker({ areas, onChange }: { areas: string[]; onChange: (v: string
     else onChange([...areas.filter((a) => a !== "Statewide"), county]);
   };
 
+  // Quick region presets
+  const REGIONS: Record<string, string[]> = {
+    "SE Michigan": ["Wayne", "Oakland", "Macomb", "Washtenaw", "Monroe", "Livingston", "St. Clair"],
+    "West MI": ["Kent", "Ottawa", "Muskegon", "Allegan", "Kalamazoo", "Berrien"],
+    "Mid MI": ["Ingham", "Eaton", "Clinton", "Jackson", "Calhoun"],
+    "Northern LP": ["Grand Traverse", "Leelanau", "Antrim", "Charlevoix", "Emmet", "Cheboygan"],
+    "UP": ["Marquette", "Houghton", "Chippewa", "Delta", "Dickinson", "Gogebic"],
+  };
+
   return (
     <div className="space-y-3">
       <label className="flex items-center gap-2 text-sm cursor-pointer rounded-md border border-border/60 px-3 py-2 hover:border-accent/60 transition-colors">
@@ -821,6 +1376,31 @@ function AreaPicker({ areas, onChange }: { areas: string[]; onChange: (v: string
 
       {!isStatewide && (
         <>
+          <div className="flex flex-wrap gap-1.5">
+            {Object.entries(REGIONS).map(([name, list]) => (
+              <button
+                key={name}
+                type="button"
+                onClick={() => {
+                  const merged = Array.from(new Set([...areas.filter((a) => a !== "Statewide"), ...list]));
+                  onChange(merged);
+                }}
+                className="text-[10px] font-mono uppercase px-2 py-0.5 rounded border border-border/60 text-muted-foreground hover:border-accent hover:text-accent transition-colors"
+              >
+                + {name}
+              </button>
+            ))}
+            {areas.length > 0 && (
+              <button
+                type="button"
+                onClick={() => onChange([])}
+                className="text-[10px] font-mono uppercase px-2 py-0.5 rounded border border-border/60 text-muted-foreground hover:border-destructive hover:text-destructive transition-colors"
+              >
+                Clear all
+              </button>
+            )}
+          </div>
+
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input
