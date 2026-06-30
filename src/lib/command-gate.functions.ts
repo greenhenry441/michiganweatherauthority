@@ -17,7 +17,7 @@ export const isCommandUnlocked = createServerFn({ method: "GET" })
 
 export const unlockCommand = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: unknown) => z.object({ password: z.string().min(1).max(200), code: z.string().regex(/^\d{6}$/) }).parse(d))
+  .inputValidator((d: unknown) => z.object({ password: z.string().min(1).max(200) }).parse(d))
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
 
@@ -58,35 +58,12 @@ export const unlockCommand = createServerFn({ method: "POST" })
       return { ok: false as const, error: "invalid_credentials" };
     }
 
-    // 4. TOTP check against command factor — read via service role since the SELECT policy
-    // was removed to prevent client-side leakage of the TOTP secret.
-    const { supabaseAdmin: _admin } = await import("@/integrations/supabase/client.server");
-    const { data: factor } = await _admin
-      .from("user_mfa_factors")
-      .select("method, secret, confirmed_at")
-      .eq("user_id", userId)
-      .eq("purpose", "command")
-      .maybeSingle();
-    if (!factor || !factor.confirmed_at || factor.method !== "totp" || !factor.secret) {
-      await recordAttempt(false);
-      return { ok: false as const, error: "mfa_not_enrolled" };
-    }
-    const { verifyTotp } = await import("./totp.server");
-    const ok = await verifyTotp(factor.secret, data.code);
-    if (!ok) {
-      await recordAttempt(false);
-      return { ok: false as const, error: "invalid_credentials" };
-    }
-
-    // 5. set session
+    // 4. set session
     const { useSession } = await import("@tanstack/react-start/server");
     const { COMMAND_SESSION } = await import("./session-config.server");
     const session = await useSession<CommandSession>(COMMAND_SESSION);
     await session.update({ unlocked: true, userId, unlockedAt: Date.now() });
 
-    // update last_used
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    await supabaseAdmin.from("user_mfa_factors").update({ last_used_at: new Date().toISOString() }).eq("user_id", userId).eq("purpose", "command");
     await recordAttempt(true);
     return { ok: true as const };
   });

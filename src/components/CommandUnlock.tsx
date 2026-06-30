@@ -4,31 +4,27 @@ import { Loader2, Lock, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { unlockCommand } from "@/lib/command-gate.functions";
 
 export function CommandUnlock({ onUnlocked }: { onUnlocked: () => void }) {
   const [password, setPassword] = useState("");
-  const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const unlock = useServerFn(unlockCommand);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!password || code.length !== 6) return;
+    if (!password) return;
     setBusy(true);
     try {
-      const res = await unlock({ data: { password, code } });
+      const res = await unlock({ data: { password } });
       if (!res.ok) {
         const msg =
           res.error === "not_authorized" ? "Your account is not authorized for Command."
           : res.error === "rate_limited" ? "Too many failed attempts. Wait 15 minutes."
-          : res.error === "mfa_not_enrolled" ? "Set up Command 2FA in Settings first."
-          : "Invalid password or code.";
+          : "Invalid password.";
         toast.error(msg);
-        setCode("");
         return;
       }
       toast.success("Command unlocked");
@@ -56,7 +52,7 @@ export function CommandUnlock({ onUnlocked }: { onUnlocked: () => void }) {
             </span>
             <h1 className="font-display text-3xl sm:text-4xl text-aurora">MWA Command</h1>
             <p className="text-sm text-muted-foreground mt-2 max-w-sm">
-              Authorized broadcasters only. Enter the command password and your authenticator code to continue.
+              Authorized broadcasters only. Enter the command password to continue.
             </p>
           </div>
 
@@ -68,18 +64,7 @@ export function CommandUnlock({ onUnlocked }: { onUnlocked: () => void }) {
                 <Input type="password" required autoFocus value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••••" className="h-11 font-mono" />
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-[10px] font-mono uppercase tracking-[0.25em] text-muted-foreground">Authenticator code</Label>
-                <div className="flex justify-center">
-                  <InputOTP maxLength={6} value={code} onChange={setCode}>
-                    <InputOTPGroup>
-                      {[0,1,2,3,4,5].map((i) => <InputOTPSlot key={i} index={i} className="h-12 w-12 text-lg" />)}
-                    </InputOTPGroup>
-                  </InputOTP>
-                </div>
-              </div>
-
-              <Button type="submit" disabled={busy || !password || code.length !== 6} className="w-full h-11 font-display tracking-wider">
+              <Button type="submit" disabled={busy || !password} className="w-full h-11 font-display tracking-wider">
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Unlock Command"}
               </Button>
 
