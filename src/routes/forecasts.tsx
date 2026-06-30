@@ -101,10 +101,14 @@ function ForecastsPage() {
             </SelectContent>
           </Select>
         </div>
-        <Button variant="outline" onClick={() => { types.refetch(); list.refetch(); product.refetch(); }}>
-          <RefreshCw className={cn("h-3.5 w-3.5 mr-1.5", (list.isFetching || product.isFetching) && "animate-spin")} />
-          Refresh
-        </Button>
+        <div className="flex gap-2">
+          <LocationOfficeButton onPick={(id) => setOffice(id)} />
+          <Button variant="outline" onClick={() => { types.refetch(); list.refetch(); product.refetch(); }}>
+            <RefreshCw className={cn("h-3.5 w-3.5 mr-1.5", (list.isFetching || product.isFetching) && "animate-spin")} />
+            Refresh
+          </Button>
+        </div>
+
       </div>
 
       <div className="grid md:grid-cols-[260px_1fr] gap-4">
