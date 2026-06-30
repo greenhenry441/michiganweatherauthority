@@ -26,6 +26,12 @@ const reportSchema = z.object({
   photo_url: z.string().max(2000).nullable().optional(),
 });
 
+// Coarsen GPS to ~1km grid so public listings can't be used to track individuals.
+function coarsen(n: number | null | undefined) {
+  if (n == null) return n;
+  return Math.round(n * 100) / 100;
+}
+
 export const listReports = createServerFn({ method: "GET" })
   .inputValidator((data: unknown) =>
     z
@@ -34,20 +40,18 @@ export const listReports = createServerFn({ method: "GET" })
       .parse(data ?? {}),
   )
   .handler(async ({ data }) => {
-    const client = createClient<Database>(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_PUBLISHABLE_KEY!,
-      { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
-    );
-    let q = client
+    // Public listing: use service role to bypass RLS (which now restricts SELECT to
+    // authenticated users) and explicitly strip user_id + coarsen GPS before returning.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    let q = supabaseAdmin
       .from("spotter_reports")
-      .select("id, kind, measurement, lat, lon, location_label, notes, photo_url, status, confirmed_count, doubt_count, created_at, user_id")
+      .select("id, kind, measurement, lat, lon, location_label, notes, photo_url, status, confirmed_count, doubt_count, created_at")
       .order("created_at", { ascending: false })
       .limit(data?.limit ?? 50);
     if (data?.kind) q = q.eq("kind", data.kind);
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
-    return rows ?? [];
+    return (rows ?? []).map((r) => ({ ...r, lat: coarsen(r.lat)!, lon: coarsen(r.lon)! }));
   });
 
 export const createReport = createServerFn({ method: "POST" })
