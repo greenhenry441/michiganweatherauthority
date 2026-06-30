@@ -9,6 +9,9 @@ import {
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 import { MICHIGAN_CITIES, type MichiganCity } from "@/lib/michigan-cities";
+import { useGeolocation, nearestMichiganCity } from "@/lib/use-geolocation";
+import { Crosshair } from "lucide-react";
+
 import {
   getCityWeather, getMichiganAlerts, getExtraStats,
   aqiCategory, uvCategory, type NWSAlert, type ExtraStats,
