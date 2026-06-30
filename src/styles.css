@@ -18,9 +18,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-display: "DM Serif Display", ui-serif, Georgia, serif;
+  --font-display: var(--app-font-display, "DM Serif Display", ui-serif, Georgia, serif);
   --font-mono: ui-monospace, "SFMono-Regular", "JetBrains Mono", monospace;
-  --font-sans: "Fira Sans", system-ui, sans-serif;
+  --font-sans: var(--app-font-sans, "Fira Sans", system-ui, sans-serif);
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
