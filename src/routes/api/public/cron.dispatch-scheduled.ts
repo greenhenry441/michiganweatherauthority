@@ -50,10 +50,15 @@ export const Route = createFileRoute("/api/public/cron/dispatch-scheduled")({
 
               const { data: subs } = await supabaseAdmin
                 .from("push_subscriptions")
-                .select("endpoint, p256dh, auth, min_severity");
-              const SEV: Record<string, number> = { minor: 1, moderate: 2, severe: 3, extreme: 4 };
-              const sev = SEV[p.severity] ?? 2;
-              const targets = (subs ?? []).filter((s: any) => (SEV[s.min_severity ?? "moderate"] ?? 2) <= sev);
+                .select("endpoint, p256dh, auth, min_severity, user_id");
+              const { filterTargets } = await import("@/lib/push-targeting.server");
+              const targets = await filterTargets(supabaseAdmin, (subs ?? []) as any[], {
+                severity: p.severity,
+                areas: p.areas ?? [],
+                typeId: p.typeId,
+                kind: p.kind,
+              });
+
 
               if (targets.length) {
                 const result = await sendPushNotifications(
