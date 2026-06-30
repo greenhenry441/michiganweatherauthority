@@ -151,6 +151,12 @@ function SettingsPage() {
           onClear={() => setForm((f) => ({ ...f, home_zip: "", home_city: "", home_lat: null, home_lon: null }))}
         />
 
+        <UseMyLocationButton onPicked={(c) => {
+          setForm((f) => ({ ...f, home_zip: c.zip, home_city: c.name, home_lat: c.lat, home_lon: c.lon }));
+        }} />
+
+
+
         <CitySearchField
           label="Work city (optional)"
           saved={form.work_city ? `${form.work_city} (${form.work_zip})` : null}
