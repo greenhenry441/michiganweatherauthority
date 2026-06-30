@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { registerServiceWorker } from "../lib/register-sw";
 import { THEME_BOOT_SCRIPT } from "../lib/theme";
+import { StatusBanner } from "../components/StatusBanner";
 
 
 function NotFoundComponent() {
