@@ -1,73 +1,93 @@
-# Plan: Command gate + dual 2FA + modern auth
+# MWA — Settings, Push, and Big Feature Drop
 
-## 1. Command access (admin-only, password + dedicated 2FA)
+## Part 1 — Settings actually work
 
-- Add **Command** link in the main header, visible to everyone signed in with the `admin` role. Non-admins don't see it. Anonymous users don't see it.
-- `/command` is wrapped in a server-checked gate. Two-step unlock:
-  1. **Password**: `MWA-ADMIN`, stored as `COMMAND_PASSWORD` secret (timing-safe compare server-side; never sent to client).
-  2. **Command 2FA**: TOTP code from an authenticator app, enrolled separately from sign-in 2FA.
-- Unlock state lives in an encrypted server session cookie (`command-gate`, 2-hour TTL, httpOnly, sameSite=lax). Refresh keeps you in until it expires or you click "Lock command".
-- Server fn `unlockCommand({ password, totp })` requires `admin` role + valid password + valid TOTP. Wrong values return a generic failure; rate-limited (5 attempts / 15 min per user) using a `command_unlock_attempts` table.
-- Lock button in the command header.
+Every toggle in `/settings` becomes a real preference persisted to the `user_preferences` table (new) and applied app-wide.
 
-## 2. Two SEPARATE 2FA factors per user
+- **Notifications**
+  - Master push on/off (existing).
+  - Severity filters: Extreme / Severe / Moderate / Minor checkboxes — server filters before sending.
+  - County filter: multi-select MI counties (alerts not touching selected counties are skipped).
+  - Quiet hours: start/end time + timezone; alerts during quiet hours go silent unless `severity = extreme`.
+  - Alert-type filter: tornado, severe T-storm, flood, winter, marine, etc.
+- **Display**
+  - Theme picker (noir / aurora / og) — already exists, verify it persists.
+  - Units: °F/°C, mph/kph, in/mm, 12/24h clock — wire into HomeRadar, Forecasts, HourlyMeteogram, AlertCard.
+  - Map default: radar / alerts / lightning / satellite.
+- **Account**
+  - Display name + avatar upload (`avatars` bucket).
+  - Email change (Supabase auth update).
+  - Password change.
+  - MFA enrollment (existing component — verify).
+  - Delete account (server fn → admin delete user).
+- **Test push button**: sends a real notification to the current device only.
 
-Two independent enrollments so ordinary 2FA users cannot enter command without explicit command 2FA setup.
+## Part 2 — Push notifications work
 
-| Factor | Used for | Methods |
-|---|---|---|
-| `signin_2fa` | Normal sign-in challenge | Authenticator app (TOTP) **or** Email code |
-| `command_2fa` | `/command` unlock (admin only) | Authenticator app (TOTP) **only** — email not allowed for command |
+- Add `/api/public/push/test` server route (signed-in caller verified by bearer).
+- Server reads `user_preferences` per subscription and filters: severity, county overlap, quiet hours, type.
+- Fix subscription upsert to require `authenticated` (already done) and write `prefs_user_id`.
+- Add cron-driven sweep that retries failed pushes and prunes 410/404 endpoints.
+- Settings page shows: permission state, registration state, last test result, subscription count.
 
-New table `user_mfa_factors`:
-- `user_id`, `purpose` (`signin` \| `command`), `method` (`totp` \| `email`), `secret` (TOTP base32, null for email), `confirmed_at`, `last_used_at`. Unique on (user_id, purpose).
-- RLS: owner can read/insert/update/delete their own; service_role full.
+## Part 3 — New features
 
-## 3. Sign-in 2FA flow
+### Personal weather
+- **Saved locations**: home + favorites (geocoded). Home city drives the index page hero.
+- **Custom alert thresholds**: notify me when temp < X, wind > Y, etc. — evaluated by a 5-min cron against Open-Meteo.
+- **Daily briefing**: opt-in 7am push with today's high/low/precip + active alerts for home city.
 
-- After password sign-in succeeds, if user has a confirmed `signin_2fa`, redirect to `/auth/verify` (separate route). User submits 6-digit code (TOTP or emailed code). Server fn verifies; on success sets a `signin-mfa-verified` session flag and navigates to original destination. On fail, generic error + rate limit.
-- Email-method codes: random 6-digit, 10-min TTL, hashed in `mfa_email_codes` table (`user_id`, `purpose`, `code_hash`, `expires_at`, `consumed_at`). Sent via existing Lovable auth email infra (transactional template).
-- Session check on protected routes ensures `signin-mfa-verified` exists when the user has enrolled — otherwise bounce to `/auth/verify`.
+### Severe-weather tools
+- **Lightning radius alerts**: notify when a strike lands within N miles of home (uses existing LightningPanel data source).
+- **Tornado tracker page**: live MI tornado warnings with polygon map, time-to-impact for saved locations.
+- **Storm chase mode**: full-screen dark dashboard — radar + lightning + warnings + reports, auto-refresh 30s.
+- **Spotter reports**: signed-in users submit ground truth (hail size, wind damage, funnel sighted) with photo + auto-geolocation.
 
-## 4. Settings page — 2FA management
+### Social / community
+- **Storm report feed** at `/reports`: list + map of recent user reports.
+- **Photo uploads** with Supabase Storage (`storm-photos` bucket, public-read).
+- **Reactions** (👍 confirmed, 👎 doubtful) + comment thread per report.
+- **Leaderboard**: top reporters this month by confirmed reports.
 
-New section "Two-factor authentication" with two cards:
+### Command tools (admin only)
+- **Alert composer**: rich editor + severity + areas (county multi-select on a map) + send-now / schedule.
+- **Broadcast scheduler**: queue alerts for future ISO time, processed by cron.
+- **Analytics dashboard**: DAU, push delivery rate, click-through, top counties, alerts/day chart.
+- **Audit log viewer**: every admin action (already partially logged) shown with filters.
+- **Subscriber explorer**: list push subs with device, last-seen, prefs, manual revoke.
 
-- **Sign-in 2FA**: choose Authenticator app or Email. Enroll flow shows QR code + manual key for TOTP; verifies with one code before activating. For email: send code, verify, activate. Disable button (requires current code).
-- **Command 2FA** (only shown if user has admin role): authenticator-only enroll flow, same QR+verify pattern. Disable requires current code.
+## Technical notes
 
-Both show status (Not configured / Active since DATE / Last used DATE).
+### Database (one migration)
+- `user_preferences` (user_id PK, units jsonb, notify_severity text[], notify_counties text[], notify_types text[], quiet_start time, quiet_end time, quiet_tz text, daily_briefing bool, lightning_radius_mi int, home_lat/home_lon, default_map text)
+- `saved_locations` (id, user_id, label, lat, lon, is_home)
+- `alert_thresholds` (id, user_id, metric, op, value, location_id)
+- `spotter_reports` (id, user_id, kind, value, lat, lon, photo_url, notes, created_at, confirmed_count, doubt_count)
+- `report_reactions` (id, report_id, user_id, kind UNIQUE per user/report)
+- `report_comments` (id, report_id, user_id, body)
+- `scheduled_alerts` (id, payload jsonb, send_at, sent_at, status)
+- `admin_audit_log` exists — add UI only.
+- `push_delivery_log` (id, alert_id, sub_id, ok, status_code, created_at)
+- All with strict RLS; admin tables gated by `has_role(uid, 'admin')`.
+- Storage buckets: `avatars` (public), `storm-photos` (public).
 
-## 5. Modern auth page redesign (`/auth` and `/auth/verify`)
+### Server
+- New `*.functions.ts`: `preferences`, `saved-locations`, `thresholds`, `spotter-reports`, `scheduled-alerts`, `analytics`, `account`.
+- New `/api/public/push/test`, `/api/public/cron/check-thresholds`, `/api/public/cron/dispatch-scheduled`, `/api/public/cron/daily-briefing`, `/api/public/cron/lightning-watch`.
+- Update `admin-alerts.functions.ts` to honor per-user prefs and write `push_delivery_log`.
+- pg_cron jobs: every 5 min (thresholds + scheduled), every 60s (lightning), 7am local (briefing), nightly prune.
 
-Direction: **"Storm Console"** — full-bleed dark canvas, animated radar sweep + lightning flicker behind a frosted-glass card on the right. Left side: live-feeling MWA brand panel (rotating tagline, status pill "Systems nominal" tied to current alert count). Tabbed sign in / sign up with floating-label inputs, gold accent (#FACC15) on focus, smooth Motion transitions.
+### Frontend
+- Rebuild `/settings` with tabs (Notifications, Display, Account, Devices, Danger).
+- New routes: `/reports`, `/reports/$id`, `/chase`, `/tornado`, `/command/composer`, `/command/scheduler`, `/command/analytics`, `/command/audit`, `/command/subscribers`.
+- New `usePreferences()` hook and `<UnitsContext>` provider for app-wide unit formatting.
+- New `<CountyMultiSelect>`, `<LocationSearch>` (Open-Meteo geocoder), `<PhotoUpload>`.
 
-- Typography: **Space Grotesk** display + **Inter** body.
-- Card uses `backdrop-blur` + 1px gradient border (gold→teal).
-- Google sign-in via existing `lovable.auth.signInWithOAuth` broker, styled as a primary outlined button.
-- Adapts to current theme tokens (works in noir / aurora / og + light/dark).
-- `/auth/verify` reuses the same shell, replaces the form with a 6-cell OTP input and "Resend code" (email only).
+### Verification
+- Send-test-push button proves end-to-end delivery for the current user/device.
+- Each settings tab shows a live "Last saved: …" indicator and refetches on save.
+- Cron health card on `/command/analytics` shows last run + success of each job.
 
-## 6. Technical details
+## Risk / scope
 
-- TOTP: implement RFC 6238 with WebCrypto in a server-only helper (`src/lib/totp.server.ts`). No new npm package needed — HMAC-SHA1 via `crypto.subtle`.
-- Password compare: `crypto.timingSafeEqual` over sha256 digests.
-- Secrets to add: `COMMAND_PASSWORD` (set to `MWA-ADMIN`), `SESSION_SECRET` (generated, 64 chars) for `useSession`.
-- New server functions in `src/lib/`:
-  - `command-gate.functions.ts` — `unlockCommand`, `lockCommand`, `isCommandUnlocked`.
-  - `mfa.functions.ts` — `startEnroll(purpose, method)`, `confirmEnroll`, `disableFactor`, `verifyCode`, `sendEmailCode`, `listMyFactors`.
-- New routes: `src/routes/auth/verify.tsx`, `src/routes/_authenticated/command-unlock.tsx` (or inline gate on `/command`).
-- Header changes: `Command` link with shield icon; clicking when locked routes to unlock screen.
-- Migrations:
-  1. `user_mfa_factors` table + grants + RLS.
-  2. `mfa_email_codes` table + grants + RLS.
-  3. `command_unlock_attempts` table + grants + RLS.
-
-## 7. Out of scope (confirm if you want these too)
-
-- Recovery codes / backup codes for 2FA.
-- WebAuthn / passkeys.
-- Per-device "remember this device 30 days".
-- SMS as a 2FA method.
-
-Approve and I'll build it.
+This is a very large batch. Estimated 1 big migration + ~25 new files + ~10 edits. I'll ship in this order so the app stays usable at each step: migration → preferences + units → push test + filtering → saved locations → spotter reports → command tools → cron jobs → chase mode polish.

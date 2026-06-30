@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      alert_thresholds: {
+        Row: {
+          created_at: string
+          enabled: boolean
+          id: string
+          label: string | null
+          last_fired_at: string | null
+          location_id: string | null
+          metric: string
+          op: string
+          user_id: string
+          value: number
+        }
+        Insert: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          label?: string | null
+          last_fired_at?: string | null
+          location_id?: string | null
+          metric: string
+          op: string
+          user_id: string
+          value: number
+        }
+        Update: {
+          created_at?: string
+          enabled?: boolean
+          id?: string
+          label?: string | null
+          last_fired_at?: string | null
+          location_id?: string | null
+          metric?: string
+          op?: string
+          user_id?: string
+          value?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alert_thresholds_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "saved_locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       alerts: {
         Row: {
           areas: string[]
@@ -191,6 +238,39 @@ export type Database = {
         }
         Relationships: []
       }
+      push_delivery_log: {
+        Row: {
+          alert_id: string | null
+          created_at: string
+          endpoint: string
+          error: string | null
+          id: number
+          ok: boolean
+          status_code: number | null
+          user_id: string | null
+        }
+        Insert: {
+          alert_id?: string | null
+          created_at?: string
+          endpoint: string
+          error?: string | null
+          id?: number
+          ok: boolean
+          status_code?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          alert_id?: string | null
+          created_at?: string
+          endpoint?: string
+          error?: string | null
+          id?: number
+          ok?: boolean
+          status_code?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       push_subscriptions: {
         Row: {
           auth: string
@@ -227,6 +307,181 @@ export type Database = {
         }
         Relationships: []
       }
+      report_comments: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          report_id: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          report_id: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          report_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_comments_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "spotter_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      report_reactions: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          report_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind: string
+          report_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          report_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "report_reactions_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "spotter_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      saved_locations: {
+        Row: {
+          created_at: string
+          id: string
+          is_home: boolean
+          label: string
+          lat: number
+          lon: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_home?: boolean
+          label: string
+          lat: number
+          lon: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_home?: boolean
+          label?: string
+          lat?: number
+          lon?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      scheduled_alerts: {
+        Row: {
+          created_at: string
+          created_by: string
+          error: string | null
+          id: string
+          payload: Json
+          send_at: string
+          sent_at: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          error?: string | null
+          id?: string
+          payload: Json
+          send_at: string
+          sent_at?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          error?: string | null
+          id?: string
+          payload?: Json
+          send_at?: string
+          sent_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      spotter_reports: {
+        Row: {
+          confirmed_count: number
+          created_at: string
+          doubt_count: number
+          id: string
+          kind: string
+          lat: number
+          location_label: string | null
+          lon: number
+          measurement: string | null
+          notes: string | null
+          photo_url: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          confirmed_count?: number
+          created_at?: string
+          doubt_count?: number
+          id?: string
+          kind: string
+          lat: number
+          location_label?: string | null
+          lon: number
+          measurement?: string | null
+          notes?: string | null
+          photo_url?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          confirmed_count?: number
+          created_at?: string
+          doubt_count?: number
+          id?: string
+          kind?: string
+          lat?: number
+          location_label?: string | null
+          lon?: number
+          measurement?: string | null
+          notes?: string | null
+          photo_url?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_mfa_factors: {
         Row: {
           confirmed_at: string | null
@@ -258,6 +513,72 @@ export type Database = {
           method?: string
           purpose?: string
           secret?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_preferences: {
+        Row: {
+          clock_24h: boolean
+          created_at: string
+          daily_briefing: boolean
+          default_map: string
+          home_label: string | null
+          home_lat: number | null
+          home_lon: number | null
+          lightning_radius_mi: number
+          notify_counties: string[]
+          notify_severity: string[]
+          notify_types: string[]
+          quiet_end: string | null
+          quiet_start: string | null
+          quiet_tz: string
+          units_precip: string
+          units_speed: string
+          units_temp: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          clock_24h?: boolean
+          created_at?: string
+          daily_briefing?: boolean
+          default_map?: string
+          home_label?: string | null
+          home_lat?: number | null
+          home_lon?: number | null
+          lightning_radius_mi?: number
+          notify_counties?: string[]
+          notify_severity?: string[]
+          notify_types?: string[]
+          quiet_end?: string | null
+          quiet_start?: string | null
+          quiet_tz?: string
+          units_precip?: string
+          units_speed?: string
+          units_temp?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          clock_24h?: boolean
+          created_at?: string
+          daily_briefing?: boolean
+          default_map?: string
+          home_label?: string | null
+          home_lat?: number | null
+          home_lon?: number | null
+          lightning_radius_mi?: number
+          notify_counties?: string[]
+          notify_severity?: string[]
+          notify_types?: string[]
+          quiet_end?: string | null
+          quiet_start?: string | null
+          quiet_tz?: string
+          units_precip?: string
+          units_speed?: string
+          units_temp?: string
           updated_at?: string
           user_id?: string
         }
