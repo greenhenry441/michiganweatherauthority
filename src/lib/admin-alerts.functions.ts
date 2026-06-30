@@ -61,16 +61,43 @@ export const issueAlert = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
 
-    // Fan out push notifications to all registered subscribers (best-effort).
+    // Fan out push notifications, applying per-user preferences before sending.
     try {
       const { data: subs } = await supabaseAdmin
         .from("push_subscriptions")
-        .select("endpoint, p256dh, auth, min_severity");
+        .select("id, endpoint, p256dh, auth, min_severity, user_id");
       if (subs && subs.length) {
         const SEV_RANK: Record<string, number> = { minor: 1, moderate: 2, severe: 3, extreme: 4 };
         const sev = SEV_RANK[data.severity] ?? 2;
-        const filtered = subs.filter((s) => (SEV_RANK[s.min_severity ?? "moderate"] ?? 2) <= sev);
-        if (filtered.length) {
+        const userIds = Array.from(new Set((subs as any[]).map((s) => s.user_id).filter(Boolean)));
+        const { data: prefRows } = userIds.length
+          ? await supabaseAdmin
+              .from("user_preferences")
+              .select("user_id, notify_severity, notify_counties, notify_types, quiet_start, quiet_end")
+              .in("user_id", userIds)
+          : { data: [] as any[] };
+        const prefsMap = new Map<string, any>(((prefRows as any[]) ?? []).map((p) => [p.user_id, p]));
+
+        const targets = (subs as any[]).filter((s) => {
+          if ((SEV_RANK[s.min_severity ?? "moderate"] ?? 2) > sev) return false;
+          const p = s.user_id ? prefsMap.get(s.user_id) : null;
+          if (!p) return true;
+          if (p.notify_severity?.length && !p.notify_severity.includes(data.severity)) return false;
+          if (p.notify_counties?.length && data.areas.length && !data.areas.some((a) => p.notify_counties.includes(a))) return false;
+          if (p.notify_types?.length && data.typeId && !p.notify_types.includes(data.typeId)) return false;
+          if (data.severity !== "extreme" && p.quiet_start && p.quiet_end) {
+            const now = new Date();
+            const mins = now.getUTCHours() * 60 + now.getUTCMinutes();
+            const [sh, sm] = String(p.quiet_start).split(":").map(Number);
+            const [eh, em] = String(p.quiet_end).split(":").map(Number);
+            const start = sh * 60 + sm; const end = eh * 60 + em;
+            const inQuiet = start <= end ? mins >= start && mins < end : mins >= start || mins < end;
+            if (inQuiet) return false;
+          }
+          return true;
+        });
+
+        if (targets.length) {
           const { sendPushNotifications } = await import("@/lib/web-push.server");
           const title =
             data.customName ||
@@ -79,14 +106,36 @@ export const issueAlert = createServerFn({ method: "POST" })
               : data.kind === "mwa-network"
                 ? "MWA Network Notification"
                 : data.headline);
-          await sendPushNotifications(filtered, {
-            title,
-            body: `${(data.areas.length ? data.areas : ["Statewide"]).join(", ")} — ${data.headline}`,
-            url: "/",
-            id: row.id,
-            tag: `mwa-${row.id}`,
-            severity: data.severity,
-          });
+          const result = await sendPushNotifications(
+            targets.map((s: any) => ({ endpoint: s.endpoint, p256dh: s.p256dh, auth: s.auth })),
+            {
+              title,
+              body: `${(data.areas.length ? data.areas : ["Statewide"]).join(", ")} — ${data.headline}`,
+              url: "/",
+              id: row.id,
+              tag: `mwa-${row.id}`,
+              severity: data.severity,
+            },
+          );
+          // Log delivery + prune dead endpoints.
+          try {
+            const goneSet = new Set(result.gone);
+            await supabaseAdmin.from("push_delivery_log").insert(
+              targets.map((s: any) => ({
+                alert_id: row.id,
+                endpoint: s.endpoint,
+                user_id: s.user_id,
+                ok: !goneSet.has(s.endpoint),
+                status_code: null,
+                error: null,
+              })),
+            );
+            if (result.gone.length) {
+              await supabaseAdmin.from("push_subscriptions").delete().in("endpoint", result.gone);
+            }
+          } catch (logErr) {
+            console.error("[push] log/prune failed", logErr);
+          }
         }
       }
     } catch (e) {
