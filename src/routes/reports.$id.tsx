@@ -98,7 +98,7 @@ function ReportDetail() {
         {thread.data?.comments.map((c: any) => (
           <div key={c.id} className="rounded-lg border border-border bg-card p-3">
             <div className="text-[10px] font-mono text-muted-foreground mb-1">
-              {c.user_id.slice(0, 8)}… · {new Date(c.created_at).toLocaleString()}
+              Spotter · {new Date(c.created_at).toLocaleString()}
             </div>
             <p className="text-sm whitespace-pre-wrap">{c.body}</p>
           </div>
