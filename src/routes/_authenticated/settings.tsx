@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, MapPin, Bell, LogOut, Save, Search, Palette, Sun, Moon, Settings2 } from "lucide-react";
+import { ArrowLeft, MapPin, Bell, LogOut, Save, Search, Palette, Sun, Moon, Settings2, Cloud, Crosshair, Calendar, BarChart3, Users, Activity, Zap, Trophy, Camera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,6 +18,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { THEMES, MODES, applyTheme, getTheme, getMode, type ThemeName, type ThemeMode } from "@/lib/theme";
 import { usePrefs } from "@/lib/prefs";
 import { MfaManager } from "@/components/MfaManager";
+import { sendTestPushToMe } from "@/lib/test-push.functions";
+import { getMyPreferences, updateMyPreferences } from "@/lib/preferences.functions";
+import { useIsAdmin } from "@/hooks/useIsAdmin";
+
 
 
 export const Route = createFileRoute("/_authenticated/settings")({
