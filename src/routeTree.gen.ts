@@ -27,6 +27,9 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthVerifyRouteImport } from './routes/auth.verify'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as ApiPublicCronDispatchScheduledRouteImport } from './routes/api/public/cron.dispatch-scheduled'
+import { Route as ApiPublicCronDailyBriefingRouteImport } from './routes/api/public/cron.daily-briefing'
+import { Route as ApiPublicCronCheckThresholdsRouteImport } from './routes/api/public/cron.check-thresholds'
 
 const WebcamsRoute = WebcamsRouteImport.update({
   id: '/webcams',
@@ -117,6 +120,24 @@ const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiPublicCronDispatchScheduledRoute =
+  ApiPublicCronDispatchScheduledRouteImport.update({
+    id: '/api/public/cron/dispatch-scheduled',
+    path: '/api/public/cron/dispatch-scheduled',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicCronDailyBriefingRoute =
+  ApiPublicCronDailyBriefingRouteImport.update({
+    id: '/api/public/cron/daily-briefing',
+    path: '/api/public/cron/daily-briefing',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicCronCheckThresholdsRoute =
+  ApiPublicCronCheckThresholdsRouteImport.update({
+    id: '/api/public/cron/check-thresholds',
+    path: '/api/public/cron/check-thresholds',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -136,6 +157,9 @@ export interface FileRoutesByFullPath {
   '/webcams': typeof WebcamsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/auth/verify': typeof AuthVerifyRoute
+  '/api/public/cron/check-thresholds': typeof ApiPublicCronCheckThresholdsRoute
+  '/api/public/cron/daily-briefing': typeof ApiPublicCronDailyBriefingRoute
+  '/api/public/cron/dispatch-scheduled': typeof ApiPublicCronDispatchScheduledRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -155,6 +179,9 @@ export interface FileRoutesByTo {
   '/webcams': typeof WebcamsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/auth/verify': typeof AuthVerifyRoute
+  '/api/public/cron/check-thresholds': typeof ApiPublicCronCheckThresholdsRoute
+  '/api/public/cron/daily-briefing': typeof ApiPublicCronDailyBriefingRoute
+  '/api/public/cron/dispatch-scheduled': typeof ApiPublicCronDispatchScheduledRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -176,6 +203,9 @@ export interface FileRoutesById {
   '/webcams': typeof WebcamsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/auth/verify': typeof AuthVerifyRoute
+  '/api/public/cron/check-thresholds': typeof ApiPublicCronCheckThresholdsRoute
+  '/api/public/cron/daily-briefing': typeof ApiPublicCronDailyBriefingRoute
+  '/api/public/cron/dispatch-scheduled': typeof ApiPublicCronDispatchScheduledRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -197,6 +227,9 @@ export interface FileRouteTypes {
     | '/webcams'
     | '/settings'
     | '/auth/verify'
+    | '/api/public/cron/check-thresholds'
+    | '/api/public/cron/daily-briefing'
+    | '/api/public/cron/dispatch-scheduled'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -216,6 +249,9 @@ export interface FileRouteTypes {
     | '/webcams'
     | '/settings'
     | '/auth/verify'
+    | '/api/public/cron/check-thresholds'
+    | '/api/public/cron/daily-briefing'
+    | '/api/public/cron/dispatch-scheduled'
   id:
     | '__root__'
     | '/'
@@ -236,6 +272,9 @@ export interface FileRouteTypes {
     | '/webcams'
     | '/_authenticated/settings'
     | '/auth/verify'
+    | '/api/public/cron/check-thresholds'
+    | '/api/public/cron/daily-briefing'
+    | '/api/public/cron/dispatch-scheduled'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -255,6 +294,9 @@ export interface RootRouteChildren {
   ToolsRoute: typeof ToolsRoute
   TropicalRoute: typeof TropicalRoute
   WebcamsRoute: typeof WebcamsRoute
+  ApiPublicCronCheckThresholdsRoute: typeof ApiPublicCronCheckThresholdsRoute
+  ApiPublicCronDailyBriefingRoute: typeof ApiPublicCronDailyBriefingRoute
+  ApiPublicCronDispatchScheduledRoute: typeof ApiPublicCronDispatchScheduledRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -385,6 +427,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/cron/dispatch-scheduled': {
+      id: '/api/public/cron/dispatch-scheduled'
+      path: '/api/public/cron/dispatch-scheduled'
+      fullPath: '/api/public/cron/dispatch-scheduled'
+      preLoaderRoute: typeof ApiPublicCronDispatchScheduledRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/cron/daily-briefing': {
+      id: '/api/public/cron/daily-briefing'
+      path: '/api/public/cron/daily-briefing'
+      fullPath: '/api/public/cron/daily-briefing'
+      preLoaderRoute: typeof ApiPublicCronDailyBriefingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/cron/check-thresholds': {
+      id: '/api/public/cron/check-thresholds'
+      path: '/api/public/cron/check-thresholds'
+      fullPath: '/api/public/cron/check-thresholds'
+      preLoaderRoute: typeof ApiPublicCronCheckThresholdsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -426,6 +489,9 @@ const rootRouteChildren: RootRouteChildren = {
   ToolsRoute: ToolsRoute,
   TropicalRoute: TropicalRoute,
   WebcamsRoute: WebcamsRoute,
+  ApiPublicCronCheckThresholdsRoute: ApiPublicCronCheckThresholdsRoute,
+  ApiPublicCronDailyBriefingRoute: ApiPublicCronDailyBriefingRoute,
+  ApiPublicCronDispatchScheduledRoute: ApiPublicCronDispatchScheduledRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
