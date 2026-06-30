@@ -23,6 +23,11 @@ function isStandalone() {
     (window.navigator as any).standalone === true
   );
 }
+function inIframe() {
+  if (typeof window === "undefined") return false;
+  try { return window.self !== window.top; } catch { return true; }
+}
+const PUBLISHED_URL = "https://michigan-weather-auth.lovable.app";
 
 export function InstallAppButton() {
   const [mounted, setMounted] = useState(false);
@@ -103,7 +108,26 @@ export function InstallAppButton() {
               </button>
             </div>
 
-            {isIos() ? (
+            {inIframe() ? (
+              <div className="space-y-3 text-sm">
+                <p className="text-muted-foreground leading-snug">
+                  Install only works from the live site — the editor preview is in a sandbox iframe so
+                  browsers block install prompts here.
+                </p>
+                <a
+                  href={PUBLISHED_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full text-center rounded-xl bg-accent text-accent-foreground font-display font-bold uppercase tracking-wider text-xs py-3 hover:opacity-90 transition-opacity"
+                >
+                  Open live site to install
+                </a>
+                <p className="text-xs text-muted-foreground border-t border-border pt-3">
+                  On the live site: desktop browsers show an install icon in the address bar; on
+                  iPhone use Safari → Share → Add to Home Screen.
+                </p>
+              </div>
+            ) : isIos() ? (
               <ol className="space-y-3 text-sm">
                 <li className="flex gap-3">
                   <span className="font-mono text-accent">1.</span>
