@@ -147,3 +147,31 @@ function ForecastsPage() {
     </div>
   );
 }
+
+// One-tap "load my office" button. Calls NWS /points to map lat/lon → office
+// (a.k.a. WFO / gridId), and silently no-ops if it's not one of the MI WFOs.
+function LocationOfficeButton({ onPick }: { onPick: (officeId: string) => void }) {
+  const { request, loading } = useGeolocation();
+  const go = async () => {
+    try {
+      const fix = await request();
+      const pt = await getPoint(fix.lat, fix.lon);
+      const id = pt.properties.gridId;
+      const match = MI_OFFICES.find((o) => o.id === id);
+      if (match) {
+        onPick(match.id);
+        toast.success(`Loaded ${match.name} (${match.id}) for your location`);
+      } else {
+        toast.message(`Closest NWS office is ${id} — not in Michigan's roster`);
+      }
+    } catch (e) {
+      toast.error(String((e as Error).message ?? e));
+    }
+  };
+  return (
+    <Button variant="secondary" onClick={go} disabled={loading}>
+      <Crosshair className={cn("h-3.5 w-3.5 mr-1.5 text-accent", loading && "animate-pulse")} />
+      My office
+    </Button>
+  );
+}
