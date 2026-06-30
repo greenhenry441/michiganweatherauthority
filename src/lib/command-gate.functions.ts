@@ -58,8 +58,10 @@ export const unlockCommand = createServerFn({ method: "POST" })
       return { ok: false as const, error: "invalid_credentials" };
     }
 
-    // 4. TOTP check against command factor
-    const { data: factor } = await supabase
+    // 4. TOTP check against command factor — read via service role since the SELECT policy
+    // was removed to prevent client-side leakage of the TOTP secret.
+    const { supabaseAdmin: _admin } = await import("@/integrations/supabase/client.server");
+    const { data: factor } = await _admin
       .from("user_mfa_factors")
       .select("method, secret, confirmed_at")
       .eq("user_id", userId)
