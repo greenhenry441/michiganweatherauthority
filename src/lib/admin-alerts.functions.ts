@@ -67,35 +67,14 @@ export const issueAlert = createServerFn({ method: "POST" })
         .from("push_subscriptions")
         .select("id, endpoint, p256dh, auth, min_severity, user_id");
       if (subs && subs.length) {
-        const SEV_RANK: Record<string, number> = { minor: 1, moderate: 2, severe: 3, extreme: 4 };
-        const sev = SEV_RANK[data.severity] ?? 2;
-        const userIds = Array.from(new Set((subs as any[]).map((s) => s.user_id).filter(Boolean)));
-        const { data: prefRows } = userIds.length
-          ? await supabaseAdmin
-              .from("user_preferences")
-              .select("user_id, notify_severity, notify_counties, notify_types, quiet_start, quiet_end")
-              .in("user_id", userIds)
-          : { data: [] as any[] };
-        const prefsMap = new Map<string, any>(((prefRows as any[]) ?? []).map((p) => [p.user_id, p]));
-
-        const targets = (subs as any[]).filter((s) => {
-          if ((SEV_RANK[s.min_severity ?? "moderate"] ?? 2) > sev) return false;
-          const p = s.user_id ? prefsMap.get(s.user_id) : null;
-          if (!p) return true;
-          if (p.notify_severity?.length && !p.notify_severity.includes(data.severity)) return false;
-          if (p.notify_counties?.length && data.areas.length && !data.areas.some((a) => p.notify_counties.includes(a))) return false;
-          if (p.notify_types?.length && data.typeId && !p.notify_types.includes(data.typeId)) return false;
-          if (data.severity !== "extreme" && p.quiet_start && p.quiet_end) {
-            const now = new Date();
-            const mins = now.getUTCHours() * 60 + now.getUTCMinutes();
-            const [sh, sm] = String(p.quiet_start).split(":").map(Number);
-            const [eh, em] = String(p.quiet_end).split(":").map(Number);
-            const start = sh * 60 + sm; const end = eh * 60 + em;
-            const inQuiet = start <= end ? mins >= start && mins < end : mins >= start || mins < end;
-            if (inQuiet) return false;
-          }
-          return true;
+        const { filterTargets } = await import("@/lib/push-targeting.server");
+        const targets = await filterTargets(supabaseAdmin, subs as any[], {
+          severity: data.severity,
+          areas: data.areas,
+          typeId: data.typeId,
+          kind: data.kind,
         });
+
 
         if (targets.length) {
           const { sendPushNotifications } = await import("@/lib/web-push.server");
