@@ -18,6 +18,7 @@ import { Route as SatelliteRouteImport } from './routes/satellite'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as OutlookRouteImport } from './routes/outlook'
 import { Route as MesoscaleRouteImport } from './routes/mesoscale'
+import { Route as ManagementRouteImport } from './routes/management'
 import { Route as LightningRouteImport } from './routes/lightning'
 import { Route as ForecastsRouteImport } from './routes/forecasts'
 import { Route as CommandRouteImport } from './routes/command'
@@ -88,6 +89,11 @@ const OutlookRoute = OutlookRouteImport.update({
 const MesoscaleRoute = MesoscaleRouteImport.update({
   id: '/mesoscale',
   path: '/mesoscale',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ManagementRoute = ManagementRouteImport.update({
+  id: '/management',
+  path: '/management',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LightningRoute = LightningRouteImport.update({
@@ -238,6 +244,7 @@ export interface FileRoutesByFullPath {
   '/command': typeof CommandRoute
   '/forecasts': typeof ForecastsRoute
   '/lightning': typeof LightningRoute
+  '/management': typeof ManagementRoute
   '/mesoscale': typeof MesoscaleRoute
   '/outlook': typeof OutlookRoute
   '/reports': typeof ReportsRouteWithChildren
@@ -274,6 +281,7 @@ export interface FileRoutesByTo {
   '/command': typeof CommandRoute
   '/forecasts': typeof ForecastsRoute
   '/lightning': typeof LightningRoute
+  '/management': typeof ManagementRoute
   '/mesoscale': typeof MesoscaleRoute
   '/outlook': typeof OutlookRoute
   '/reports': typeof ReportsRouteWithChildren
@@ -312,6 +320,7 @@ export interface FileRoutesById {
   '/command': typeof CommandRoute
   '/forecasts': typeof ForecastsRoute
   '/lightning': typeof LightningRoute
+  '/management': typeof ManagementRoute
   '/mesoscale': typeof MesoscaleRoute
   '/outlook': typeof OutlookRoute
   '/reports': typeof ReportsRouteWithChildren
@@ -350,6 +359,7 @@ export interface FileRouteTypes {
     | '/command'
     | '/forecasts'
     | '/lightning'
+    | '/management'
     | '/mesoscale'
     | '/outlook'
     | '/reports'
@@ -386,6 +396,7 @@ export interface FileRouteTypes {
     | '/command'
     | '/forecasts'
     | '/lightning'
+    | '/management'
     | '/mesoscale'
     | '/outlook'
     | '/reports'
@@ -423,6 +434,7 @@ export interface FileRouteTypes {
     | '/command'
     | '/forecasts'
     | '/lightning'
+    | '/management'
     | '/mesoscale'
     | '/outlook'
     | '/reports'
@@ -461,6 +473,7 @@ export interface RootRouteChildren {
   CommandRoute: typeof CommandRoute
   ForecastsRoute: typeof ForecastsRoute
   LightningRoute: typeof LightningRoute
+  ManagementRoute: typeof ManagementRoute
   MesoscaleRoute: typeof MesoscaleRoute
   OutlookRoute: typeof OutlookRoute
   ReportsRoute: typeof ReportsRouteWithChildren
@@ -540,6 +553,13 @@ declare module '@tanstack/react-router' {
       path: '/mesoscale'
       fullPath: '/mesoscale'
       preLoaderRoute: typeof MesoscaleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/management': {
+      id: '/management'
+      path: '/management'
+      fullPath: '/management'
+      preLoaderRoute: typeof ManagementRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lightning': {
@@ -786,6 +806,7 @@ const rootRouteChildren: RootRouteChildren = {
   CommandRoute: CommandRoute,
   ForecastsRoute: ForecastsRoute,
   LightningRoute: LightningRoute,
+  ManagementRoute: ManagementRoute,
   MesoscaleRoute: MesoscaleRoute,
   OutlookRoute: OutlookRoute,
   ReportsRoute: ReportsRouteWithChildren,
