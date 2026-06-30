@@ -110,9 +110,9 @@ function ReportsPage() {
             </h2>
             <ol className="mt-3 space-y-1.5 text-sm">
               {board.data?.length ? board.data.slice(0, 10).map((u: any, i: number) => (
-                <li key={u.user_id} className="flex justify-between gap-2">
+                <li key={u.handle} className="flex justify-between gap-2">
                   <span className="font-mono text-muted-foreground">#{i + 1}</span>
-                  <span className="flex-1 truncate font-mono text-xs">{u.user_id.slice(0, 8)}…</span>
+                  <span className="flex-1 truncate font-mono text-xs">{u.handle}…</span>
                   <span className="text-xs text-accent">{u.confirms} ✓ · {u.reports} reports</span>
                 </li>
               )) : <li className="text-xs text-muted-foreground">No data yet.</li>}
