@@ -133,6 +133,45 @@ export type Database = {
         }
         Relationships: []
       }
+      dispatcher_test_runs: {
+        Row: {
+          details: Json
+          duration_ms: number
+          error: string | null
+          failed: number
+          id: string
+          ok: boolean
+          passed: number
+          ran_at: string
+          source: string
+          total: number
+        }
+        Insert: {
+          details?: Json
+          duration_ms?: number
+          error?: string | null
+          failed?: number
+          id?: string
+          ok: boolean
+          passed?: number
+          ran_at?: string
+          source?: string
+          total?: number
+        }
+        Update: {
+          details?: Json
+          duration_ms?: number
+          error?: string | null
+          failed?: number
+          id?: string
+          ok?: boolean
+          passed?: number
+          ran_at?: string
+          source?: string
+          total?: number
+        }
+        Relationships: []
+      }
       mfa_email_codes: {
         Row: {
           code_hash: string
