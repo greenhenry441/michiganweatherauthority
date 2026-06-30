@@ -13,6 +13,7 @@ import { Route as WebcamsRouteImport } from './routes/webcams'
 import { Route as TropicalRouteImport } from './routes/tropical'
 import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as StormReportsRouteImport } from './routes/storm-reports'
+import { Route as SnowRouteImport } from './routes/snow'
 import { Route as SatelliteRouteImport } from './routes/satellite'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as OutlookRouteImport } from './routes/outlook'
@@ -29,14 +30,17 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ReportsIdRouteImport } from './routes/reports.$id'
 import { Route as AuthVerifyRouteImport } from './routes/auth.verify'
+import { Route as AlertsIdRouteImport } from './routes/alerts.$id'
 import { Route as AuthenticatedThresholdsRouteImport } from './routes/_authenticated/thresholds'
 import { Route as AuthenticatedSpotterRouteImport } from './routes/_authenticated/spotter'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedLocationsRouteImport } from './routes/_authenticated/locations'
+import { Route as AuthenticatedDispatcherHealthRouteImport } from './routes/_authenticated/dispatcher-health'
 import { Route as AuthenticatedAdminSubscribersRouteImport } from './routes/_authenticated/admin-subscribers'
 import { Route as AuthenticatedAdminSchedulerRouteImport } from './routes/_authenticated/admin-scheduler'
 import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin-audit'
 import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin-analytics'
+import { Route as ApiPublicCronDispatcherSelfTestRouteImport } from './routes/api/public/cron.dispatcher-self-test'
 import { Route as ApiPublicCronDispatchScheduledRouteImport } from './routes/api/public/cron.dispatch-scheduled'
 import { Route as ApiPublicCronDailyBriefingRouteImport } from './routes/api/public/cron.daily-briefing'
 import { Route as ApiPublicCronCheckThresholdsRouteImport } from './routes/api/public/cron.check-thresholds'
@@ -59,6 +63,11 @@ const ToolsRoute = ToolsRouteImport.update({
 const StormReportsRoute = StormReportsRouteImport.update({
   id: '/storm-reports',
   path: '/storm-reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SnowRoute = SnowRouteImport.update({
+  id: '/snow',
+  path: '/snow',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SatelliteRoute = SatelliteRouteImport.update({
@@ -140,6 +149,11 @@ const AuthVerifyRoute = AuthVerifyRouteImport.update({
   path: '/verify',
   getParentRoute: () => AuthRoute,
 } as any)
+const AlertsIdRoute = AlertsIdRouteImport.update({
+  id: '/alerts/$id',
+  path: '/alerts/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedThresholdsRoute = AuthenticatedThresholdsRouteImport.update({
   id: '/thresholds',
   path: '/thresholds',
@@ -160,6 +174,12 @@ const AuthenticatedLocationsRoute = AuthenticatedLocationsRouteImport.update({
   path: '/locations',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedDispatcherHealthRoute =
+  AuthenticatedDispatcherHealthRouteImport.update({
+    id: '/dispatcher-health',
+    path: '/dispatcher-health',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminSubscribersRoute =
   AuthenticatedAdminSubscribersRouteImport.update({
     id: '/admin-subscribers',
@@ -182,6 +202,12 @@ const AuthenticatedAdminAnalyticsRoute =
     id: '/admin-analytics',
     path: '/admin-analytics',
     getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const ApiPublicCronDispatcherSelfTestRoute =
+  ApiPublicCronDispatcherSelfTestRouteImport.update({
+    id: '/api/public/cron/dispatcher-self-test',
+    path: '/api/public/cron/dispatcher-self-test',
+    getParentRoute: () => rootRouteImport,
   } as any)
 const ApiPublicCronDispatchScheduledRoute =
   ApiPublicCronDispatchScheduledRouteImport.update({
@@ -216,6 +242,7 @@ export interface FileRoutesByFullPath {
   '/outlook': typeof OutlookRoute
   '/reports': typeof ReportsRouteWithChildren
   '/satellite': typeof SatelliteRoute
+  '/snow': typeof SnowRoute
   '/storm-reports': typeof StormReportsRoute
   '/tools': typeof ToolsRoute
   '/tropical': typeof TropicalRoute
@@ -224,15 +251,18 @@ export interface FileRoutesByFullPath {
   '/admin-audit': typeof AuthenticatedAdminAuditRoute
   '/admin-scheduler': typeof AuthenticatedAdminSchedulerRoute
   '/admin-subscribers': typeof AuthenticatedAdminSubscribersRoute
+  '/dispatcher-health': typeof AuthenticatedDispatcherHealthRoute
   '/locations': typeof AuthenticatedLocationsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/spotter': typeof AuthenticatedSpotterRoute
   '/thresholds': typeof AuthenticatedThresholdsRoute
+  '/alerts/$id': typeof AlertsIdRoute
   '/auth/verify': typeof AuthVerifyRoute
   '/reports/$id': typeof ReportsIdRoute
   '/api/public/cron/check-thresholds': typeof ApiPublicCronCheckThresholdsRoute
   '/api/public/cron/daily-briefing': typeof ApiPublicCronDailyBriefingRoute
   '/api/public/cron/dispatch-scheduled': typeof ApiPublicCronDispatchScheduledRoute
+  '/api/public/cron/dispatcher-self-test': typeof ApiPublicCronDispatcherSelfTestRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -248,6 +278,7 @@ export interface FileRoutesByTo {
   '/outlook': typeof OutlookRoute
   '/reports': typeof ReportsRouteWithChildren
   '/satellite': typeof SatelliteRoute
+  '/snow': typeof SnowRoute
   '/storm-reports': typeof StormReportsRoute
   '/tools': typeof ToolsRoute
   '/tropical': typeof TropicalRoute
@@ -256,15 +287,18 @@ export interface FileRoutesByTo {
   '/admin-audit': typeof AuthenticatedAdminAuditRoute
   '/admin-scheduler': typeof AuthenticatedAdminSchedulerRoute
   '/admin-subscribers': typeof AuthenticatedAdminSubscribersRoute
+  '/dispatcher-health': typeof AuthenticatedDispatcherHealthRoute
   '/locations': typeof AuthenticatedLocationsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/spotter': typeof AuthenticatedSpotterRoute
   '/thresholds': typeof AuthenticatedThresholdsRoute
+  '/alerts/$id': typeof AlertsIdRoute
   '/auth/verify': typeof AuthVerifyRoute
   '/reports/$id': typeof ReportsIdRoute
   '/api/public/cron/check-thresholds': typeof ApiPublicCronCheckThresholdsRoute
   '/api/public/cron/daily-briefing': typeof ApiPublicCronDailyBriefingRoute
   '/api/public/cron/dispatch-scheduled': typeof ApiPublicCronDispatchScheduledRoute
+  '/api/public/cron/dispatcher-self-test': typeof ApiPublicCronDispatcherSelfTestRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -282,6 +316,7 @@ export interface FileRoutesById {
   '/outlook': typeof OutlookRoute
   '/reports': typeof ReportsRouteWithChildren
   '/satellite': typeof SatelliteRoute
+  '/snow': typeof SnowRoute
   '/storm-reports': typeof StormReportsRoute
   '/tools': typeof ToolsRoute
   '/tropical': typeof TropicalRoute
@@ -290,15 +325,18 @@ export interface FileRoutesById {
   '/_authenticated/admin-audit': typeof AuthenticatedAdminAuditRoute
   '/_authenticated/admin-scheduler': typeof AuthenticatedAdminSchedulerRoute
   '/_authenticated/admin-subscribers': typeof AuthenticatedAdminSubscribersRoute
+  '/_authenticated/dispatcher-health': typeof AuthenticatedDispatcherHealthRoute
   '/_authenticated/locations': typeof AuthenticatedLocationsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/spotter': typeof AuthenticatedSpotterRoute
   '/_authenticated/thresholds': typeof AuthenticatedThresholdsRoute
+  '/alerts/$id': typeof AlertsIdRoute
   '/auth/verify': typeof AuthVerifyRoute
   '/reports/$id': typeof ReportsIdRoute
   '/api/public/cron/check-thresholds': typeof ApiPublicCronCheckThresholdsRoute
   '/api/public/cron/daily-briefing': typeof ApiPublicCronDailyBriefingRoute
   '/api/public/cron/dispatch-scheduled': typeof ApiPublicCronDispatchScheduledRoute
+  '/api/public/cron/dispatcher-self-test': typeof ApiPublicCronDispatcherSelfTestRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -316,6 +354,7 @@ export interface FileRouteTypes {
     | '/outlook'
     | '/reports'
     | '/satellite'
+    | '/snow'
     | '/storm-reports'
     | '/tools'
     | '/tropical'
@@ -324,15 +363,18 @@ export interface FileRouteTypes {
     | '/admin-audit'
     | '/admin-scheduler'
     | '/admin-subscribers'
+    | '/dispatcher-health'
     | '/locations'
     | '/settings'
     | '/spotter'
     | '/thresholds'
+    | '/alerts/$id'
     | '/auth/verify'
     | '/reports/$id'
     | '/api/public/cron/check-thresholds'
     | '/api/public/cron/daily-briefing'
     | '/api/public/cron/dispatch-scheduled'
+    | '/api/public/cron/dispatcher-self-test'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -348,6 +390,7 @@ export interface FileRouteTypes {
     | '/outlook'
     | '/reports'
     | '/satellite'
+    | '/snow'
     | '/storm-reports'
     | '/tools'
     | '/tropical'
@@ -356,15 +399,18 @@ export interface FileRouteTypes {
     | '/admin-audit'
     | '/admin-scheduler'
     | '/admin-subscribers'
+    | '/dispatcher-health'
     | '/locations'
     | '/settings'
     | '/spotter'
     | '/thresholds'
+    | '/alerts/$id'
     | '/auth/verify'
     | '/reports/$id'
     | '/api/public/cron/check-thresholds'
     | '/api/public/cron/daily-briefing'
     | '/api/public/cron/dispatch-scheduled'
+    | '/api/public/cron/dispatcher-self-test'
   id:
     | '__root__'
     | '/'
@@ -381,6 +427,7 @@ export interface FileRouteTypes {
     | '/outlook'
     | '/reports'
     | '/satellite'
+    | '/snow'
     | '/storm-reports'
     | '/tools'
     | '/tropical'
@@ -389,15 +436,18 @@ export interface FileRouteTypes {
     | '/_authenticated/admin-audit'
     | '/_authenticated/admin-scheduler'
     | '/_authenticated/admin-subscribers'
+    | '/_authenticated/dispatcher-health'
     | '/_authenticated/locations'
     | '/_authenticated/settings'
     | '/_authenticated/spotter'
     | '/_authenticated/thresholds'
+    | '/alerts/$id'
     | '/auth/verify'
     | '/reports/$id'
     | '/api/public/cron/check-thresholds'
     | '/api/public/cron/daily-briefing'
     | '/api/public/cron/dispatch-scheduled'
+    | '/api/public/cron/dispatcher-self-test'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -415,13 +465,16 @@ export interface RootRouteChildren {
   OutlookRoute: typeof OutlookRoute
   ReportsRoute: typeof ReportsRouteWithChildren
   SatelliteRoute: typeof SatelliteRoute
+  SnowRoute: typeof SnowRoute
   StormReportsRoute: typeof StormReportsRoute
   ToolsRoute: typeof ToolsRoute
   TropicalRoute: typeof TropicalRoute
   WebcamsRoute: typeof WebcamsRoute
+  AlertsIdRoute: typeof AlertsIdRoute
   ApiPublicCronCheckThresholdsRoute: typeof ApiPublicCronCheckThresholdsRoute
   ApiPublicCronDailyBriefingRoute: typeof ApiPublicCronDailyBriefingRoute
   ApiPublicCronDispatchScheduledRoute: typeof ApiPublicCronDispatchScheduledRoute
+  ApiPublicCronDispatcherSelfTestRoute: typeof ApiPublicCronDispatcherSelfTestRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -452,6 +505,13 @@ declare module '@tanstack/react-router' {
       path: '/storm-reports'
       fullPath: '/storm-reports'
       preLoaderRoute: typeof StormReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/snow': {
+      id: '/snow'
+      path: '/snow'
+      fullPath: '/snow'
+      preLoaderRoute: typeof SnowRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/satellite': {
@@ -566,6 +626,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthVerifyRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/alerts/$id': {
+      id: '/alerts/$id'
+      path: '/alerts/$id'
+      fullPath: '/alerts/$id'
+      preLoaderRoute: typeof AlertsIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/thresholds': {
       id: '/_authenticated/thresholds'
       path: '/thresholds'
@@ -592,6 +659,13 @@ declare module '@tanstack/react-router' {
       path: '/locations'
       fullPath: '/locations'
       preLoaderRoute: typeof AuthenticatedLocationsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/dispatcher-health': {
+      id: '/_authenticated/dispatcher-health'
+      path: '/dispatcher-health'
+      fullPath: '/dispatcher-health'
+      preLoaderRoute: typeof AuthenticatedDispatcherHealthRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin-subscribers': {
@@ -622,6 +696,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminAnalyticsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/public/cron/dispatcher-self-test': {
+      id: '/api/public/cron/dispatcher-self-test'
+      path: '/api/public/cron/dispatcher-self-test'
+      fullPath: '/api/public/cron/dispatcher-self-test'
+      preLoaderRoute: typeof ApiPublicCronDispatcherSelfTestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/cron/dispatch-scheduled': {
       id: '/api/public/cron/dispatch-scheduled'
       path: '/api/public/cron/dispatch-scheduled'
@@ -651,6 +732,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdminAuditRoute: typeof AuthenticatedAdminAuditRoute
   AuthenticatedAdminSchedulerRoute: typeof AuthenticatedAdminSchedulerRoute
   AuthenticatedAdminSubscribersRoute: typeof AuthenticatedAdminSubscribersRoute
+  AuthenticatedDispatcherHealthRoute: typeof AuthenticatedDispatcherHealthRoute
   AuthenticatedLocationsRoute: typeof AuthenticatedLocationsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedSpotterRoute: typeof AuthenticatedSpotterRoute
@@ -662,6 +744,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdminAuditRoute: AuthenticatedAdminAuditRoute,
   AuthenticatedAdminSchedulerRoute: AuthenticatedAdminSchedulerRoute,
   AuthenticatedAdminSubscribersRoute: AuthenticatedAdminSubscribersRoute,
+  AuthenticatedDispatcherHealthRoute: AuthenticatedDispatcherHealthRoute,
   AuthenticatedLocationsRoute: AuthenticatedLocationsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedSpotterRoute: AuthenticatedSpotterRoute,
@@ -707,13 +790,16 @@ const rootRouteChildren: RootRouteChildren = {
   OutlookRoute: OutlookRoute,
   ReportsRoute: ReportsRouteWithChildren,
   SatelliteRoute: SatelliteRoute,
+  SnowRoute: SnowRoute,
   StormReportsRoute: StormReportsRoute,
   ToolsRoute: ToolsRoute,
   TropicalRoute: TropicalRoute,
   WebcamsRoute: WebcamsRoute,
+  AlertsIdRoute: AlertsIdRoute,
   ApiPublicCronCheckThresholdsRoute: ApiPublicCronCheckThresholdsRoute,
   ApiPublicCronDailyBriefingRoute: ApiPublicCronDailyBriefingRoute,
   ApiPublicCronDispatchScheduledRoute: ApiPublicCronDispatchScheduledRoute,
+  ApiPublicCronDispatcherSelfTestRoute: ApiPublicCronDispatcherSelfTestRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
