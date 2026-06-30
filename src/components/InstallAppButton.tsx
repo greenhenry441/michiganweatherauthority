@@ -23,6 +23,11 @@ function isStandalone() {
     (window.navigator as any).standalone === true
   );
 }
+function inIframe() {
+  if (typeof window === "undefined") return false;
+  try { return window.self !== window.top; } catch { return true; }
+}
+const PUBLISHED_URL = "https://michigan-weather-auth.lovable.app";
 
 export function InstallAppButton() {
   const [mounted, setMounted] = useState(false);
