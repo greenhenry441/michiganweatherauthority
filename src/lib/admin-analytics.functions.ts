@@ -92,10 +92,7 @@ export const listPushSubscribers = createServerFn({ method: "GET" })
 
 export const revokeSubscription = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => {
-    const { z } = require("zod") as typeof import("zod");
-    return z.object({ id: z.string().uuid() }).parse(data);
-  })
+  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ data, context }) => {
     await requireAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
