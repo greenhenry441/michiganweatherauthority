@@ -9,6 +9,9 @@ import {
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 import { MICHIGAN_CITIES, type MichiganCity } from "@/lib/michigan-cities";
+import { useGeolocation, nearestMichiganCity } from "@/lib/use-geolocation";
+import { Crosshair } from "lucide-react";
+
 import {
   getCityWeather, getMichiganAlerts, getExtraStats,
   aqiCategory, uvCategory, type NWSAlert, type ExtraStats,
@@ -585,6 +588,21 @@ function HomePage() {
 function CitySearch({ city, onPick }: { city: MichiganCity; onPick: (c: MichiganCity) => void }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
+  const { request, loading, error } = useGeolocation();
+
+  const useMyLocation = async () => {
+    try {
+      const fix = await request();
+      const { city: nearest, miles } = nearestMichiganCity(fix);
+      onPick(nearest);
+      setOpen(false);
+      setQ("");
+      toast.success(`Snapped to ${nearest.name} (${miles.toFixed(1)} mi away)`);
+    } catch {
+      toast.error(error ?? "Couldn't get your location");
+    }
+  };
+
 
   const results = useMemo(() => {
     const term = q.trim().toLowerCase();
@@ -604,7 +622,19 @@ function CitySearch({ city, onPick }: { city: MichiganCity; onPick: (c: Michigan
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-[340px] p-0" align="end">
-        <div className="p-2 border-b border-border">
+        <div className="p-2 border-b border-border space-y-2">
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            className="w-full justify-start gap-2 h-9 font-mono text-xs"
+            onClick={useMyLocation}
+            disabled={loading}
+          >
+            <Crosshair className={"h-3.5 w-3.5 text-accent " + (loading ? "animate-pulse" : "")} />
+            {loading ? "Locating…" : "Use my location"}
+          </Button>
+
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
             <Input

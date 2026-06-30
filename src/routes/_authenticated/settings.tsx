@@ -151,6 +151,12 @@ function SettingsPage() {
           onClear={() => setForm((f) => ({ ...f, home_zip: "", home_city: "", home_lat: null, home_lon: null }))}
         />
 
+        <UseMyLocationButton onPicked={(c) => {
+          setForm((f) => ({ ...f, home_zip: c.zip, home_city: c.name, home_lat: c.lat, home_lon: c.lon }));
+        }} />
+
+
+
         <CitySearchField
           label="Work city (optional)"
           saved={form.work_city ? `${form.work_city} (${form.work_zip})` : null}
@@ -791,5 +797,31 @@ function SegGroup({
         </button>
       ))}
     </div>
+  );
+}
+
+// Pulls the device's current GPS fix, snaps it to the closest Michigan ZIP,
+// and writes that into the home-location form. Doesn't auto-save — user
+// still clicks the form's Save button so they can review first.
+import { useGeolocation, nearestMichiganCity } from "@/lib/use-geolocation";
+import type { MichiganCity } from "@/lib/michigan-cities";
+
+function UseMyLocationButton({ onPicked }: { onPicked: (c: MichiganCity) => void }) {
+  const { request, loading, error } = useGeolocation();
+  const go = async () => {
+    try {
+      const fix = await request();
+      const { city, miles } = nearestMichiganCity(fix);
+      onPicked(city);
+      toast.success(`Set home to ${city.name} (${miles.toFixed(1)} mi away). Click Save to keep it.`);
+    } catch {
+      toast.error(error ?? "Couldn't get your location");
+    }
+  };
+  return (
+    <Button type="button" variant="secondary" size="sm" onClick={go} disabled={loading} className="h-8 gap-2 text-xs">
+      <Crosshair className={"h-3.5 w-3.5 text-accent " + (loading ? "animate-pulse" : "")} />
+      {loading ? "Locating…" : "Use my current location for home"}
+    </Button>
   );
 }

@@ -1,11 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
-import { ArrowLeft, FileText, Radio, RefreshCw } from "lucide-react";
+import { ArrowLeft, Crosshair, FileText, Radio, RefreshCw } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MI_OFFICES, getProductTypes, getProductList, getProductText } from "@/lib/weather-api";
+import { MI_OFFICES, getProductTypes, getProductList, getProductText, getPoint } from "@/lib/weather-api";
+import { useGeolocation } from "@/lib/use-geolocation";
 import { cn } from "@/lib/utils";
+
 
 export const Route = createFileRoute("/forecasts")({
   head: () => ({
@@ -98,10 +101,14 @@ function ForecastsPage() {
             </SelectContent>
           </Select>
         </div>
-        <Button variant="outline" onClick={() => { types.refetch(); list.refetch(); product.refetch(); }}>
-          <RefreshCw className={cn("h-3.5 w-3.5 mr-1.5", (list.isFetching || product.isFetching) && "animate-spin")} />
-          Refresh
-        </Button>
+        <div className="flex gap-2">
+          <LocationOfficeButton onPick={(id) => setOffice(id)} />
+          <Button variant="outline" onClick={() => { types.refetch(); list.refetch(); product.refetch(); }}>
+            <RefreshCw className={cn("h-3.5 w-3.5 mr-1.5", (list.isFetching || product.isFetching) && "animate-spin")} />
+            Refresh
+          </Button>
+        </div>
+
       </div>
 
       <div className="grid md:grid-cols-[260px_1fr] gap-4">
@@ -138,5 +145,33 @@ function ForecastsPage() {
         </article>
       </div>
     </div>
+  );
+}
+
+// One-tap "load my office" button. Calls NWS /points to map lat/lon → office
+// (a.k.a. WFO / gridId), and silently no-ops if it's not one of the MI WFOs.
+function LocationOfficeButton({ onPick }: { onPick: (officeId: string) => void }) {
+  const { request, loading } = useGeolocation();
+  const go = async () => {
+    try {
+      const fix = await request();
+      const pt = await getPoint(fix.lat, fix.lon);
+      const id = pt.properties.gridId;
+      const match = MI_OFFICES.find((o) => o.id === id);
+      if (match) {
+        onPick(match.id);
+        toast.success(`Loaded ${match.name} (${match.id}) for your location`);
+      } else {
+        toast.message(`Closest NWS office is ${id} — not in Michigan's roster`);
+      }
+    } catch (e) {
+      toast.error(String((e as Error).message ?? e));
+    }
+  };
+  return (
+    <Button variant="secondary" onClick={go} disabled={loading}>
+      <Crosshair className={cn("h-3.5 w-3.5 mr-1.5 text-accent", loading && "animate-pulse")} />
+      My office
+    </Button>
   );
 }

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const DAYS = [
   { day: 1, label: "Day 1" },
@@ -7,18 +7,54 @@ const DAYS = [
   { day: 4, label: "Days 4-8" },
 ];
 
-// Bust SPC's aggressive CDN cache hourly so flipping tabs always pulls a fresh image.
-function spcSrc(day: number) {
+// SPC publishes several outlook products per day. Day 1/2/3 each have a
+// "categorical" GIF that is the canonical convective outlook map. The
+// extended outlook (Days 4-8) is a probability GIF. We provide a fallback
+// chain because SPC occasionally has the new issuance staged before the
+// canonical filename refreshes; if the primary 404s, we swap to the
+// "1200otlk" timed image (Day 1's 12Z issuance), the static `otlk` image,
+// or the experimental folder.
+function spcSources(day: number): string[] {
   const stamp = Math.floor(Date.now() / (1000 * 60 * 30));
-  if (day <= 3) {
-    return `https://www.spc.noaa.gov/products/outlook/day${day}otlk.gif?t=${stamp}`;
+  if (day === 1) {
+    return [
+      `https://www.spc.noaa.gov/products/outlook/day1otlk.gif?t=${stamp}`,
+      `https://www.spc.noaa.gov/products/outlook/day1otlk_1300.gif?t=${stamp}`,
+      `https://www.spc.noaa.gov/products/outlook/day1otlk_1200.gif?t=${stamp}`,
+    ];
   }
-  return `https://www.spc.noaa.gov/products/exper/day4-8/day48prob.gif?t=${stamp}`;
+  if (day === 2) {
+    return [
+      `https://www.spc.noaa.gov/products/outlook/day2otlk.gif?t=${stamp}`,
+      `https://www.spc.noaa.gov/products/outlook/day2otlk_0600.gif?t=${stamp}`,
+      `https://www.spc.noaa.gov/products/outlook/day2otlk_1730.gif?t=${stamp}`,
+    ];
+  }
+  if (day === 3) {
+    return [
+      `https://www.spc.noaa.gov/products/outlook/day3otlk.gif?t=${stamp}`,
+      `https://www.spc.noaa.gov/products/outlook/day3otlk_0730.gif?t=${stamp}`,
+    ];
+  }
+  return [
+    `https://www.spc.noaa.gov/products/exper/day4-8/day48prob.gif?t=${stamp}`,
+    `https://www.spc.noaa.gov/products/exper/day4-8/day48probotlk_0700.gif?t=${stamp}`,
+  ];
 }
+
+const SPC_SITE = (day: number) =>
+  day <= 3
+    ? `https://www.spc.noaa.gov/products/outlook/day${day}otlk.html`
+    : `https://www.spc.noaa.gov/products/exper/day4-8/`;
 
 export function SevereOutlookPanel() {
   const [day, setDay] = useState(1);
-  const src = useMemo(() => spcSrc(day), [day]);
+  const sources = useMemo(() => spcSources(day), [day]);
+  const [idx, setIdx] = useState(0);
+  // Reset the fallback chain whenever the active day changes.
+  useEffect(() => { setIdx(0); }, [day]);
+  const src = sources[idx] ?? sources[0];
+
   return (
     <div className="rounded-2xl glass aurora-border p-4">
       <div className="flex items-center justify-between mb-3 gap-3 flex-wrap">
@@ -43,7 +79,7 @@ export function SevereOutlookPanel() {
           ))}
         </div>
       </div>
-      <div className="rounded-xl overflow-hidden border border-border bg-white/95 grid place-items-center">
+      <div className="rounded-xl overflow-hidden border border-border bg-white/95 grid place-items-center min-h-[280px]">
         <img
           key={src}
           src={src}
@@ -51,7 +87,15 @@ export function SevereOutlookPanel() {
           loading="lazy"
           referrerPolicy="no-referrer"
           className="w-full h-auto max-h-[480px] object-contain"
+          onError={() => {
+            if (idx < sources.length - 1) setIdx(idx + 1);
+          }}
         />
+        {idx === sources.length - 1 && (
+          <noscript>
+            <a href={SPC_SITE(day)} className="text-xs text-accent">View on SPC site</a>
+          </noscript>
+        )}
       </div>
       <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] font-mono text-muted-foreground">
         <Legend color="#80c580" label="TSTM" />
@@ -62,7 +106,7 @@ export function SevereOutlookPanel() {
         <Legend color="#ff80ff" label="HIGH" />
         <a
           className="ml-auto text-accent hover:underline"
-          href="https://www.spc.noaa.gov/products/outlook/"
+          href={SPC_SITE(day)}
           target="_blank"
           rel="noopener noreferrer"
         >
