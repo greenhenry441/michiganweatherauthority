@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowLeft, AlertTriangle, CloudLightning, Zap, Satellite,
-  FileSpreadsheet, Radio, FileText, BookOpen, Wind, ThermometerSun, Camera, Cloud,
+  FileSpreadsheet, Radio, FileText, BookOpen, Wind, ThermometerSun, Camera, Cloud, Snowflake,
 } from "lucide-react";
+
 
 export const Route = createFileRoute("/tools")({
   head: () => ({
