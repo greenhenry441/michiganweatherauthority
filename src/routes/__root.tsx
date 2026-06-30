@@ -135,7 +135,7 @@ function RootComponent() {
     // Initialize favicon based on current theme/mode (set by THEME_BOOT_SCRIPT)
     import("../lib/favicon").then(({ updateFavicon }) => {
       const root = document.documentElement;
-      const theme = (root.getAttribute("data-theme") as "noir" | "aurora" | "og") || "noir";
+      const theme = (root.getAttribute("data-theme") as "noir" | "aurora" | "og" | "minimal") || "noir";
       const mode = (root.getAttribute("data-mode") as "dark" | "light") || "dark";
       updateFavicon(theme, mode);
     }).catch(() => {});
