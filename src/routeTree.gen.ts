@@ -14,19 +14,25 @@ import { Route as TropicalRouteImport } from './routes/tropical'
 import { Route as ToolsRouteImport } from './routes/tools'
 import { Route as StormReportsRouteImport } from './routes/storm-reports'
 import { Route as SatelliteRouteImport } from './routes/satellite'
+import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as OutlookRouteImport } from './routes/outlook'
 import { Route as MesoscaleRouteImport } from './routes/mesoscale'
 import { Route as LightningRouteImport } from './routes/lightning'
 import { Route as ForecastsRouteImport } from './routes/forecasts'
 import { Route as CommandRouteImport } from './routes/command'
 import { Route as ClimateRouteImport } from './routes/climate'
+import { Route as ChaseRouteImport } from './routes/chase'
 import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AlertsMapRouteImport } from './routes/alerts-map'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ReportsIdRouteImport } from './routes/reports.$id'
 import { Route as AuthVerifyRouteImport } from './routes/auth.verify'
+import { Route as AuthenticatedThresholdsRouteImport } from './routes/_authenticated/thresholds'
+import { Route as AuthenticatedSpotterRouteImport } from './routes/_authenticated/spotter'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedLocationsRouteImport } from './routes/_authenticated/locations'
 import { Route as ApiPublicCronDispatchScheduledRouteImport } from './routes/api/public/cron.dispatch-scheduled'
 import { Route as ApiPublicCronDailyBriefingRouteImport } from './routes/api/public/cron.daily-briefing'
 import { Route as ApiPublicCronCheckThresholdsRouteImport } from './routes/api/public/cron.check-thresholds'
@@ -54,6 +60,11 @@ const StormReportsRoute = StormReportsRouteImport.update({
 const SatelliteRoute = SatelliteRouteImport.update({
   id: '/satellite',
   path: '/satellite',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportsRoute = ReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OutlookRoute = OutlookRouteImport.update({
@@ -86,6 +97,11 @@ const ClimateRoute = ClimateRouteImport.update({
   path: '/climate',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ChaseRoute = ChaseRouteImport.update({
+  id: '/chase',
+  path: '/chase',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ChangelogRoute = ChangelogRouteImport.update({
   id: '/changelog',
   path: '/changelog',
@@ -110,14 +126,34 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReportsIdRoute = ReportsIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ReportsRoute,
+} as any)
 const AuthVerifyRoute = AuthVerifyRouteImport.update({
   id: '/verify',
   path: '/verify',
   getParentRoute: () => AuthRoute,
 } as any)
+const AuthenticatedThresholdsRoute = AuthenticatedThresholdsRouteImport.update({
+  id: '/thresholds',
+  path: '/thresholds',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedSpotterRoute = AuthenticatedSpotterRouteImport.update({
+  id: '/spotter',
+  path: '/spotter',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedLocationsRoute = AuthenticatedLocationsRouteImport.update({
+  id: '/locations',
+  path: '/locations',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const ApiPublicCronDispatchScheduledRoute =
@@ -144,19 +180,25 @@ export interface FileRoutesByFullPath {
   '/alerts-map': typeof AlertsMapRoute
   '/auth': typeof AuthRouteWithChildren
   '/changelog': typeof ChangelogRoute
+  '/chase': typeof ChaseRoute
   '/climate': typeof ClimateRoute
   '/command': typeof CommandRoute
   '/forecasts': typeof ForecastsRoute
   '/lightning': typeof LightningRoute
   '/mesoscale': typeof MesoscaleRoute
   '/outlook': typeof OutlookRoute
+  '/reports': typeof ReportsRouteWithChildren
   '/satellite': typeof SatelliteRoute
   '/storm-reports': typeof StormReportsRoute
   '/tools': typeof ToolsRoute
   '/tropical': typeof TropicalRoute
   '/webcams': typeof WebcamsRoute
+  '/locations': typeof AuthenticatedLocationsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/spotter': typeof AuthenticatedSpotterRoute
+  '/thresholds': typeof AuthenticatedThresholdsRoute
   '/auth/verify': typeof AuthVerifyRoute
+  '/reports/$id': typeof ReportsIdRoute
   '/api/public/cron/check-thresholds': typeof ApiPublicCronCheckThresholdsRoute
   '/api/public/cron/daily-briefing': typeof ApiPublicCronDailyBriefingRoute
   '/api/public/cron/dispatch-scheduled': typeof ApiPublicCronDispatchScheduledRoute
@@ -166,19 +208,25 @@ export interface FileRoutesByTo {
   '/alerts-map': typeof AlertsMapRoute
   '/auth': typeof AuthRouteWithChildren
   '/changelog': typeof ChangelogRoute
+  '/chase': typeof ChaseRoute
   '/climate': typeof ClimateRoute
   '/command': typeof CommandRoute
   '/forecasts': typeof ForecastsRoute
   '/lightning': typeof LightningRoute
   '/mesoscale': typeof MesoscaleRoute
   '/outlook': typeof OutlookRoute
+  '/reports': typeof ReportsRouteWithChildren
   '/satellite': typeof SatelliteRoute
   '/storm-reports': typeof StormReportsRoute
   '/tools': typeof ToolsRoute
   '/tropical': typeof TropicalRoute
   '/webcams': typeof WebcamsRoute
+  '/locations': typeof AuthenticatedLocationsRoute
   '/settings': typeof AuthenticatedSettingsRoute
+  '/spotter': typeof AuthenticatedSpotterRoute
+  '/thresholds': typeof AuthenticatedThresholdsRoute
   '/auth/verify': typeof AuthVerifyRoute
+  '/reports/$id': typeof ReportsIdRoute
   '/api/public/cron/check-thresholds': typeof ApiPublicCronCheckThresholdsRoute
   '/api/public/cron/daily-briefing': typeof ApiPublicCronDailyBriefingRoute
   '/api/public/cron/dispatch-scheduled': typeof ApiPublicCronDispatchScheduledRoute
@@ -190,19 +238,25 @@ export interface FileRoutesById {
   '/alerts-map': typeof AlertsMapRoute
   '/auth': typeof AuthRouteWithChildren
   '/changelog': typeof ChangelogRoute
+  '/chase': typeof ChaseRoute
   '/climate': typeof ClimateRoute
   '/command': typeof CommandRoute
   '/forecasts': typeof ForecastsRoute
   '/lightning': typeof LightningRoute
   '/mesoscale': typeof MesoscaleRoute
   '/outlook': typeof OutlookRoute
+  '/reports': typeof ReportsRouteWithChildren
   '/satellite': typeof SatelliteRoute
   '/storm-reports': typeof StormReportsRoute
   '/tools': typeof ToolsRoute
   '/tropical': typeof TropicalRoute
   '/webcams': typeof WebcamsRoute
+  '/_authenticated/locations': typeof AuthenticatedLocationsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
+  '/_authenticated/spotter': typeof AuthenticatedSpotterRoute
+  '/_authenticated/thresholds': typeof AuthenticatedThresholdsRoute
   '/auth/verify': typeof AuthVerifyRoute
+  '/reports/$id': typeof ReportsIdRoute
   '/api/public/cron/check-thresholds': typeof ApiPublicCronCheckThresholdsRoute
   '/api/public/cron/daily-briefing': typeof ApiPublicCronDailyBriefingRoute
   '/api/public/cron/dispatch-scheduled': typeof ApiPublicCronDispatchScheduledRoute
@@ -214,19 +268,25 @@ export interface FileRouteTypes {
     | '/alerts-map'
     | '/auth'
     | '/changelog'
+    | '/chase'
     | '/climate'
     | '/command'
     | '/forecasts'
     | '/lightning'
     | '/mesoscale'
     | '/outlook'
+    | '/reports'
     | '/satellite'
     | '/storm-reports'
     | '/tools'
     | '/tropical'
     | '/webcams'
+    | '/locations'
     | '/settings'
+    | '/spotter'
+    | '/thresholds'
     | '/auth/verify'
+    | '/reports/$id'
     | '/api/public/cron/check-thresholds'
     | '/api/public/cron/daily-briefing'
     | '/api/public/cron/dispatch-scheduled'
@@ -236,19 +296,25 @@ export interface FileRouteTypes {
     | '/alerts-map'
     | '/auth'
     | '/changelog'
+    | '/chase'
     | '/climate'
     | '/command'
     | '/forecasts'
     | '/lightning'
     | '/mesoscale'
     | '/outlook'
+    | '/reports'
     | '/satellite'
     | '/storm-reports'
     | '/tools'
     | '/tropical'
     | '/webcams'
+    | '/locations'
     | '/settings'
+    | '/spotter'
+    | '/thresholds'
     | '/auth/verify'
+    | '/reports/$id'
     | '/api/public/cron/check-thresholds'
     | '/api/public/cron/daily-briefing'
     | '/api/public/cron/dispatch-scheduled'
@@ -259,19 +325,25 @@ export interface FileRouteTypes {
     | '/alerts-map'
     | '/auth'
     | '/changelog'
+    | '/chase'
     | '/climate'
     | '/command'
     | '/forecasts'
     | '/lightning'
     | '/mesoscale'
     | '/outlook'
+    | '/reports'
     | '/satellite'
     | '/storm-reports'
     | '/tools'
     | '/tropical'
     | '/webcams'
+    | '/_authenticated/locations'
     | '/_authenticated/settings'
+    | '/_authenticated/spotter'
+    | '/_authenticated/thresholds'
     | '/auth/verify'
+    | '/reports/$id'
     | '/api/public/cron/check-thresholds'
     | '/api/public/cron/daily-briefing'
     | '/api/public/cron/dispatch-scheduled'
@@ -283,12 +355,14 @@ export interface RootRouteChildren {
   AlertsMapRoute: typeof AlertsMapRoute
   AuthRoute: typeof AuthRouteWithChildren
   ChangelogRoute: typeof ChangelogRoute
+  ChaseRoute: typeof ChaseRoute
   ClimateRoute: typeof ClimateRoute
   CommandRoute: typeof CommandRoute
   ForecastsRoute: typeof ForecastsRoute
   LightningRoute: typeof LightningRoute
   MesoscaleRoute: typeof MesoscaleRoute
   OutlookRoute: typeof OutlookRoute
+  ReportsRoute: typeof ReportsRouteWithChildren
   SatelliteRoute: typeof SatelliteRoute
   StormReportsRoute: typeof StormReportsRoute
   ToolsRoute: typeof ToolsRoute
@@ -336,6 +410,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SatelliteRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reports': {
+      id: '/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof ReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/outlook': {
       id: '/outlook'
       path: '/outlook'
@@ -378,6 +459,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClimateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/chase': {
+      id: '/chase'
+      path: '/chase'
+      fullPath: '/chase'
+      preLoaderRoute: typeof ChaseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/changelog': {
       id: '/changelog'
       path: '/changelog'
@@ -413,6 +501,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reports/$id': {
+      id: '/reports/$id'
+      path: '/$id'
+      fullPath: '/reports/$id'
+      preLoaderRoute: typeof ReportsIdRouteImport
+      parentRoute: typeof ReportsRoute
+    }
     '/auth/verify': {
       id: '/auth/verify'
       path: '/verify'
@@ -420,11 +515,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthVerifyRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_authenticated/thresholds': {
+      id: '/_authenticated/thresholds'
+      path: '/thresholds'
+      fullPath: '/thresholds'
+      preLoaderRoute: typeof AuthenticatedThresholdsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/spotter': {
+      id: '/_authenticated/spotter'
+      path: '/spotter'
+      fullPath: '/spotter'
+      preLoaderRoute: typeof AuthenticatedSpotterRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/settings': {
       id: '/_authenticated/settings'
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/locations': {
+      id: '/_authenticated/locations'
+      path: '/locations'
+      fullPath: '/locations'
+      preLoaderRoute: typeof AuthenticatedLocationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/public/cron/dispatch-scheduled': {
@@ -452,11 +568,17 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedLocationsRoute: typeof AuthenticatedLocationsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
+  AuthenticatedSpotterRoute: typeof AuthenticatedSpotterRoute
+  AuthenticatedThresholdsRoute: typeof AuthenticatedThresholdsRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedLocationsRoute: AuthenticatedLocationsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
+  AuthenticatedSpotterRoute: AuthenticatedSpotterRoute,
+  AuthenticatedThresholdsRoute: AuthenticatedThresholdsRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -472,18 +594,31 @@ const AuthRouteChildren: AuthRouteChildren = {
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
+interface ReportsRouteChildren {
+  ReportsIdRoute: typeof ReportsIdRoute
+}
+
+const ReportsRouteChildren: ReportsRouteChildren = {
+  ReportsIdRoute: ReportsIdRoute,
+}
+
+const ReportsRouteWithChildren =
+  ReportsRoute._addFileChildren(ReportsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AlertsMapRoute: AlertsMapRoute,
   AuthRoute: AuthRouteWithChildren,
   ChangelogRoute: ChangelogRoute,
+  ChaseRoute: ChaseRoute,
   ClimateRoute: ClimateRoute,
   CommandRoute: CommandRoute,
   ForecastsRoute: ForecastsRoute,
   LightningRoute: LightningRoute,
   MesoscaleRoute: MesoscaleRoute,
   OutlookRoute: OutlookRoute,
+  ReportsRoute: ReportsRouteWithChildren,
   SatelliteRoute: SatelliteRoute,
   StormReportsRoute: StormReportsRoute,
   ToolsRoute: ToolsRoute,
