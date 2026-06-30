@@ -26,6 +26,12 @@ const reportSchema = z.object({
   photo_url: z.string().max(2000).nullable().optional(),
 });
 
+// Coarsen GPS to ~1km grid so public listings can't be used to track individuals.
+function coarsen(n: number | null | undefined) {
+  if (n == null) return n;
+  return Math.round(n * 100) / 100;
+}
+
 export const listReports = createServerFn({ method: "GET" })
   .inputValidator((data: unknown) =>
     z
@@ -34,20 +40,18 @@ export const listReports = createServerFn({ method: "GET" })
       .parse(data ?? {}),
   )
   .handler(async ({ data }) => {
-    const client = createClient<Database>(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_PUBLISHABLE_KEY!,
-      { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
-    );
-    let q = client
+    // Public listing: use service role to bypass RLS (which now restricts SELECT to
+    // authenticated users) and explicitly strip user_id + coarsen GPS before returning.
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    let q = supabaseAdmin
       .from("spotter_reports")
-      .select("id, kind, measurement, lat, lon, location_label, notes, photo_url, status, confirmed_count, doubt_count, created_at, user_id")
+      .select("id, kind, measurement, lat, lon, location_label, notes, photo_url, status, confirmed_count, doubt_count, created_at")
       .order("created_at", { ascending: false })
       .limit(data?.limit ?? 50);
     if (data?.kind) q = q.eq("kind", data.kind);
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
-    return rows ?? [];
+    return (rows ?? []).map((r) => ({ ...r, lat: coarsen(r.lat)!, lon: coarsen(r.lon)! }));
   });
 
 export const createReport = createServerFn({ method: "POST" })
@@ -118,43 +122,41 @@ export const getReportThread = createServerFn({ method: "GET" })
     z.object({ report_id: z.string().uuid() }).parse(data),
   )
   .handler(async ({ data }) => {
-    const client = createClient<Database>(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_PUBLISHABLE_KEY!,
-      { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
-    );
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const [{ data: report }, { data: comments }] = await Promise.all([
-      client
+      supabaseAdmin
         .from("spotter_reports")
-        .select("id, kind, measurement, lat, lon, location_label, notes, photo_url, status, confirmed_count, doubt_count, created_at, user_id")
+        .select("id, kind, measurement, lat, lon, location_label, notes, photo_url, status, confirmed_count, doubt_count, created_at")
         .eq("id", data.report_id)
         .maybeSingle(),
-      client
+      supabaseAdmin
         .from("report_comments")
-        .select("id, body, created_at, user_id")
+        .select("id, body, created_at")
         .eq("report_id", data.report_id)
         .order("created_at", { ascending: true }),
     ]);
-    return { report, comments: comments ?? [] };
+    const safeReport = report
+      ? { ...report, lat: coarsen(report.lat)!, lon: coarsen(report.lon)! }
+      : null;
+    return { report: safeReport, comments: comments ?? [] };
   });
 
 export const leaderboardThisMonth = createServerFn({ method: "GET" }).handler(async () => {
-  const client = createClient<Database>(
-    process.env.SUPABASE_URL!,
-    process.env.SUPABASE_PUBLISHABLE_KEY!,
-    { auth: { storage: undefined, persistSession: false, autoRefreshToken: false } },
-  );
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const start = new Date();
   start.setUTCDate(1);
   start.setUTCHours(0, 0, 0, 0);
-  const { data, error } = await client
+  // Aggregate by user_id server-side, then return only a stable opaque handle (first 8 of UUID)
+  // so the public leaderboard doesn't expose full account UUIDs.
+  const { data, error } = await supabaseAdmin
     .from("spotter_reports")
     .select("user_id, confirmed_count")
     .gte("created_at", start.toISOString());
   if (error) throw new Error(error.message);
-  const map = new Map<string, { user_id: string; reports: number; confirms: number }>();
+  const map = new Map<string, { handle: string; reports: number; confirms: number }>();
   for (const r of data ?? []) {
-    const e = map.get(r.user_id) ?? { user_id: r.user_id, reports: 0, confirms: 0 };
+    const handle = r.user_id.slice(0, 8);
+    const e = map.get(r.user_id) ?? { handle, reports: 0, confirms: 0 };
     e.reports += 1;
     e.confirms += r.confirmed_count ?? 0;
     map.set(r.user_id, e);
@@ -163,3 +165,4 @@ export const leaderboardThisMonth = createServerFn({ method: "GET" }).handler(as
     .sort((a, b) => b.confirms - a.confirms || b.reports - a.reports)
     .slice(0, 25);
 });
+

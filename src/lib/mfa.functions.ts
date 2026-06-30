@@ -9,7 +9,8 @@ type Method = "totp" | "email";
 export const listMyFactors = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data } = await context.supabase
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data } = await supabaseAdmin
       .from("user_mfa_factors")
       .select("purpose, method, confirmed_at, last_used_at")
       .eq("user_id", context.userId);
@@ -45,13 +46,13 @@ export const confirmTotpEnroll = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ purpose: z.enum(["signin", "command"]), code: z.string().regex(/^\d{6}$/) }).parse(d))
   .handler(async ({ data, context }) => {
-    const { data: row } = await context.supabase
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: row } = await supabaseAdmin
       .from("user_mfa_factors").select("secret, method").eq("user_id", context.userId).eq("purpose", data.purpose).maybeSingle();
     if (!row || row.method !== "totp" || !row.secret) return { ok: false as const, error: "no_pending_enroll" };
     const { verifyTotp } = await import("./totp.server");
     const ok = await verifyTotp(row.secret, data.code);
     if (!ok) return { ok: false as const, error: "invalid_code" };
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("user_mfa_factors")
       .update({ confirmed_at: new Date().toISOString() })
       .eq("user_id", context.userId).eq("purpose", data.purpose);
@@ -88,7 +89,7 @@ export const confirmEmailEnroll = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ code: z.string().regex(/^\d{6}$/) }).parse(d))
   .handler(async ({ data, context }) => {
-    const ok = await consumeCode(context.userId, "enroll", data.code, context.supabase);
+    const ok = await consumeCode(context.userId, "enroll", data.code);
     if (!ok) return { ok: false as const, error: "invalid_code" };
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("user_mfa_factors")
@@ -103,7 +104,8 @@ export const sendSigninCode = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const email = context.claims?.email;
     if (!email) throw new Error("No email");
-    const { data: factor } = await context.supabase
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: factor } = await supabaseAdmin
       .from("user_mfa_factors").select("method, confirmed_at").eq("user_id", context.userId).eq("purpose", "signin").maybeSingle();
     if (!factor?.confirmed_at || factor.method !== "email") return { ok: false as const, error: "no_email_factor" };
     return await issueAndSendCode(context.userId, email, "signin");
@@ -113,7 +115,8 @@ export const verifySigninMfa = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((d: unknown) => z.object({ code: z.string().regex(/^\d{6}$/) }).parse(d))
   .handler(async ({ data, context }) => {
-    const { data: factor } = await context.supabase
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: factor } = await supabaseAdmin
       .from("user_mfa_factors").select("method, secret, confirmed_at").eq("user_id", context.userId).eq("purpose", "signin").maybeSingle();
     if (!factor?.confirmed_at) return { ok: false as const, error: "no_factor" };
 
@@ -122,7 +125,7 @@ export const verifySigninMfa = createServerFn({ method: "POST" })
       const { verifyTotp } = await import("./totp.server");
       ok = await verifyTotp(factor.secret, data.code);
     } else if (factor.method === "email") {
-      ok = await consumeCode(context.userId, "signin", data.code, context.supabase);
+      ok = await consumeCode(context.userId, "signin", data.code);
     }
     if (!ok) return { ok: false as const, error: "invalid_code" };
 
@@ -131,7 +134,6 @@ export const verifySigninMfa = createServerFn({ method: "POST" })
     const session = await useSession<SigninMfaSession>(SIGNIN_MFA_SESSION);
     await session.update({ verifiedUserId: context.userId, verifiedAt: Date.now() });
 
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await supabaseAdmin.from("user_mfa_factors")
       .update({ last_used_at: new Date().toISOString() })
       .eq("user_id", context.userId).eq("purpose", "signin");
@@ -141,7 +143,8 @@ export const verifySigninMfa = createServerFn({ method: "POST" })
 export const isSigninMfaVerified = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const { data: factor } = await context.supabase
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: factor } = await supabaseAdmin
       .from("user_mfa_factors").select("method, confirmed_at").eq("user_id", context.userId).eq("purpose", "signin").maybeSingle();
     const enrolled = !!factor?.confirmed_at;
     if (!enrolled) return { enrolled: false, verified: true };
@@ -174,10 +177,11 @@ async function issueAndSendCode(userId: string, email: string, purpose: "signin"
   }
 }
 
-async function consumeCode(userId: string, purpose: string, code: string, supabase: any) {
+async function consumeCode(userId: string, purpose: string, code: string) {
   const hashBuf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(code) as BufferSource);
   const hash = Array.from(new Uint8Array(hashBuf)).map((b) => b.toString(16).padStart(2, "0")).join("");
-  const { data } = await supabase
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data } = await supabaseAdmin
     .from("mfa_email_codes")
     .select("id, expires_at, consumed_at")
     .eq("user_id", userId).eq("purpose", purpose).eq("code_hash", hash)
@@ -187,7 +191,6 @@ async function consumeCode(userId: string, purpose: string, code: string, supaba
     .limit(1)
     .maybeSingle();
   if (!data) return false;
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   await supabaseAdmin.from("mfa_email_codes").update({ consumed_at: new Date().toISOString() }).eq("id", data.id);
   return true;
 }
