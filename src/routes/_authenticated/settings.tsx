@@ -289,12 +289,11 @@ function SettingsPage() {
 
       <MfaManager />
 
-
+      <CloudPrefsSection />
+      <MoreSection />
 
       <div className="flex flex-wrap gap-2 justify-end">
-        <Button variant="outline" type="button" onClick={testNotification} size="lg">
-          <Bell className="h-4 w-4 mr-2" /> Send test notification
-        </Button>
+        <TestPushButton />
         <Button onClick={() => save.mutate(form)} disabled={save.isPending} size="lg">
           <Save className="h-4 w-4 mr-2" /> {save.isPending ? "Saving…" : "Save changes"}
         </Button>
@@ -304,28 +303,127 @@ function SettingsPage() {
   );
 }
 
-async function testNotification() {
-  if (typeof window === "undefined" || !("Notification" in window)) {
-    toast.error("Your browser doesn't support notifications");
-    return;
-  }
-  let perm = Notification.permission;
-  if (perm === "default") perm = await Notification.requestPermission();
-  if (perm !== "granted") {
-    toast.error("Notifications are blocked by your browser");
-    return;
-  }
-  try {
-    const reg = "serviceWorker" in navigator ? await navigator.serviceWorker.getRegistration() : null;
-    const title = "MWA test notification";
-    const body = "If you can read this, your device is set up for MWA alerts.";
-    if (reg) reg.showNotification(title, { body, tag: "mwa-test", data: { url: "/" } });
-    else new Notification(title, { body, tag: "mwa-test" });
-    toast.success("Test notification sent");
-  } catch (e) {
-    toast.error((e as Error).message);
-  }
+function TestPushButton() {
+  const sendTest = useServerFn(sendTestPushToMe);
+  const m = useMutation({
+    mutationFn: () => sendTest(),
+    onSuccess: (r: any) => {
+      if (r.sent > 0) toast.success(`Sent to ${r.sent}/${r.devices} device${r.devices === 1 ? "" : "s"}`);
+      else toast.warning(`No deliveries succeeded (${r.failed} failed, ${r.removed} pruned). Re-enable notifications and try again.`);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const localTest = async () => {
+    if (!("Notification" in window)) { toast.error("Notifications not supported"); return; }
+    let perm = Notification.permission;
+    if (perm === "default") perm = await Notification.requestPermission();
+    if (perm !== "granted") { toast.error("Notifications blocked"); return; }
+    try {
+      const reg = "serviceWorker" in navigator ? await navigator.serviceWorker.getRegistration() : null;
+      const t = "MWA local test";
+      const body = "Local notification (no server roundtrip).";
+      if (reg) reg.showNotification(t, { body, tag: "mwa-local-test" });
+      else new Notification(t, { body, tag: "mwa-local-test" });
+      toast.success("Local notification fired");
+    } catch (e) { toast.error((e as Error).message); }
+  };
+  return (
+    <div className="flex gap-2">
+      <Button variant="outline" type="button" onClick={localTest} size="lg">
+        <Bell className="h-4 w-4 mr-2" /> Local test
+      </Button>
+      <Button variant="outline" type="button" onClick={() => m.mutate()} disabled={m.isPending} size="lg">
+        <Bell className="h-4 w-4 mr-2" /> {m.isPending ? "Sending…" : "Send real push to my devices"}
+      </Button>
+    </div>
+  );
 }
+
+function CloudPrefsSection() {
+  const qc = useQueryClient();
+  const fetchPrefs = useServerFn(getMyPreferences);
+  const updatePrefs = useServerFn(updateMyPreferences);
+  const q = useQuery({ queryKey: ["cloud-prefs"], queryFn: () => fetchPrefs() });
+  const m = useMutation({
+    mutationFn: (data: any) => updatePrefs({ data }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["cloud-prefs"] }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const p: any = q.data ?? {};
+  return (
+    <section className="rounded-xl border border-border bg-card p-5 space-y-4">
+      <div className="flex items-center gap-2 text-accent">
+        <Cloud className="h-4 w-4" />
+        <h2 className="font-display tracking-wider uppercase text-sm">Cloud Preferences</h2>
+        <span className="text-[10px] text-muted-foreground ml-auto">Synced across devices</span>
+      </div>
+      <ToggleRow
+        label="Daily morning briefing push (7am ET)"
+        desc="Get a daily push at 7am with today's high/low and precipitation for your home city."
+        checked={!!p.daily_briefing}
+        onChange={(v) => m.mutate({ daily_briefing: v })}
+      />
+      <div className="space-y-1.5">
+        <Label className="text-xs font-mono uppercase tracking-wider">Lightning radius alerts (miles, 0 = off)</Label>
+        <Input
+          type="number" min={0} max={100}
+          value={p.lightning_radius_mi ?? 0}
+          onChange={(e) => m.mutate({ lightning_radius_mi: Math.max(0, Math.min(100, Number(e.target.value))) })}
+        />
+        <p className="text-[10px] text-muted-foreground">Push when lightning strikes within this radius of your home location.</p>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-1.5">
+          <Label className="text-[10px] font-mono uppercase tracking-wider">Quiet from</Label>
+          <Input type="time" value={p.quiet_start ?? ""} onChange={(e) => m.mutate({ quiet_start: e.target.value || null })} />
+        </div>
+        <div className="space-y-1.5">
+          <Label className="text-[10px] font-mono uppercase tracking-wider">Quiet until</Label>
+          <Input type="time" value={p.quiet_end ?? ""} onChange={(e) => m.mutate({ quiet_end: e.target.value || null })} />
+        </div>
+      </div>
+      <p className="text-[10px] text-muted-foreground">Extreme alerts always break quiet hours. Other alerts are suppressed.</p>
+    </section>
+  );
+}
+
+function MoreSection() {
+  const { isAdmin } = useIsAdmin();
+  return (
+    <section className="rounded-xl border border-border bg-card p-5 space-y-3">
+      <h2 className="font-display tracking-wider uppercase text-sm text-accent">More</h2>
+      <div className="grid sm:grid-cols-2 gap-2">
+        <NavTile to="/locations" icon={Crosshair} label="Saved locations" desc="Home + favorites" />
+        <NavTile to="/thresholds" icon={Zap} label="Custom thresholds" desc="Notify on temp/wind/etc" />
+        <NavTile to="/reports" icon={Trophy} label="Spotter reports" desc="Community storm feed" />
+        <NavTile to="/spotter" icon={Camera} label="Submit a report" desc="Log a sighting" />
+        <NavTile to="/chase" icon={Activity} label="Storm chase mode" desc="Full-screen dashboard" />
+        {isAdmin && (
+          <>
+            <NavTile to="/admin-analytics" icon={BarChart3} label="Admin · Analytics" desc="Usage + delivery" />
+            <NavTile to="/admin-scheduler" icon={Calendar} label="Admin · Scheduler" desc="Queue alerts" />
+            <NavTile to="/admin-audit" icon={Activity} label="Admin · Audit log" desc="Action history" />
+            <NavTile to="/admin-subscribers" icon={Users} label="Admin · Subscribers" desc="Push devices" />
+          </>
+        )}
+      </div>
+    </section>
+  );
+}
+function NavTile({ to, icon: Icon, label, desc }: any) {
+  return (
+    <Link to={to} className="rounded-lg border border-border p-3 hover:border-accent transition-colors flex items-start gap-3">
+      <div className="h-9 w-9 rounded-md bg-accent/10 grid place-items-center shrink-0">
+        <Icon className="h-4 w-4 text-accent" />
+      </div>
+      <div className="min-w-0">
+        <div className="text-sm font-medium">{label}</div>
+        <div className="text-[11px] text-muted-foreground">{desc}</div>
+      </div>
+    </Link>
+  );
+}
+
 
 function filterCities(q: string) {
   if (!q.trim()) return [];
