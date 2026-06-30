@@ -33,6 +33,10 @@ import { Route as AuthenticatedThresholdsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedSpotterRouteImport } from './routes/_authenticated/spotter'
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedLocationsRouteImport } from './routes/_authenticated/locations'
+import { Route as AuthenticatedAdminSubscribersRouteImport } from './routes/_authenticated/admin-subscribers'
+import { Route as AuthenticatedAdminSchedulerRouteImport } from './routes/_authenticated/admin-scheduler'
+import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin-audit'
+import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin-analytics'
 import { Route as ApiPublicCronDispatchScheduledRouteImport } from './routes/api/public/cron.dispatch-scheduled'
 import { Route as ApiPublicCronDailyBriefingRouteImport } from './routes/api/public/cron.daily-briefing'
 import { Route as ApiPublicCronCheckThresholdsRouteImport } from './routes/api/public/cron.check-thresholds'
@@ -156,6 +160,29 @@ const AuthenticatedLocationsRoute = AuthenticatedLocationsRouteImport.update({
   path: '/locations',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminSubscribersRoute =
+  AuthenticatedAdminSubscribersRouteImport.update({
+    id: '/admin-subscribers',
+    path: '/admin-subscribers',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminSchedulerRoute =
+  AuthenticatedAdminSchedulerRouteImport.update({
+    id: '/admin-scheduler',
+    path: '/admin-scheduler',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedAdminAuditRoute = AuthenticatedAdminAuditRouteImport.update({
+  id: '/admin-audit',
+  path: '/admin-audit',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedAdminAnalyticsRoute =
+  AuthenticatedAdminAnalyticsRouteImport.update({
+    id: '/admin-analytics',
+    path: '/admin-analytics',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicCronDispatchScheduledRoute =
   ApiPublicCronDispatchScheduledRouteImport.update({
     id: '/api/public/cron/dispatch-scheduled',
@@ -193,6 +220,10 @@ export interface FileRoutesByFullPath {
   '/tools': typeof ToolsRoute
   '/tropical': typeof TropicalRoute
   '/webcams': typeof WebcamsRoute
+  '/admin-analytics': typeof AuthenticatedAdminAnalyticsRoute
+  '/admin-audit': typeof AuthenticatedAdminAuditRoute
+  '/admin-scheduler': typeof AuthenticatedAdminSchedulerRoute
+  '/admin-subscribers': typeof AuthenticatedAdminSubscribersRoute
   '/locations': typeof AuthenticatedLocationsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/spotter': typeof AuthenticatedSpotterRoute
@@ -221,6 +252,10 @@ export interface FileRoutesByTo {
   '/tools': typeof ToolsRoute
   '/tropical': typeof TropicalRoute
   '/webcams': typeof WebcamsRoute
+  '/admin-analytics': typeof AuthenticatedAdminAnalyticsRoute
+  '/admin-audit': typeof AuthenticatedAdminAuditRoute
+  '/admin-scheduler': typeof AuthenticatedAdminSchedulerRoute
+  '/admin-subscribers': typeof AuthenticatedAdminSubscribersRoute
   '/locations': typeof AuthenticatedLocationsRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/spotter': typeof AuthenticatedSpotterRoute
@@ -251,6 +286,10 @@ export interface FileRoutesById {
   '/tools': typeof ToolsRoute
   '/tropical': typeof TropicalRoute
   '/webcams': typeof WebcamsRoute
+  '/_authenticated/admin-analytics': typeof AuthenticatedAdminAnalyticsRoute
+  '/_authenticated/admin-audit': typeof AuthenticatedAdminAuditRoute
+  '/_authenticated/admin-scheduler': typeof AuthenticatedAdminSchedulerRoute
+  '/_authenticated/admin-subscribers': typeof AuthenticatedAdminSubscribersRoute
   '/_authenticated/locations': typeof AuthenticatedLocationsRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/spotter': typeof AuthenticatedSpotterRoute
@@ -281,6 +320,10 @@ export interface FileRouteTypes {
     | '/tools'
     | '/tropical'
     | '/webcams'
+    | '/admin-analytics'
+    | '/admin-audit'
+    | '/admin-scheduler'
+    | '/admin-subscribers'
     | '/locations'
     | '/settings'
     | '/spotter'
@@ -309,6 +352,10 @@ export interface FileRouteTypes {
     | '/tools'
     | '/tropical'
     | '/webcams'
+    | '/admin-analytics'
+    | '/admin-audit'
+    | '/admin-scheduler'
+    | '/admin-subscribers'
     | '/locations'
     | '/settings'
     | '/spotter'
@@ -338,6 +385,10 @@ export interface FileRouteTypes {
     | '/tools'
     | '/tropical'
     | '/webcams'
+    | '/_authenticated/admin-analytics'
+    | '/_authenticated/admin-audit'
+    | '/_authenticated/admin-scheduler'
+    | '/_authenticated/admin-subscribers'
     | '/_authenticated/locations'
     | '/_authenticated/settings'
     | '/_authenticated/spotter'
@@ -543,6 +594,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedLocationsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin-subscribers': {
+      id: '/_authenticated/admin-subscribers'
+      path: '/admin-subscribers'
+      fullPath: '/admin-subscribers'
+      preLoaderRoute: typeof AuthenticatedAdminSubscribersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin-scheduler': {
+      id: '/_authenticated/admin-scheduler'
+      path: '/admin-scheduler'
+      fullPath: '/admin-scheduler'
+      preLoaderRoute: typeof AuthenticatedAdminSchedulerRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin-audit': {
+      id: '/_authenticated/admin-audit'
+      path: '/admin-audit'
+      fullPath: '/admin-audit'
+      preLoaderRoute: typeof AuthenticatedAdminAuditRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/admin-analytics': {
+      id: '/_authenticated/admin-analytics'
+      path: '/admin-analytics'
+      fullPath: '/admin-analytics'
+      preLoaderRoute: typeof AuthenticatedAdminAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/cron/dispatch-scheduled': {
       id: '/api/public/cron/dispatch-scheduled'
       path: '/api/public/cron/dispatch-scheduled'
@@ -568,6 +647,10 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminAnalyticsRoute: typeof AuthenticatedAdminAnalyticsRoute
+  AuthenticatedAdminAuditRoute: typeof AuthenticatedAdminAuditRoute
+  AuthenticatedAdminSchedulerRoute: typeof AuthenticatedAdminSchedulerRoute
+  AuthenticatedAdminSubscribersRoute: typeof AuthenticatedAdminSubscribersRoute
   AuthenticatedLocationsRoute: typeof AuthenticatedLocationsRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedSpotterRoute: typeof AuthenticatedSpotterRoute
@@ -575,6 +658,10 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminAnalyticsRoute: AuthenticatedAdminAnalyticsRoute,
+  AuthenticatedAdminAuditRoute: AuthenticatedAdminAuditRoute,
+  AuthenticatedAdminSchedulerRoute: AuthenticatedAdminSchedulerRoute,
+  AuthenticatedAdminSubscribersRoute: AuthenticatedAdminSubscribersRoute,
   AuthenticatedLocationsRoute: AuthenticatedLocationsRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedSpotterRoute: AuthenticatedSpotterRoute,
