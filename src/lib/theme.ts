@@ -1,4 +1,4 @@
-export type ThemeName = "noir" | "aurora" | "og";
+export type ThemeName = "noir" | "aurora" | "og" | "minimal";
 export type ThemeMode = "dark" | "light";
 
 const THEME_KEY = "mwa-theme";
@@ -8,6 +8,7 @@ export const THEMES: { id: ThemeName; label: string; desc: string }[] = [
   { id: "noir", label: "Storm Noir", desc: "Black + gold editorial broadcast" },
   { id: "aurora", label: "Aurora Glass", desc: "Midnight glass with teal/violet aurora" },
   { id: "og", label: "OG Storm Blue", desc: "Original deep blue weather console" },
+  { id: "minimal", label: "Minimal", desc: "Modern monochrome with Inter typography" },
 ];
 
 export const MODES: { id: ThemeMode; label: string }[] = [
@@ -15,10 +16,12 @@ export const MODES: { id: ThemeMode; label: string }[] = [
   { id: "light", label: "Light" },
 ];
 
+const VALID: ThemeName[] = ["noir", "aurora", "og", "minimal"];
+
 export function getTheme(): ThemeName {
   if (typeof window === "undefined") return "noir";
   const v = window.localStorage.getItem(THEME_KEY) as ThemeName | null;
-  return v && ["noir", "aurora", "og"].includes(v) ? v : "noir";
+  return v && VALID.includes(v) ? v : "noir";
 }
 
 export function getMode(): ThemeMode {
@@ -36,7 +39,6 @@ export function applyTheme(theme: ThemeName, mode: ThemeMode) {
     window.localStorage.setItem(THEME_KEY, theme);
     window.localStorage.setItem(MODE_KEY, mode);
   } catch {}
-  // Swap favicon to match theme/mode
   import("./favicon").then(({ updateFavicon }) => updateFavicon(theme, mode)).catch(() => {});
 }
 
@@ -45,6 +47,7 @@ export function applyTheme(theme: ThemeName, mode: ThemeMode) {
 export const THEME_BOOT_SCRIPT = `
 (function(){try{
   var t=localStorage.getItem('${THEME_KEY}')||'noir';
+  if(['noir','aurora','og','minimal'].indexOf(t)===-1)t='noir';
   var m=localStorage.getItem('${MODE_KEY}')||'dark';
   document.documentElement.setAttribute('data-theme',t);
   document.documentElement.setAttribute('data-mode',m);

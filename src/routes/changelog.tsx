@@ -51,6 +51,18 @@ type Entry = {
 
 const ENTRIES: Entry[] = [
   {
+    version: "3.4.0",
+    date: "Jun 30, 2026",
+    status: "minor",
+    title: "New Minimal theme",
+    bullets: [
+      "Added a fourth theme — Minimal — in Settings → Appearance: modern monochrome surfaces with a single cool-blue accent.",
+      "Switched typography for the Minimal theme to Inter Tight (display) + Inter (body) for a clean, contemporary feel.",
+      "Custom favicon mark for Minimal — geometric monogram with separate dark-mode (outlined ring) and light-mode (filled square) variants that auto-swap with the chosen mode.",
+      "Light and dark mode both fully tuned for Minimal, with matching border, surface, and accent tokens.",
+    ],
+  },
+  {
     version: "3.3.0",
     date: "Jun 28, 2026",
     status: "open-beta",
