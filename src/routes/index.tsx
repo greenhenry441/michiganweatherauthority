@@ -585,6 +585,21 @@ function HomePage() {
 function CitySearch({ city, onPick }: { city: MichiganCity; onPick: (c: MichiganCity) => void }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
+  const { request, loading, error } = useGeolocation();
+
+  const useMyLocation = async () => {
+    try {
+      const fix = await request();
+      const { city: nearest, miles } = nearestMichiganCity(fix);
+      onPick(nearest);
+      setOpen(false);
+      setQ("");
+      toast.success(`Snapped to ${nearest.name} (${miles.toFixed(1)} mi away)`);
+    } catch {
+      toast.error(error ?? "Couldn't get your location");
+    }
+  };
+
 
   const results = useMemo(() => {
     const term = q.trim().toLowerCase();
