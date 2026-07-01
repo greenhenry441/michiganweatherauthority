@@ -172,36 +172,6 @@ export type Database = {
         }
         Relationships: []
       }
-      mfa_email_codes: {
-        Row: {
-          code_hash: string
-          consumed_at: string | null
-          created_at: string
-          expires_at: string
-          id: string
-          purpose: string
-          user_id: string
-        }
-        Insert: {
-          code_hash: string
-          consumed_at?: string | null
-          created_at?: string
-          expires_at: string
-          id?: string
-          purpose: string
-          user_id: string
-        }
-        Update: {
-          code_hash?: string
-          consumed_at?: string | null
-          created_at?: string
-          expires_at?: string
-          id?: string
-          purpose?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           created_at: string
@@ -560,42 +530,6 @@ export type Database = {
           starts_at?: string
           title?: string
           updated_at?: string
-        }
-        Relationships: []
-      }
-      user_mfa_factors: {
-        Row: {
-          confirmed_at: string | null
-          created_at: string
-          id: string
-          last_used_at: string | null
-          method: string
-          purpose: string
-          secret: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          confirmed_at?: string | null
-          created_at?: string
-          id?: string
-          last_used_at?: string | null
-          method: string
-          purpose: string
-          secret?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          confirmed_at?: string | null
-          created_at?: string
-          id?: string
-          last_used_at?: string | null
-          method?: string
-          purpose?: string
-          secret?: string | null
-          updated_at?: string
-          user_id?: string
         }
         Relationships: []
       }

@@ -10,8 +10,6 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { AuthShell } from "@/components/AuthShell";
-import { useServerFn } from "@tanstack/react-start";
-import { isSigninMfaVerified } from "@/lib/mfa.functions";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -31,16 +29,12 @@ function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
-  const checkMfa = useServerFn(isSigninMfaVerified);
 
   useEffect(() => {
-    supabase.auth.getUser().then(async ({ data }) => {
-      if (!data.user) return;
-      const res = await checkMfa().catch(() => ({ enrolled: false, verified: true }));
-      if (res.enrolled && !res.verified) nav({ to: "/auth/verify" });
-      else nav({ to: "/" });
+    supabase.auth.getUser().then(({ data }) => {
+      if (data.user) nav({ to: "/" });
     });
-  }, [nav, checkMfa]);
+  }, [nav]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,8 +51,6 @@ function AuthPage() {
       } else {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
-        const res = await checkMfa().catch(() => ({ enrolled: false, verified: true }));
-        if (res.enrolled && !res.verified) { nav({ to: "/auth/verify" }); return; }
         toast.success("Welcome back");
         nav({ to: "/" });
       }
@@ -73,8 +65,7 @@ function AuthPage() {
       const result = await lovable.auth.signInWithOAuth(provider, { redirect_uri: window.location.origin });
       if (result.error) { toast.error(result.error.message ?? `${provider} sign-in failed`); setBusy(false); return; }
       if (result.redirected) return;
-      const res = await checkMfa().catch(() => ({ enrolled: false, verified: true }));
-      if (res.enrolled && !res.verified) nav({ to: "/auth/verify" }); else nav({ to: "/" });
+      nav({ to: "/" });
     } catch (err) { toast.error((err as Error).message); setBusy(false); }
   };
 
