@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Activity } from "lucide-react";
 import { getAuditLog } from "@/lib/admin-analytics.functions";
 
-export const Route = createFileRoute("/_authenticated/admin-audit")({
+export const Route = createFileRoute("/admin-audit")({
   head: () => ({ meta: [{ title: "Admin · Audit log — MWA" }, { name: "robots", content: "noindex" }] }),
   component: AdminAudit,
 });

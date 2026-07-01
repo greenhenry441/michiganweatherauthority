@@ -7,7 +7,7 @@ import { Activity, CheckCircle2, XCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute("/_authenticated/dispatcher-health")({
+export const Route = createFileRoute("/dispatcher-health")({
   head: () => ({ meta: [{ title: "Dispatcher health — MWA admin" }] }),
   component: DispatcherHealth,
 });

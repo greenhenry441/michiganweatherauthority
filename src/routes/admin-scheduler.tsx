@@ -12,7 +12,7 @@ import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { listScheduledAlerts, createScheduledAlert, cancelScheduledAlert } from "@/lib/scheduled-alerts.functions";
 
-export const Route = createFileRoute("/_authenticated/admin-scheduler")({
+export const Route = createFileRoute("/admin-scheduler")({
   head: () => ({ meta: [{ title: "Admin · Scheduler — MWA" }, { name: "robots", content: "noindex" }] }),
   component: AdminScheduler,
 });

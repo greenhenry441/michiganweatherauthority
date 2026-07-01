@@ -13,7 +13,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { createReport } from "@/lib/spotter-reports.functions";
 import { supabase } from "@/integrations/supabase/client";
 
-export const Route = createFileRoute("/_authenticated/spotter")({
+export const Route = createFileRoute("/spotter")({
   head: () => ({ meta: [{ title: "Submit spotter report — MWA" }, { name: "robots", content: "noindex" }] }),
   component: SpotterSubmit,
 });
