@@ -30,7 +30,6 @@ import { Route as AlertsMapRouteImport } from './routes/alerts-map'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ReportsIdRouteImport } from './routes/reports.$id'
-import { Route as AuthVerifyRouteImport } from './routes/auth.verify'
 import { Route as AlertsIdRouteImport } from './routes/alerts.$id'
 import { Route as AuthenticatedThresholdsRouteImport } from './routes/_authenticated/thresholds'
 import { Route as AuthenticatedSpotterRouteImport } from './routes/_authenticated/spotter'
@@ -150,11 +149,6 @@ const ReportsIdRoute = ReportsIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ReportsRoute,
 } as any)
-const AuthVerifyRoute = AuthVerifyRouteImport.update({
-  id: '/verify',
-  path: '/verify',
-  getParentRoute: () => AuthRoute,
-} as any)
 const AlertsIdRoute = AlertsIdRouteImport.update({
   id: '/alerts/$id',
   path: '/alerts/$id',
@@ -237,7 +231,7 @@ const ApiPublicCronCheckThresholdsRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/alerts-map': typeof AlertsMapRoute
-  '/auth': typeof AuthRouteWithChildren
+  '/auth': typeof AuthRoute
   '/changelog': typeof ChangelogRoute
   '/chase': typeof ChaseRoute
   '/climate': typeof ClimateRoute
@@ -264,7 +258,6 @@ export interface FileRoutesByFullPath {
   '/spotter': typeof AuthenticatedSpotterRoute
   '/thresholds': typeof AuthenticatedThresholdsRoute
   '/alerts/$id': typeof AlertsIdRoute
-  '/auth/verify': typeof AuthVerifyRoute
   '/reports/$id': typeof ReportsIdRoute
   '/api/public/cron/check-thresholds': typeof ApiPublicCronCheckThresholdsRoute
   '/api/public/cron/daily-briefing': typeof ApiPublicCronDailyBriefingRoute
@@ -274,7 +267,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/alerts-map': typeof AlertsMapRoute
-  '/auth': typeof AuthRouteWithChildren
+  '/auth': typeof AuthRoute
   '/changelog': typeof ChangelogRoute
   '/chase': typeof ChaseRoute
   '/climate': typeof ClimateRoute
@@ -301,7 +294,6 @@ export interface FileRoutesByTo {
   '/spotter': typeof AuthenticatedSpotterRoute
   '/thresholds': typeof AuthenticatedThresholdsRoute
   '/alerts/$id': typeof AlertsIdRoute
-  '/auth/verify': typeof AuthVerifyRoute
   '/reports/$id': typeof ReportsIdRoute
   '/api/public/cron/check-thresholds': typeof ApiPublicCronCheckThresholdsRoute
   '/api/public/cron/daily-briefing': typeof ApiPublicCronDailyBriefingRoute
@@ -313,7 +305,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/alerts-map': typeof AlertsMapRoute
-  '/auth': typeof AuthRouteWithChildren
+  '/auth': typeof AuthRoute
   '/changelog': typeof ChangelogRoute
   '/chase': typeof ChaseRoute
   '/climate': typeof ClimateRoute
@@ -340,7 +332,6 @@ export interface FileRoutesById {
   '/_authenticated/spotter': typeof AuthenticatedSpotterRoute
   '/_authenticated/thresholds': typeof AuthenticatedThresholdsRoute
   '/alerts/$id': typeof AlertsIdRoute
-  '/auth/verify': typeof AuthVerifyRoute
   '/reports/$id': typeof ReportsIdRoute
   '/api/public/cron/check-thresholds': typeof ApiPublicCronCheckThresholdsRoute
   '/api/public/cron/daily-briefing': typeof ApiPublicCronDailyBriefingRoute
@@ -379,7 +370,6 @@ export interface FileRouteTypes {
     | '/spotter'
     | '/thresholds'
     | '/alerts/$id'
-    | '/auth/verify'
     | '/reports/$id'
     | '/api/public/cron/check-thresholds'
     | '/api/public/cron/daily-briefing'
@@ -416,7 +406,6 @@ export interface FileRouteTypes {
     | '/spotter'
     | '/thresholds'
     | '/alerts/$id'
-    | '/auth/verify'
     | '/reports/$id'
     | '/api/public/cron/check-thresholds'
     | '/api/public/cron/daily-briefing'
@@ -454,7 +443,6 @@ export interface FileRouteTypes {
     | '/_authenticated/spotter'
     | '/_authenticated/thresholds'
     | '/alerts/$id'
-    | '/auth/verify'
     | '/reports/$id'
     | '/api/public/cron/check-thresholds'
     | '/api/public/cron/daily-briefing'
@@ -466,7 +454,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AlertsMapRoute: typeof AlertsMapRoute
-  AuthRoute: typeof AuthRouteWithChildren
+  AuthRoute: typeof AuthRoute
   ChangelogRoute: typeof ChangelogRoute
   ChaseRoute: typeof ChaseRoute
   ClimateRoute: typeof ClimateRoute
@@ -639,13 +627,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReportsIdRouteImport
       parentRoute: typeof ReportsRoute
     }
-    '/auth/verify': {
-      id: '/auth/verify'
-      path: '/verify'
-      fullPath: '/auth/verify'
-      preLoaderRoute: typeof AuthVerifyRouteImport
-      parentRoute: typeof AuthRoute
-    }
     '/alerts/$id': {
       id: '/alerts/$id'
       path: '/alerts/$id'
@@ -774,16 +755,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
-interface AuthRouteChildren {
-  AuthVerifyRoute: typeof AuthVerifyRoute
-}
-
-const AuthRouteChildren: AuthRouteChildren = {
-  AuthVerifyRoute: AuthVerifyRoute,
-}
-
-const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
-
 interface ReportsRouteChildren {
   ReportsIdRoute: typeof ReportsIdRoute
 }
@@ -799,7 +770,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AlertsMapRoute: AlertsMapRoute,
-  AuthRoute: AuthRouteWithChildren,
+  AuthRoute: AuthRoute,
   ChangelogRoute: ChangelogRoute,
   ChaseRoute: ChaseRoute,
   ClimateRoute: ClimateRoute,
@@ -825,13 +796,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

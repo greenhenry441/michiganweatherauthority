@@ -17,7 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { THEMES, MODES, applyTheme, getTheme, getMode, type ThemeName, type ThemeMode } from "@/lib/theme";
 import { usePrefs } from "@/lib/prefs";
-import { MfaManager } from "@/components/MfaManager";
+
 import { sendTestPushToMe } from "@/lib/test-push.functions";
 import { getMyPreferences, updateMyPreferences } from "@/lib/preferences.functions";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -293,7 +293,7 @@ function SettingsPage() {
         </div>
       </section>
 
-      <MfaManager />
+      
 
       <CloudPrefsSection />
       <MoreSection />
