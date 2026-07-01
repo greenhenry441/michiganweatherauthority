@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Users, Send, AlertTriangle, BarChart3 } from "lucide-react";
 import { getAdminAnalytics } from "@/lib/admin-analytics.functions";
 
-export const Route = createFileRoute("/_authenticated/admin-analytics")({
+export const Route = createFileRoute("/admin-analytics")({
   head: () => ({ meta: [{ title: "Admin · Analytics — MWA" }, { name: "robots", content: "noindex" }] }),
   component: AdminAnalytics,
 });

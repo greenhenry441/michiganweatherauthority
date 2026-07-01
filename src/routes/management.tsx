@@ -183,11 +183,11 @@ function Console({ onLock }: { onLock: () => void }) {
 
 function Shortcuts() {
   const items: Array<{ to: string; label: string; desc: string }> = [
-    { to: "/_authenticated/admin-scheduler", label: "Broadcast scheduler", desc: "Compose & schedule push alerts" },
-    { to: "/_authenticated/admin-analytics", label: "Analytics", desc: "Subscriptions, deliveries, reports" },
-    { to: "/_authenticated/admin-audit", label: "Audit log", desc: "Admin & dispatcher activity" },
-    { to: "/_authenticated/admin-subscribers", label: "Subscribers", desc: "Push subscriber registry" },
-    { to: "/_authenticated/dispatcher-health", label: "Dispatcher health", desc: "Nightly self-test results" },
+    { to: "/admin-scheduler", label: "Broadcast scheduler", desc: "Compose & schedule push alerts" },
+    { to: "/admin-analytics", label: "Analytics", desc: "Subscriptions, deliveries, reports" },
+    { to: "/admin-audit", label: "Audit log", desc: "Admin & dispatcher activity" },
+    { to: "/admin-subscribers", label: "Subscribers", desc: "Push subscriber registry" },
+    { to: "/dispatcher-health", label: "Dispatcher health", desc: "Nightly self-test results" },
     { to: "/changelog", label: "Changelog", desc: "Public release notes" },
   ];
   return (

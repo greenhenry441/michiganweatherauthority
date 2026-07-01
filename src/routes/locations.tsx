@@ -11,7 +11,7 @@ import {
   listMyLocations, addLocation, deleteLocation, setHomeLocation, geocodeLocation,
 } from "@/lib/saved-locations.functions";
 
-export const Route = createFileRoute("/_authenticated/locations")({
+export const Route = createFileRoute("/locations")({
   head: () => ({ meta: [{ title: "Saved locations — MWA" }, { name: "robots", content: "noindex" }] }),
   component: LocationsPage,
 });

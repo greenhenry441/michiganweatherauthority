@@ -12,34 +12,33 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as WebcamsRouteImport } from './routes/webcams'
 import { Route as TropicalRouteImport } from './routes/tropical'
 import { Route as ToolsRouteImport } from './routes/tools'
+import { Route as ThresholdsRouteImport } from './routes/thresholds'
 import { Route as StormReportsRouteImport } from './routes/storm-reports'
+import { Route as SpotterRouteImport } from './routes/spotter'
 import { Route as SnowRouteImport } from './routes/snow'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as SatelliteRouteImport } from './routes/satellite'
 import { Route as ReportsRouteImport } from './routes/reports'
 import { Route as OutlookRouteImport } from './routes/outlook'
 import { Route as MesoscaleRouteImport } from './routes/mesoscale'
 import { Route as ManagementRouteImport } from './routes/management'
+import { Route as LocationsRouteImport } from './routes/locations'
 import { Route as LightningRouteImport } from './routes/lightning'
 import { Route as ForecastsRouteImport } from './routes/forecasts'
+import { Route as DispatcherHealthRouteImport } from './routes/dispatcher-health'
 import { Route as CommandRouteImport } from './routes/command'
 import { Route as ClimateRouteImport } from './routes/climate'
 import { Route as ChaseRouteImport } from './routes/chase'
 import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AlertsMapRouteImport } from './routes/alerts-map'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AdminSubscribersRouteImport } from './routes/admin-subscribers'
+import { Route as AdminSchedulerRouteImport } from './routes/admin-scheduler'
+import { Route as AdminAuditRouteImport } from './routes/admin-audit'
+import { Route as AdminAnalyticsRouteImport } from './routes/admin-analytics'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ReportsIdRouteImport } from './routes/reports.$id'
 import { Route as AlertsIdRouteImport } from './routes/alerts.$id'
-import { Route as AuthenticatedThresholdsRouteImport } from './routes/_authenticated/thresholds'
-import { Route as AuthenticatedSpotterRouteImport } from './routes/_authenticated/spotter'
-import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
-import { Route as AuthenticatedLocationsRouteImport } from './routes/_authenticated/locations'
-import { Route as AuthenticatedDispatcherHealthRouteImport } from './routes/_authenticated/dispatcher-health'
-import { Route as AuthenticatedAdminSubscribersRouteImport } from './routes/_authenticated/admin-subscribers'
-import { Route as AuthenticatedAdminSchedulerRouteImport } from './routes/_authenticated/admin-scheduler'
-import { Route as AuthenticatedAdminAuditRouteImport } from './routes/_authenticated/admin-audit'
-import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin-analytics'
 import { Route as ApiPublicCronDispatcherSelfTestRouteImport } from './routes/api/public/cron.dispatcher-self-test'
 import { Route as ApiPublicCronDispatchScheduledRouteImport } from './routes/api/public/cron.dispatch-scheduled'
 import { Route as ApiPublicCronDailyBriefingRouteImport } from './routes/api/public/cron.daily-briefing'
@@ -60,14 +59,29 @@ const ToolsRoute = ToolsRouteImport.update({
   path: '/tools',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ThresholdsRoute = ThresholdsRouteImport.update({
+  id: '/thresholds',
+  path: '/thresholds',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const StormReportsRoute = StormReportsRouteImport.update({
   id: '/storm-reports',
   path: '/storm-reports',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SpotterRoute = SpotterRouteImport.update({
+  id: '/spotter',
+  path: '/spotter',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SnowRoute = SnowRouteImport.update({
   id: '/snow',
   path: '/snow',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SatelliteRoute = SatelliteRouteImport.update({
@@ -95,6 +109,11 @@ const ManagementRoute = ManagementRouteImport.update({
   path: '/management',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LocationsRoute = LocationsRouteImport.update({
+  id: '/locations',
+  path: '/locations',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LightningRoute = LightningRouteImport.update({
   id: '/lightning',
   path: '/lightning',
@@ -103,6 +122,11 @@ const LightningRoute = LightningRouteImport.update({
 const ForecastsRoute = ForecastsRouteImport.update({
   id: '/forecasts',
   path: '/forecasts',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DispatcherHealthRoute = DispatcherHealthRouteImport.update({
+  id: '/dispatcher-health',
+  path: '/dispatcher-health',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CommandRoute = CommandRouteImport.update({
@@ -135,8 +159,24 @@ const AlertsMapRoute = AlertsMapRouteImport.update({
   path: '/alerts-map',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
+const AdminSubscribersRoute = AdminSubscribersRouteImport.update({
+  id: '/admin-subscribers',
+  path: '/admin-subscribers',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminSchedulerRoute = AdminSchedulerRouteImport.update({
+  id: '/admin-scheduler',
+  path: '/admin-scheduler',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminAuditRoute = AdminAuditRouteImport.update({
+  id: '/admin-audit',
+  path: '/admin-audit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminAnalyticsRoute = AdminAnalyticsRouteImport.update({
+  id: '/admin-analytics',
+  path: '/admin-analytics',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -154,55 +194,6 @@ const AlertsIdRoute = AlertsIdRouteImport.update({
   path: '/alerts/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedThresholdsRoute = AuthenticatedThresholdsRouteImport.update({
-  id: '/thresholds',
-  path: '/thresholds',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedSpotterRoute = AuthenticatedSpotterRouteImport.update({
-  id: '/spotter',
-  path: '/spotter',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedLocationsRoute = AuthenticatedLocationsRouteImport.update({
-  id: '/locations',
-  path: '/locations',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedDispatcherHealthRoute =
-  AuthenticatedDispatcherHealthRouteImport.update({
-    id: '/dispatcher-health',
-    path: '/dispatcher-health',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedAdminSubscribersRoute =
-  AuthenticatedAdminSubscribersRouteImport.update({
-    id: '/admin-subscribers',
-    path: '/admin-subscribers',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedAdminSchedulerRoute =
-  AuthenticatedAdminSchedulerRouteImport.update({
-    id: '/admin-scheduler',
-    path: '/admin-scheduler',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedAdminAuditRoute = AuthenticatedAdminAuditRouteImport.update({
-  id: '/admin-audit',
-  path: '/admin-audit',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedAdminAnalyticsRoute =
-  AuthenticatedAdminAnalyticsRouteImport.update({
-    id: '/admin-analytics',
-    path: '/admin-analytics',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
 const ApiPublicCronDispatcherSelfTestRoute =
   ApiPublicCronDispatcherSelfTestRouteImport.update({
     id: '/api/public/cron/dispatcher-self-test',
@@ -230,33 +221,33 @@ const ApiPublicCronCheckThresholdsRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/admin-analytics': typeof AdminAnalyticsRoute
+  '/admin-audit': typeof AdminAuditRoute
+  '/admin-scheduler': typeof AdminSchedulerRoute
+  '/admin-subscribers': typeof AdminSubscribersRoute
   '/alerts-map': typeof AlertsMapRoute
   '/auth': typeof AuthRoute
   '/changelog': typeof ChangelogRoute
   '/chase': typeof ChaseRoute
   '/climate': typeof ClimateRoute
   '/command': typeof CommandRoute
+  '/dispatcher-health': typeof DispatcherHealthRoute
   '/forecasts': typeof ForecastsRoute
   '/lightning': typeof LightningRoute
+  '/locations': typeof LocationsRoute
   '/management': typeof ManagementRoute
   '/mesoscale': typeof MesoscaleRoute
   '/outlook': typeof OutlookRoute
   '/reports': typeof ReportsRouteWithChildren
   '/satellite': typeof SatelliteRoute
+  '/settings': typeof SettingsRoute
   '/snow': typeof SnowRoute
+  '/spotter': typeof SpotterRoute
   '/storm-reports': typeof StormReportsRoute
+  '/thresholds': typeof ThresholdsRoute
   '/tools': typeof ToolsRoute
   '/tropical': typeof TropicalRoute
   '/webcams': typeof WebcamsRoute
-  '/admin-analytics': typeof AuthenticatedAdminAnalyticsRoute
-  '/admin-audit': typeof AuthenticatedAdminAuditRoute
-  '/admin-scheduler': typeof AuthenticatedAdminSchedulerRoute
-  '/admin-subscribers': typeof AuthenticatedAdminSubscribersRoute
-  '/dispatcher-health': typeof AuthenticatedDispatcherHealthRoute
-  '/locations': typeof AuthenticatedLocationsRoute
-  '/settings': typeof AuthenticatedSettingsRoute
-  '/spotter': typeof AuthenticatedSpotterRoute
-  '/thresholds': typeof AuthenticatedThresholdsRoute
   '/alerts/$id': typeof AlertsIdRoute
   '/reports/$id': typeof ReportsIdRoute
   '/api/public/cron/check-thresholds': typeof ApiPublicCronCheckThresholdsRoute
@@ -266,33 +257,33 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/admin-analytics': typeof AdminAnalyticsRoute
+  '/admin-audit': typeof AdminAuditRoute
+  '/admin-scheduler': typeof AdminSchedulerRoute
+  '/admin-subscribers': typeof AdminSubscribersRoute
   '/alerts-map': typeof AlertsMapRoute
   '/auth': typeof AuthRoute
   '/changelog': typeof ChangelogRoute
   '/chase': typeof ChaseRoute
   '/climate': typeof ClimateRoute
   '/command': typeof CommandRoute
+  '/dispatcher-health': typeof DispatcherHealthRoute
   '/forecasts': typeof ForecastsRoute
   '/lightning': typeof LightningRoute
+  '/locations': typeof LocationsRoute
   '/management': typeof ManagementRoute
   '/mesoscale': typeof MesoscaleRoute
   '/outlook': typeof OutlookRoute
   '/reports': typeof ReportsRouteWithChildren
   '/satellite': typeof SatelliteRoute
+  '/settings': typeof SettingsRoute
   '/snow': typeof SnowRoute
+  '/spotter': typeof SpotterRoute
   '/storm-reports': typeof StormReportsRoute
+  '/thresholds': typeof ThresholdsRoute
   '/tools': typeof ToolsRoute
   '/tropical': typeof TropicalRoute
   '/webcams': typeof WebcamsRoute
-  '/admin-analytics': typeof AuthenticatedAdminAnalyticsRoute
-  '/admin-audit': typeof AuthenticatedAdminAuditRoute
-  '/admin-scheduler': typeof AuthenticatedAdminSchedulerRoute
-  '/admin-subscribers': typeof AuthenticatedAdminSubscribersRoute
-  '/dispatcher-health': typeof AuthenticatedDispatcherHealthRoute
-  '/locations': typeof AuthenticatedLocationsRoute
-  '/settings': typeof AuthenticatedSettingsRoute
-  '/spotter': typeof AuthenticatedSpotterRoute
-  '/thresholds': typeof AuthenticatedThresholdsRoute
   '/alerts/$id': typeof AlertsIdRoute
   '/reports/$id': typeof ReportsIdRoute
   '/api/public/cron/check-thresholds': typeof ApiPublicCronCheckThresholdsRoute
@@ -303,34 +294,33 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/admin-analytics': typeof AdminAnalyticsRoute
+  '/admin-audit': typeof AdminAuditRoute
+  '/admin-scheduler': typeof AdminSchedulerRoute
+  '/admin-subscribers': typeof AdminSubscribersRoute
   '/alerts-map': typeof AlertsMapRoute
   '/auth': typeof AuthRoute
   '/changelog': typeof ChangelogRoute
   '/chase': typeof ChaseRoute
   '/climate': typeof ClimateRoute
   '/command': typeof CommandRoute
+  '/dispatcher-health': typeof DispatcherHealthRoute
   '/forecasts': typeof ForecastsRoute
   '/lightning': typeof LightningRoute
+  '/locations': typeof LocationsRoute
   '/management': typeof ManagementRoute
   '/mesoscale': typeof MesoscaleRoute
   '/outlook': typeof OutlookRoute
   '/reports': typeof ReportsRouteWithChildren
   '/satellite': typeof SatelliteRoute
+  '/settings': typeof SettingsRoute
   '/snow': typeof SnowRoute
+  '/spotter': typeof SpotterRoute
   '/storm-reports': typeof StormReportsRoute
+  '/thresholds': typeof ThresholdsRoute
   '/tools': typeof ToolsRoute
   '/tropical': typeof TropicalRoute
   '/webcams': typeof WebcamsRoute
-  '/_authenticated/admin-analytics': typeof AuthenticatedAdminAnalyticsRoute
-  '/_authenticated/admin-audit': typeof AuthenticatedAdminAuditRoute
-  '/_authenticated/admin-scheduler': typeof AuthenticatedAdminSchedulerRoute
-  '/_authenticated/admin-subscribers': typeof AuthenticatedAdminSubscribersRoute
-  '/_authenticated/dispatcher-health': typeof AuthenticatedDispatcherHealthRoute
-  '/_authenticated/locations': typeof AuthenticatedLocationsRoute
-  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
-  '/_authenticated/spotter': typeof AuthenticatedSpotterRoute
-  '/_authenticated/thresholds': typeof AuthenticatedThresholdsRoute
   '/alerts/$id': typeof AlertsIdRoute
   '/reports/$id': typeof ReportsIdRoute
   '/api/public/cron/check-thresholds': typeof ApiPublicCronCheckThresholdsRoute
@@ -342,33 +332,33 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/admin-analytics'
+    | '/admin-audit'
+    | '/admin-scheduler'
+    | '/admin-subscribers'
     | '/alerts-map'
     | '/auth'
     | '/changelog'
     | '/chase'
     | '/climate'
     | '/command'
+    | '/dispatcher-health'
     | '/forecasts'
     | '/lightning'
+    | '/locations'
     | '/management'
     | '/mesoscale'
     | '/outlook'
     | '/reports'
     | '/satellite'
+    | '/settings'
     | '/snow'
+    | '/spotter'
     | '/storm-reports'
+    | '/thresholds'
     | '/tools'
     | '/tropical'
     | '/webcams'
-    | '/admin-analytics'
-    | '/admin-audit'
-    | '/admin-scheduler'
-    | '/admin-subscribers'
-    | '/dispatcher-health'
-    | '/locations'
-    | '/settings'
-    | '/spotter'
-    | '/thresholds'
     | '/alerts/$id'
     | '/reports/$id'
     | '/api/public/cron/check-thresholds'
@@ -378,33 +368,33 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/admin-analytics'
+    | '/admin-audit'
+    | '/admin-scheduler'
+    | '/admin-subscribers'
     | '/alerts-map'
     | '/auth'
     | '/changelog'
     | '/chase'
     | '/climate'
     | '/command'
+    | '/dispatcher-health'
     | '/forecasts'
     | '/lightning'
+    | '/locations'
     | '/management'
     | '/mesoscale'
     | '/outlook'
     | '/reports'
     | '/satellite'
+    | '/settings'
     | '/snow'
+    | '/spotter'
     | '/storm-reports'
+    | '/thresholds'
     | '/tools'
     | '/tropical'
     | '/webcams'
-    | '/admin-analytics'
-    | '/admin-audit'
-    | '/admin-scheduler'
-    | '/admin-subscribers'
-    | '/dispatcher-health'
-    | '/locations'
-    | '/settings'
-    | '/spotter'
-    | '/thresholds'
     | '/alerts/$id'
     | '/reports/$id'
     | '/api/public/cron/check-thresholds'
@@ -414,34 +404,33 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/'
-    | '/_authenticated'
+    | '/admin-analytics'
+    | '/admin-audit'
+    | '/admin-scheduler'
+    | '/admin-subscribers'
     | '/alerts-map'
     | '/auth'
     | '/changelog'
     | '/chase'
     | '/climate'
     | '/command'
+    | '/dispatcher-health'
     | '/forecasts'
     | '/lightning'
+    | '/locations'
     | '/management'
     | '/mesoscale'
     | '/outlook'
     | '/reports'
     | '/satellite'
+    | '/settings'
     | '/snow'
+    | '/spotter'
     | '/storm-reports'
+    | '/thresholds'
     | '/tools'
     | '/tropical'
     | '/webcams'
-    | '/_authenticated/admin-analytics'
-    | '/_authenticated/admin-audit'
-    | '/_authenticated/admin-scheduler'
-    | '/_authenticated/admin-subscribers'
-    | '/_authenticated/dispatcher-health'
-    | '/_authenticated/locations'
-    | '/_authenticated/settings'
-    | '/_authenticated/spotter'
-    | '/_authenticated/thresholds'
     | '/alerts/$id'
     | '/reports/$id'
     | '/api/public/cron/check-thresholds'
@@ -452,22 +441,30 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AdminAnalyticsRoute: typeof AdminAnalyticsRoute
+  AdminAuditRoute: typeof AdminAuditRoute
+  AdminSchedulerRoute: typeof AdminSchedulerRoute
+  AdminSubscribersRoute: typeof AdminSubscribersRoute
   AlertsMapRoute: typeof AlertsMapRoute
   AuthRoute: typeof AuthRoute
   ChangelogRoute: typeof ChangelogRoute
   ChaseRoute: typeof ChaseRoute
   ClimateRoute: typeof ClimateRoute
   CommandRoute: typeof CommandRoute
+  DispatcherHealthRoute: typeof DispatcherHealthRoute
   ForecastsRoute: typeof ForecastsRoute
   LightningRoute: typeof LightningRoute
+  LocationsRoute: typeof LocationsRoute
   ManagementRoute: typeof ManagementRoute
   MesoscaleRoute: typeof MesoscaleRoute
   OutlookRoute: typeof OutlookRoute
   ReportsRoute: typeof ReportsRouteWithChildren
   SatelliteRoute: typeof SatelliteRoute
+  SettingsRoute: typeof SettingsRoute
   SnowRoute: typeof SnowRoute
+  SpotterRoute: typeof SpotterRoute
   StormReportsRoute: typeof StormReportsRoute
+  ThresholdsRoute: typeof ThresholdsRoute
   ToolsRoute: typeof ToolsRoute
   TropicalRoute: typeof TropicalRoute
   WebcamsRoute: typeof WebcamsRoute
@@ -501,6 +498,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ToolsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/thresholds': {
+      id: '/thresholds'
+      path: '/thresholds'
+      fullPath: '/thresholds'
+      preLoaderRoute: typeof ThresholdsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/storm-reports': {
       id: '/storm-reports'
       path: '/storm-reports'
@@ -508,11 +512,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StormReportsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/spotter': {
+      id: '/spotter'
+      path: '/spotter'
+      fullPath: '/spotter'
+      preLoaderRoute: typeof SpotterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/snow': {
       id: '/snow'
       path: '/snow'
       fullPath: '/snow'
       preLoaderRoute: typeof SnowRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/satellite': {
@@ -550,6 +568,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ManagementRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/locations': {
+      id: '/locations'
+      path: '/locations'
+      fullPath: '/locations'
+      preLoaderRoute: typeof LocationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lightning': {
       id: '/lightning'
       path: '/lightning'
@@ -562,6 +587,13 @@ declare module '@tanstack/react-router' {
       path: '/forecasts'
       fullPath: '/forecasts'
       preLoaderRoute: typeof ForecastsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dispatcher-health': {
+      id: '/dispatcher-health'
+      path: '/dispatcher-health'
+      fullPath: '/dispatcher-health'
+      preLoaderRoute: typeof DispatcherHealthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/command': {
@@ -606,11 +638,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AlertsMapRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+    '/admin-subscribers': {
+      id: '/admin-subscribers'
+      path: '/admin-subscribers'
+      fullPath: '/admin-subscribers'
+      preLoaderRoute: typeof AdminSubscribersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-scheduler': {
+      id: '/admin-scheduler'
+      path: '/admin-scheduler'
+      fullPath: '/admin-scheduler'
+      preLoaderRoute: typeof AdminSchedulerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-audit': {
+      id: '/admin-audit'
+      path: '/admin-audit'
+      fullPath: '/admin-audit'
+      preLoaderRoute: typeof AdminAuditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin-analytics': {
+      id: '/admin-analytics'
+      path: '/admin-analytics'
+      fullPath: '/admin-analytics'
+      preLoaderRoute: typeof AdminAnalyticsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -633,69 +686,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/alerts/$id'
       preLoaderRoute: typeof AlertsIdRouteImport
       parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/thresholds': {
-      id: '/_authenticated/thresholds'
-      path: '/thresholds'
-      fullPath: '/thresholds'
-      preLoaderRoute: typeof AuthenticatedThresholdsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/spotter': {
-      id: '/_authenticated/spotter'
-      path: '/spotter'
-      fullPath: '/spotter'
-      preLoaderRoute: typeof AuthenticatedSpotterRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/settings': {
-      id: '/_authenticated/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/locations': {
-      id: '/_authenticated/locations'
-      path: '/locations'
-      fullPath: '/locations'
-      preLoaderRoute: typeof AuthenticatedLocationsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/dispatcher-health': {
-      id: '/_authenticated/dispatcher-health'
-      path: '/dispatcher-health'
-      fullPath: '/dispatcher-health'
-      preLoaderRoute: typeof AuthenticatedDispatcherHealthRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/admin-subscribers': {
-      id: '/_authenticated/admin-subscribers'
-      path: '/admin-subscribers'
-      fullPath: '/admin-subscribers'
-      preLoaderRoute: typeof AuthenticatedAdminSubscribersRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/admin-scheduler': {
-      id: '/_authenticated/admin-scheduler'
-      path: '/admin-scheduler'
-      fullPath: '/admin-scheduler'
-      preLoaderRoute: typeof AuthenticatedAdminSchedulerRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/admin-audit': {
-      id: '/_authenticated/admin-audit'
-      path: '/admin-audit'
-      fullPath: '/admin-audit'
-      preLoaderRoute: typeof AuthenticatedAdminAuditRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/admin-analytics': {
-      id: '/_authenticated/admin-analytics'
-      path: '/admin-analytics'
-      fullPath: '/admin-analytics'
-      preLoaderRoute: typeof AuthenticatedAdminAnalyticsRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/public/cron/dispatcher-self-test': {
       id: '/api/public/cron/dispatcher-self-test'
@@ -728,33 +718,6 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AuthenticatedRouteRouteChildren {
-  AuthenticatedAdminAnalyticsRoute: typeof AuthenticatedAdminAnalyticsRoute
-  AuthenticatedAdminAuditRoute: typeof AuthenticatedAdminAuditRoute
-  AuthenticatedAdminSchedulerRoute: typeof AuthenticatedAdminSchedulerRoute
-  AuthenticatedAdminSubscribersRoute: typeof AuthenticatedAdminSubscribersRoute
-  AuthenticatedDispatcherHealthRoute: typeof AuthenticatedDispatcherHealthRoute
-  AuthenticatedLocationsRoute: typeof AuthenticatedLocationsRoute
-  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
-  AuthenticatedSpotterRoute: typeof AuthenticatedSpotterRoute
-  AuthenticatedThresholdsRoute: typeof AuthenticatedThresholdsRoute
-}
-
-const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedAdminAnalyticsRoute: AuthenticatedAdminAnalyticsRoute,
-  AuthenticatedAdminAuditRoute: AuthenticatedAdminAuditRoute,
-  AuthenticatedAdminSchedulerRoute: AuthenticatedAdminSchedulerRoute,
-  AuthenticatedAdminSubscribersRoute: AuthenticatedAdminSubscribersRoute,
-  AuthenticatedDispatcherHealthRoute: AuthenticatedDispatcherHealthRoute,
-  AuthenticatedLocationsRoute: AuthenticatedLocationsRoute,
-  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
-  AuthenticatedSpotterRoute: AuthenticatedSpotterRoute,
-  AuthenticatedThresholdsRoute: AuthenticatedThresholdsRoute,
-}
-
-const AuthenticatedRouteRouteWithChildren =
-  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
-
 interface ReportsRouteChildren {
   ReportsIdRoute: typeof ReportsIdRoute
 }
@@ -768,22 +731,30 @@ const ReportsRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AdminAnalyticsRoute: AdminAnalyticsRoute,
+  AdminAuditRoute: AdminAuditRoute,
+  AdminSchedulerRoute: AdminSchedulerRoute,
+  AdminSubscribersRoute: AdminSubscribersRoute,
   AlertsMapRoute: AlertsMapRoute,
   AuthRoute: AuthRoute,
   ChangelogRoute: ChangelogRoute,
   ChaseRoute: ChaseRoute,
   ClimateRoute: ClimateRoute,
   CommandRoute: CommandRoute,
+  DispatcherHealthRoute: DispatcherHealthRoute,
   ForecastsRoute: ForecastsRoute,
   LightningRoute: LightningRoute,
+  LocationsRoute: LocationsRoute,
   ManagementRoute: ManagementRoute,
   MesoscaleRoute: MesoscaleRoute,
   OutlookRoute: OutlookRoute,
   ReportsRoute: ReportsRouteWithChildren,
   SatelliteRoute: SatelliteRoute,
+  SettingsRoute: SettingsRoute,
   SnowRoute: SnowRoute,
+  SpotterRoute: SpotterRoute,
   StormReportsRoute: StormReportsRoute,
+  ThresholdsRoute: ThresholdsRoute,
   ToolsRoute: ToolsRoute,
   TropicalRoute: TropicalRoute,
   WebcamsRoute: WebcamsRoute,

@@ -58,7 +58,7 @@ const toggleThreshold = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-export const Route = createFileRoute("/_authenticated/thresholds")({
+export const Route = createFileRoute("/thresholds")({
   head: () => ({ meta: [{ title: "Custom alert thresholds — MWA" }, { name: "robots", content: "noindex" }] }),
   component: ThresholdsPage,
 });

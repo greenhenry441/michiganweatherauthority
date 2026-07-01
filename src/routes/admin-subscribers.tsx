@@ -7,7 +7,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { toast } from "sonner";
 import { listPushSubscribers, revokeSubscription } from "@/lib/admin-analytics.functions";
 
-export const Route = createFileRoute("/_authenticated/admin-subscribers")({
+export const Route = createFileRoute("/admin-subscribers")({
   head: () => ({ meta: [{ title: "Admin · Subscribers — MWA" }, { name: "robots", content: "noindex" }] }),
   component: AdminSubscribers,
 });

@@ -24,7 +24,7 @@ import { useIsAdmin } from "@/hooks/useIsAdmin";
 
 
 
-export const Route = createFileRoute("/_authenticated/settings")({
+export const Route = createFileRoute("/settings")({
   head: () => ({ meta: [{ title: "Settings — MWA" }, { name: "robots", content: "noindex" }] }),
   component: SettingsPage,
 });
