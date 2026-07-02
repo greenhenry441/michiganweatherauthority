@@ -446,12 +446,18 @@ function HomePage() {
                     <p className="text-[11px] text-muted-foreground line-clamp-2">{today.detailedForecast}</p>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 px-4 pb-4 text-xs">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 px-4 pb-4 text-xs">
+                  <FeelsLikeMetric
+                    tempF={current.temperature}
+                    humidity={current.relativeHumidity?.value ?? null}
+                    windSpeedStr={current.windSpeed}
+                  />
                   <Metric icon={Wind} label="Wind" value={`${current.windDirection} ${current.windSpeed}`} />
                   <Metric icon={Droplets} label="Humidity" value={current.relativeHumidity?.value != null ? `${Math.round(current.relativeHumidity.value)}%` : "—"} />
                   <Metric icon={Thermometer} label="Dew Point" value={current.dewpoint?.value != null ? `${Math.round((current.dewpoint.value * 9) / 5 + 32)}°F` : "—"} />
                   <Metric icon={Gauge} label="Precip" value={current.probabilityOfPrecipitation?.value != null ? `${current.probabilityOfPrecipitation.value}%` : "0%"} />
                 </div>
+
               </div>
 
               <ExtraStatsPanel data={extra.data} loading={extra.isLoading} />
@@ -1329,6 +1335,71 @@ function Metric({ icon: Icon, label, value }: { icon: any; label: string; value:
     </div>
   );
 }
+
+function parseWindMph(s: string | undefined | null): number {
+  if (!s) return 0;
+  const m = s.match(/(\d+(?:\.\d+)?)/g);
+  if (!m || !m.length) return 0;
+  // Handle ranges like "5 to 10 mph" — use the higher end
+  return Math.max(...m.map(Number));
+}
+
+function computeFeelsLike(tempF: number, humidity: number | null, windMph: number): { value: number; mode: "wind-chill" | "heat-index" | "actual" } {
+  // Wind chill: T ≤ 50°F and wind ≥ 3 mph
+  if (tempF <= 50 && windMph >= 3) {
+    const v = 35.74 + 0.6215 * tempF - 35.75 * Math.pow(windMph, 0.16) + 0.4275 * tempF * Math.pow(windMph, 0.16);
+    return { value: v, mode: "wind-chill" };
+  }
+  // Heat index: T ≥ 80°F and RH ≥ 40%
+  if (tempF >= 80 && humidity != null && humidity >= 40) {
+    const T = tempF, R = humidity;
+    let HI = -42.379 + 2.04901523 * T + 10.14333127 * R
+      - 0.22475541 * T * R - 0.00683783 * T * T
+      - 0.05481717 * R * R + 0.00122874 * T * T * R
+      + 0.00085282 * T * R * R - 0.00000199 * T * T * R * R;
+    // Adjustments
+    if (R < 13 && T >= 80 && T <= 112) {
+      HI -= ((13 - R) / 4) * Math.sqrt((17 - Math.abs(T - 95)) / 17);
+    } else if (R > 85 && T >= 80 && T <= 87) {
+      HI += ((R - 85) / 10) * ((87 - T) / 5);
+    }
+    return { value: HI, mode: "heat-index" };
+  }
+  return { value: tempF, mode: "actual" };
+}
+
+function FeelsLikeMetric({ tempF, humidity, windSpeedStr }: { tempF: number; humidity: number | null; windSpeedStr: string }) {
+  const wind = parseWindMph(windSpeedStr);
+  const { value, mode } = computeFeelsLike(tempF, humidity, wind);
+  const rounded = Math.round(value);
+  const label = mode === "wind-chill" ? "Wind Chill" : mode === "heat-index" ? "Heat Index" : "Feels Like";
+  // Danger thresholds
+  const danger =
+    mode === "wind-chill" && rounded <= 0 ? { tone: "text-sky-400", title: "Dangerous cold — frostbite risk" }
+    : mode === "heat-index" && rounded >= 100 ? { tone: "text-orange-500", title: "Dangerous heat — heat illness risk" }
+    : null;
+
+  return (
+    <div className="flex items-center gap-2.5">
+      <Thermometer className={cn("h-4 w-4", danger ? danger.tone : "text-accent")} />
+      <div className="min-w-0">
+        <p className="text-[10px] uppercase font-mono text-muted-foreground tracking-wider flex items-center gap-1">
+          {label}
+          {danger && (
+            <AlertTriangle
+              className={cn("h-3 w-3", danger.tone)}
+              aria-label={danger.title}
+            >
+              <title>{danger.title}</title>
+            </AlertTriangle>
+          )}
+        </p>
+        <p className={cn("text-sm font-medium", danger && danger.tone)}>{rounded}°F</p>
+      </div>
+    </div>
+  );
+}
+
 
 function LoadingPanel() {
   return (
