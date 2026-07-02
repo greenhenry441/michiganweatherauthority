@@ -1346,17 +1346,21 @@ function AlertCard({ entry }: { entry: AlertEntry }) {
   );
 }
 
-function Metric({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
+function Metric({ icon: Icon, label, value, alert }: { icon: any; label: string; value: string; alert?: { tone: string; title: string } | null }) {
   return (
     <div className="flex items-center gap-2.5">
-      <Icon className="h-4 w-4 text-accent" />
+      <Icon className={cn("h-4 w-4", alert ? alert.tone : "text-accent")} />
       <div>
-        <p className="text-[10px] uppercase font-mono text-muted-foreground tracking-wider">{label}</p>
-        <p className="text-sm font-medium">{value}</p>
+        <p className="text-[10px] uppercase font-mono text-muted-foreground tracking-wider flex items-center gap-1">
+          {label}
+          {alert && <AlertTriangle className={cn("h-3 w-3", alert.tone)} aria-label={alert.title}><title>{alert.title}</title></AlertTriangle>}
+        </p>
+        <p className={cn("text-sm font-medium", alert && alert.tone)}>{value}</p>
       </div>
     </div>
   );
 }
+
 
 function parseWindMph(s: string | undefined | null): number {
   if (!s) return 0;
