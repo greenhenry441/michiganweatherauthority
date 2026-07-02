@@ -684,6 +684,22 @@ function CitySearch({ city, onPick }: { city: MichiganCity; onPick: (c: Michigan
 function ExtraStatsPanel({ data, loading }: { data: ExtraStats | undefined; loading: boolean }) {
   const aqi = aqiCategory(data?.aqi ?? null);
   const uv = uvCategory(data?.uvIndex ?? null);
+
+  const aqiAlert = data?.aqi != null && data.aqi > 100
+    ? { tone: "text-orange-500", title: "Unhealthy air quality" } : null;
+  const uvAlert = data?.uvIndex != null && data.uvIndex >= 8
+    ? { tone: "text-orange-500", title: "Very high UV — burn risk" } : null;
+  const uvMaxAlert = data?.uvIndexMax != null && data.uvIndexMax >= 8
+    ? { tone: "text-orange-500", title: "Very high UV today" } : null;
+  const visAlert = data?.visibilityMi != null && data.visibilityMi < 1
+    ? { tone: "text-amber-500", title: "Low visibility" } : null;
+  const pressAlert =
+    data?.pressureMb != null && data.pressureMb < 1000
+      ? { tone: "text-sky-400", title: "Low pressure — stormy" }
+      : data?.pressureMb != null && data.pressureMb > 1030
+      ? { tone: "text-amber-500", title: "Unusually high pressure" }
+      : null;
+
   return (
     <div className="rounded-xl border border-border bg-card p-4 space-y-3">
       <div className="flex items-center gap-2">
@@ -699,6 +715,7 @@ function ExtraStatsPanel({ data, loading }: { data: ExtraStats | undefined; load
           chip={aqi.label}
           chipClass={aqi.color}
           loading={loading}
+          alert={aqiAlert}
         />
         <BigStat
           label="UV Index"
@@ -706,13 +723,14 @@ function ExtraStatsPanel({ data, loading }: { data: ExtraStats | undefined; load
           chip={uv.label}
           chipClass={uv.color}
           loading={loading}
+          alert={uvAlert}
         />
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-        <Metric icon={Eye} label="Visibility" value={data?.visibilityMi != null ? `${data.visibilityMi} mi` : "—"} />
-        <Metric icon={Gauge} label="Pressure" value={data?.pressureMb != null ? `${data.pressureMb} mb` : "—"} />
+        <Metric icon={Eye} label="Visibility" value={data?.visibilityMi != null ? `${data.visibilityMi} mi` : "—"} alert={visAlert} />
+        <Metric icon={Gauge} label="Pressure" value={data?.pressureMb != null ? `${data.pressureMb} mb` : "—"} alert={pressAlert} />
         <Metric icon={Cloud} label="Cloud" value={data?.cloudCover != null ? `${Math.round(data.cloudCover)}%` : "—"} />
-        <Metric icon={Sun} label="UV Max" value={data?.uvIndexMax != null ? data.uvIndexMax.toFixed(1) : "—"} />
+        <Metric icon={Sun} label="UV Max" value={data?.uvIndexMax != null ? data.uvIndexMax.toFixed(1) : "—"} alert={uvMaxAlert} />
       </div>
       <div className="flex items-center justify-between text-[11px] font-mono text-muted-foreground pt-1 border-t border-border/60">
         <span className="inline-flex items-center gap-1"><Sunrise className="h-3 w-3 text-amber-alert" /> {data?.sunrise ? new Date(data.sunrise).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}</span>
@@ -723,17 +741,21 @@ function ExtraStatsPanel({ data, loading }: { data: ExtraStats | undefined; load
   );
 }
 
-function BigStat({ label, value, chip, chipClass, loading }: { label: string; value: string | number; chip: string; chipClass: string; loading: boolean }) {
+function BigStat({ label, value, chip, chipClass, loading, alert }: { label: string; value: string | number; chip: string; chipClass: string; loading: boolean; alert?: { tone: string; title: string } | null }) {
   return (
     <div className="rounded-lg border border-border/60 bg-storm/50 p-3">
-      <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+        {label}
+        {alert && <AlertTriangle className={cn("h-3 w-3", alert.tone)} aria-label={alert.title}><title>{alert.title}</title></AlertTriangle>}
+      </p>
       <div className="flex items-end gap-2 mt-0.5">
-        <span className={cn("font-display text-3xl font-bold leading-none", loading && "opacity-30")}>{loading ? "…" : value}</span>
+        <span className={cn("font-display text-3xl font-bold leading-none", loading && "opacity-30", alert && alert.tone)}>{loading ? "…" : value}</span>
       </div>
       <span className={cn("inline-block mt-1.5 text-[10px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded border", chipClass)}>{chip}</span>
     </div>
   );
 }
+
 
 /* ---------------- Notifications (in-tab; works on mobile while open) ---------------- */
 
@@ -1324,17 +1346,21 @@ function AlertCard({ entry }: { entry: AlertEntry }) {
   );
 }
 
-function Metric({ icon: Icon, label, value }: { icon: any; label: string; value: string }) {
+function Metric({ icon: Icon, label, value, alert }: { icon: any; label: string; value: string; alert?: { tone: string; title: string } | null }) {
   return (
     <div className="flex items-center gap-2.5">
-      <Icon className="h-4 w-4 text-accent" />
+      <Icon className={cn("h-4 w-4", alert ? alert.tone : "text-accent")} />
       <div>
-        <p className="text-[10px] uppercase font-mono text-muted-foreground tracking-wider">{label}</p>
-        <p className="text-sm font-medium">{value}</p>
+        <p className="text-[10px] uppercase font-mono text-muted-foreground tracking-wider flex items-center gap-1">
+          {label}
+          {alert && <AlertTriangle className={cn("h-3 w-3", alert.tone)} aria-label={alert.title}><title>{alert.title}</title></AlertTriangle>}
+        </p>
+        <p className={cn("text-sm font-medium", alert && alert.tone)}>{value}</p>
       </div>
     </div>
   );
 }
+
 
 function parseWindMph(s: string | undefined | null): number {
   if (!s) return 0;
