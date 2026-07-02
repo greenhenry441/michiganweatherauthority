@@ -446,12 +446,18 @@ function HomePage() {
                     <p className="text-[11px] text-muted-foreground line-clamp-2">{today.detailedForecast}</p>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 px-4 pb-4 text-xs">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 px-4 pb-4 text-xs">
+                  <FeelsLikeMetric
+                    tempF={current.temperature}
+                    humidity={current.relativeHumidity?.value ?? null}
+                    windSpeedStr={current.windSpeed}
+                  />
                   <Metric icon={Wind} label="Wind" value={`${current.windDirection} ${current.windSpeed}`} />
                   <Metric icon={Droplets} label="Humidity" value={current.relativeHumidity?.value != null ? `${Math.round(current.relativeHumidity.value)}%` : "—"} />
                   <Metric icon={Thermometer} label="Dew Point" value={current.dewpoint?.value != null ? `${Math.round((current.dewpoint.value * 9) / 5 + 32)}°F` : "—"} />
                   <Metric icon={Gauge} label="Precip" value={current.probabilityOfPrecipitation?.value != null ? `${current.probabilityOfPrecipitation.value}%` : "0%"} />
                 </div>
+
               </div>
 
               <ExtraStatsPanel data={extra.data} loading={extra.isLoading} />
