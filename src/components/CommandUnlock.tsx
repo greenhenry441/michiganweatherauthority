@@ -20,11 +20,7 @@ export function CommandUnlock({ onUnlocked }: { onUnlocked: () => void }) {
     try {
       const res = await unlock({ data: { password } });
       if (!res.ok) {
-        const msg =
-          res.error === "not_authorized" ? "Your account is not authorized for Command."
-          : res.error === "rate_limited" ? "Too many failed attempts. Wait 15 minutes."
-          : "Invalid password.";
-        toast.error(msg);
+        toast.error("Invalid password.");
         return;
       }
       toast.success("Command unlocked");
