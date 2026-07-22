@@ -13,6 +13,11 @@
 @import "@fontsource/inter-tight/500.css";
 @import "@fontsource/inter-tight/600.css";
 @import "@fontsource/inter-tight/700.css";
+@import "@fontsource/space-grotesk/400.css";
+@import "@fontsource/space-grotesk/500.css";
+@import "@fontsource/space-grotesk/600.css";
+@import "@fontsource/space-grotesk/700.css";
+@import "@fontsource-variable/inter";
 @source "../src";
 
 @custom-variant dark (&:is(.dark *));
