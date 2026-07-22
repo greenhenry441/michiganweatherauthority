@@ -50,7 +50,7 @@ async function handlePush(event) {
       vibrate: a.severity === "extreme" ? [400, 100, 400, 100, 400] : [200, 100, 200],
     });
   } catch (err) {
-    return self.registration.showNotification("Michigan Weather Authority", {
+    return self.registration.showNotification("Michigan Weather Service", {
       body: "New alert available — open the app to view.",
       icon: "/icons/icon-192.png",
     });
