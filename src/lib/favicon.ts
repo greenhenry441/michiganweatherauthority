@@ -2,6 +2,7 @@ import type { ThemeName, ThemeMode } from "./theme";
 
 // Color per (theme, mode) — bright enough to read on browser tab bars.
 const COLORS: Record<ThemeName, { dark: string; light: string }> = {
+  prism:   { dark: "#A78BFA", light: "#7C3AED" }, // iridescent violet
   noir:    { dark: "#FACC15", light: "#B45309" }, // gold
   aurora:  { dark: "#5EEAD4", light: "#0F766E" }, // teal
   og:      { dark: "#60A5FA", light: "#1D4ED8" }, // storm blue

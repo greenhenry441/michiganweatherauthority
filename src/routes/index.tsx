@@ -41,10 +41,10 @@ import mwaLogo from "@/assets/mwa-logo-noir.png.asset.json";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Michigan Weather Authority — Live Forecasts & Alerts" },
-      { name: "description", content: "Live weather, forecasts, alerts, air quality, and UV for every city in Michigan from the Michigan Weather Authority (MWA)." },
-      { property: "og:title", content: "Michigan Weather Authority" },
-      { property: "og:description", content: "Live weather, forecasts, alerts, air quality, and UV for every city in Michigan." },
+      { title: "Michigan Weather Service — Live Forecasts & Alerts" },
+      { name: "description", content: "Live weather, forecasts, alerts, air quality, and UV for every city in Michigan from the Michigan Weather Service (MWS)." },
+      { property: "og:title", content: "Michigan Weather Service" },
+      { property: "og:description", content: "Live weather, forecasts, and alerts for every city in Michigan." },
     ],
   }),
   component: HomePage,
@@ -323,15 +323,15 @@ function HomePage() {
         <div className="max-w-7xl mx-auto px-3 sm:px-4 py-2.5 grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3">
           <Link to="/" className="flex min-w-0 items-center gap-3 min-h-11 py-1">
             <div className="relative h-11 w-11 shrink-0 grid place-items-center overflow-hidden">
-              <img src={mwaLogo.url} alt="MWA logo" className="relative h-11 w-11 object-contain" />
+              <img src={mwaLogo.url} alt="MWS logo" className="relative h-11 w-11 object-contain" />
             </div>
             <div className="min-w-0">
               <h1 className="font-display text-lg sm:text-xl md:text-2xl leading-none truncate">
-                <span className="hidden sm:inline text-aurora">Michigan Weather Authority</span>
-                <span className="sm:hidden text-aurora">MWA</span>
+                <span className="hidden sm:inline text-aurora">Michigan Weather Service</span>
+                <span className="sm:hidden text-aurora">MWS</span>
               </h1>
               <p className="text-[10px] md:text-[11px] text-muted-foreground tracking-[0.32em] uppercase truncate font-mono mt-1">
-                STORM NOIR
+                PRISM · LIVE
               </p>
             </div>
           </Link>
@@ -567,7 +567,7 @@ function HomePage() {
 
       <footer className="border-t border-border/60 mt-6">
         <div className="max-w-7xl mx-auto px-4 py-3 text-[11px] text-muted-foreground flex flex-wrap items-center justify-between gap-3">
-          <span>© Michigan Weather Authority — Unofficial. Source: NWS + Open-Meteo + MWA.</span>
+          <span>© Michigan Weather Service — Unofficial. Source: NWS + Open-Meteo + MWS.</span>
           <div className="flex items-center gap-4">
             <Link to="/changelog" className="text-accent hover:underline">
               Changelog
@@ -580,7 +580,7 @@ function HomePage() {
             >
               Status Page
             </a>
-            <span className="font-mono">MWA · v3.3.0</span>
+            <span className="font-mono">MWS · v3.5.0</span>
           </div>
         </div>
       </footer>

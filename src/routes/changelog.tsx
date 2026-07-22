@@ -51,6 +51,20 @@ type Entry = {
 
 const ENTRIES: Entry[] = [
   {
+    version: "3.5.0",
+    date: "Jul 22, 2026",
+    status: "revamp",
+    title: "Michigan Weather Service rebrand + Prism theme",
+    bullets: [
+      "Renamed the app to Michigan Weather Service (MWS). New name across the header, footer, share cards, PWA manifest, and iOS home-screen title.",
+      "Added a fifth theme — Prism — now the default: iridescent violet + cyan gradients on a deep indigo canvas.",
+      "New Prism typography: Space Grotesk display paired with Inter Variable body.",
+      "Prism favicon mark with matching dark/light variants that auto-swap with the mode.",
+      "PWA quick-actions added: long-press the home-screen icon (iOS 16.4+ / Android) for Alerts, Radar, Forecasts, and Chase Mode — the closest a web app can get to a widget.",
+      "Refreshed theme-color meta so the iOS status bar and Android chrome tint match Prism.",
+    ],
+  },
+  {
     version: "3.4.0",
     date: "Jun 30, 2026",
     status: "minor",
