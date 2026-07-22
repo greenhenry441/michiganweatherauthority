@@ -2,12 +2,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { ArrowLeft, Plus, Trash2, Thermometer } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Thermometer, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { createServerFn } from "@tanstack/react-start";
@@ -63,15 +64,41 @@ export const Route = createFileRoute("/thresholds")({
   component: ThresholdsPage,
 });
 
-const METRICS = [
-  { id: "temp_f", label: "Temperature (°F)" },
-  { id: "wind_mph", label: "Wind speed (mph)" },
-  { id: "gust_mph", label: "Wind gust (mph)" },
-  { id: "precip_in", label: "Precipitation (in)" },
-  { id: "humidity", label: "Humidity (%)" },
-  { id: "uv", label: "UV index" },
-  { id: "pressure_mb", label: "Pressure (mb)" },
+type MetricDef = {
+  id: string;
+  label: string;
+  short: string;
+  unit: string;
+  tip: string;
+  suggested: { op: string; value: number; note: string }[];
+};
+
+const METRICS: MetricDef[] = [
+  { id: "temp_f",     label: "Temperature (°F)",   short: "Temperature",  unit: "°F",  tip: "Air temperature at your home city. Ping when it crosses a threshold — great for freeze/heat alerts.",
+    suggested: [ { op: "<=", value: 32, note: "Freeze warning" }, { op: ">=", value: 90, note: "Heat advisory" }, { op: "<=", value: 0, note: "Extreme cold" } ] },
+  { id: "wind_mph",   label: "Wind speed (mph)",   short: "Sustained wind", unit: "mph", tip: "Sustained wind speed (1-minute average). Not the same as gusts — pick 'gust' for peak spikes.",
+    suggested: [ { op: ">=", value: 30, note: "Breezy" }, { op: ">=", value: 45, note: "High-wind advisory range" } ] },
+  { id: "gust_mph",   label: "Wind gust (mph)",    short: "Wind gust",     unit: "mph", tip: "Peak wind gust in the last hour. Damaging wind starts around 58 mph (severe thunderstorm criteria).",
+    suggested: [ { op: ">=", value: 50, note: "Downed branches likely" }, { op: ">=", value: 58, note: "Severe criteria" } ] },
+  { id: "precip_in",  label: "Precipitation (in)", short: "Precip / hour", unit: "in",  tip: "Liquid precipitation in the last hour. Flash flood guidance is often 1–2 in/hr depending on terrain.",
+    suggested: [ { op: ">=", value: 0.5, note: "Heavy rain" }, { op: ">=", value: 1, note: "Flash flood risk" } ] },
+  { id: "humidity",   label: "Humidity (%)",       short: "Humidity",      unit: "%",   tip: "Relative humidity. Below 30% dries fuels for fire weather; above 70% amplifies heat index.",
+    suggested: [ { op: "<=", value: 25, note: "Fire-weather dry" }, { op: ">=", value: 80, note: "Muggy" } ] },
+  { id: "uv",         label: "UV index",           short: "UV index",      unit: "",    tip: "0–11+ scale. 6+ is high, 8+ very high, 11+ extreme — sunscreen and shade strongly recommended.",
+    suggested: [ { op: ">=", value: 6, note: "High UV" }, { op: ">=", value: 8, note: "Very high UV" } ] },
+  { id: "pressure_mb",label: "Pressure (mb)",      short: "Pressure",      unit: "mb",  tip: "Sea-level pressure. Rapid drops (< 1000 mb, or > 3 mb/hr fall) often precede storms.",
+    suggested: [ { op: "<=", value: 1000, note: "Storm approaching" }, { op: ">=", value: 1030, note: "Strong high" } ] },
 ];
+
+const METRIC_MAP: Record<string, MetricDef> = Object.fromEntries(METRICS.map((m) => [m.id, m]));
+
+const OP_TIPS: Record<string, string> = {
+  ">":  "Trigger when the measured value is strictly greater than your threshold.",
+  "<":  "Trigger when the measured value is strictly less than your threshold.",
+  ">=": "Trigger when the value reaches or exceeds your threshold.",
+  "<=": "Trigger when the value drops to or below your threshold.",
+  "=":  "Trigger when the value equals your threshold exactly (rarely useful for continuous metrics).",
+};
 
 function ThresholdsPage() {
   const qc = useQueryClient();
