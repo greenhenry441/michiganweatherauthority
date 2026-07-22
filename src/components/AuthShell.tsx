@@ -39,7 +39,7 @@ export function AuthShell({
               <Radio className="h-5 w-5 text-accent" />
             </div>
             <div>
-              <div className="font-display text-lg leading-none text-aurora">Michigan Weather Authority</div>
+              <div className="font-display text-lg leading-none text-aurora">Michigan Weather Service</div>
               <div className="text-[10px] font-mono uppercase tracking-[0.3em] text-muted-foreground mt-1">STORM CONSOLE · v3.3 BETA</div>
             </div>
           </Link>

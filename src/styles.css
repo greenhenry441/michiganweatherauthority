@@ -13,6 +13,11 @@
 @import "@fontsource/inter-tight/500.css";
 @import "@fontsource/inter-tight/600.css";
 @import "@fontsource/inter-tight/700.css";
+@import "@fontsource/space-grotesk/400.css";
+@import "@fontsource/space-grotesk/500.css";
+@import "@fontsource/space-grotesk/600.css";
+@import "@fontsource/space-grotesk/700.css";
+@import "@fontsource-variable/inter";
 @source "../src";
 
 @custom-variant dark (&:is(.dark *));
@@ -319,6 +324,68 @@
   --grid-color: oklch(0.14 0 0 / 0.05);
   --glass-grad: linear-gradient(180deg, oklch(1 0 0 / 0.85), oklch(0.98 0 0 / 0.85));
   --aurora-edge: linear-gradient(120deg, oklch(0.14 0 0 / 0.20), oklch(0.55 0.13 250 / 0.25), oklch(0.14 0 0 / 0.15));
+}
+
+/* ---------- PRISM (modern default) ---------- */
+[data-theme="prism"] {
+  --radius: 0.875rem;
+  --background: oklch(0.13 0.02 275);
+  --foreground: oklch(0.97 0.01 260);
+  --card: oklch(0.18 0.03 275 / 0.7);
+  --card-foreground: oklch(0.97 0.01 260);
+  --popover: oklch(0.16 0.03 275);
+  --popover-foreground: oklch(0.97 0.01 260);
+  --primary: oklch(0.76 0.18 300);
+  --primary-foreground: oklch(0.12 0.02 275);
+  --secondary: oklch(0.22 0.04 275);
+  --secondary-foreground: oklch(0.97 0.01 260);
+  --muted: oklch(0.22 0.03 275);
+  --muted-foreground: oklch(0.72 0.03 265);
+  --accent: oklch(0.80 0.17 210);
+  --accent-foreground: oklch(0.12 0.02 275);
+  --destructive: oklch(0.62 0.24 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --border: oklch(0.80 0.17 210 / 0.20);
+  --input: oklch(0.20 0.03 275);
+  --ring: oklch(0.76 0.18 300);
+  --storm: oklch(0.18 0.03 275 / 0.75);
+  --storm-deep: oklch(0.11 0.02 275);
+  --body-bg: oklch(0.10 0.03 280);
+  --body-grad-1: radial-gradient(ellipse 65% 55% at 5% -5%, oklch(0.65 0.24 300 / 0.35), transparent 60%);
+  --body-grad-2: radial-gradient(ellipse 60% 50% at 100% 0%, oklch(0.70 0.22 210 / 0.30), transparent 60%);
+  --grid-color: oklch(0.80 0.17 210 / 0.05);
+  --glass-grad: linear-gradient(180deg, oklch(0.22 0.04 275 / 0.65), oklch(0.14 0.03 275 / 0.65));
+  --aurora-edge: linear-gradient(120deg, oklch(0.80 0.17 210 / 0.85), oklch(0.76 0.18 300 / 0.75), oklch(0.82 0.17 160 / 0.75));
+  --app-font-display: "Space Grotesk", "Inter Tight", ui-sans-serif, system-ui, sans-serif;
+  --app-font-sans: "Inter Variable", "Inter", ui-sans-serif, system-ui, sans-serif;
+}
+
+[data-theme="prism"][data-mode="light"] {
+  --background: oklch(0.98 0.005 260);
+  --foreground: oklch(0.18 0.03 275);
+  --card: oklch(1 0 0 / 0.80);
+  --card-foreground: oklch(0.18 0.03 275);
+  --popover: oklch(0.99 0.003 260);
+  --popover-foreground: oklch(0.18 0.03 275);
+  --primary: oklch(0.52 0.20 295);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.94 0.01 260);
+  --secondary-foreground: oklch(0.18 0.03 275);
+  --muted: oklch(0.94 0.01 260);
+  --muted-foreground: oklch(0.42 0.03 270);
+  --accent: oklch(0.55 0.18 220);
+  --accent-foreground: oklch(0.99 0 0);
+  --border: oklch(0.52 0.20 295 / 0.20);
+  --input: oklch(0.95 0.005 260);
+  --ring: oklch(0.52 0.20 295);
+  --storm: oklch(1 0 0 / 0.80);
+  --storm-deep: oklch(0.97 0.005 260);
+  --body-bg: oklch(0.97 0.008 260);
+  --body-grad-1: radial-gradient(ellipse 65% 55% at 5% -5%, oklch(0.65 0.20 300 / 0.18), transparent 60%);
+  --body-grad-2: radial-gradient(ellipse 60% 50% at 100% 0%, oklch(0.65 0.18 210 / 0.16), transparent 60%);
+  --grid-color: oklch(0.52 0.20 295 / 0.06);
+  --glass-grad: linear-gradient(180deg, oklch(1 0 0 / 0.80), oklch(0.98 0.005 260 / 0.70));
+  --aurora-edge: linear-gradient(120deg, oklch(0.55 0.18 220 / 0.55), oklch(0.52 0.20 295 / 0.55), oklch(0.55 0.18 160 / 0.55));
 }
 
 @layer base {

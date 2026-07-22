@@ -1,18 +1,48 @@
 {
-  "name": "Michigan Weather Authority",
-  "short_name": "MWA",
+  "name": "Michigan Weather Service",
+  "short_name": "MWS",
   "description": "Live weather, forecasts, and alerts for every city in Michigan.",
   "start_url": "/",
   "id": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#0b1220",
-  "theme_color": "#1e3a8a",
+  "theme_color": "#7C3AED",
   "orientation": "portrait",
   "icons": [
     { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
     { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
     { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Active Alerts",
+      "short_name": "Alerts",
+      "description": "Statewide alert map",
+      "url": "/alerts-map",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Radar",
+      "short_name": "Radar",
+      "description": "Live Michigan radar",
+      "url": "/?panel=radar",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Forecasts",
+      "short_name": "Forecasts",
+      "description": "NWS text products",
+      "url": "/forecasts",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Storm Chase Mode",
+      "short_name": "Chase",
+      "description": "Full-screen chase dashboard",
+      "url": "/chase",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
   ]
 }
