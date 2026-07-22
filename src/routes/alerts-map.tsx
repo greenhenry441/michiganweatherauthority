@@ -41,7 +41,10 @@ function AlertsMapPage() {
       blurb="Every active NWS alert plus MWA-issued alerts for Michigan, shaded onto county and polygon geometry with corresponding NWS colors."
     >
       <div className="grid lg:grid-cols-[1.4fr_1fr] gap-6">
-        <MichiganAlertMap alertsByCounty={countyData} polygons={polys} width={620} height={680} />
+        <div className="space-y-3">
+          <MichiganAlertMap alertsByCounty={countyData} polygons={polys} width={620} height={680} />
+          <AlertLegend />
+        </div>
         <div className="space-y-3">
           <h2 className="font-display text-2xl">Active alerts ({totalCount})</h2>
           <p className="text-[11px] font-mono uppercase tracking-[0.2em] text-muted-foreground">
@@ -77,6 +80,38 @@ function AlertsMapPage() {
         </div>
       </div>
     </ToolShell>
+  );
+}
+
+const LEGEND_ITEMS: { label: string; swatch: string; desc: string }[] = [
+  { label: "Extreme / Emergency", swatch: "bg-severe", desc: "Tornado Emergency, Flash Flood Emergency, Blizzard — take shelter now." },
+  { label: "Warning", swatch: "bg-warning", desc: "Hazard is imminent or occurring in the alerted area." },
+  { label: "Watch", swatch: "bg-watch", desc: "Conditions are favorable for the hazard to develop — stay aware." },
+  { label: "Advisory", swatch: "bg-advisory", desc: "Less serious than a warning but still worth planning around." },
+  { label: "Statement / Special", swatch: "bg-statement", desc: "Informational updates, SPS, or non-precipitation advisories." },
+  { label: "MWA Issued", swatch: "bg-amber-alert", desc: "Weather alerts issued from the MWA Command console." },
+  { label: "EAS / Network", swatch: "bg-accent", desc: "Emergency Alert System or MWA Network broadcast (not weather)." },
+];
+
+function AlertLegend() {
+  return (
+    <div className="glass rounded-xl p-4">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="font-display tracking-wider text-[11px] uppercase text-muted-foreground">Alert legend</h3>
+        <span className="text-[10px] font-mono text-muted-foreground">Hover a swatch for details</span>
+      </div>
+      <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2">
+        {LEGEND_ITEMS.map((it) => (
+          <li key={it.label} className="flex items-start gap-2 text-xs" title={it.desc}>
+            <span className={`mt-0.5 h-3 w-3 rounded-sm shrink-0 ${it.swatch}`} aria-hidden />
+            <div className="min-w-0">
+              <div className="font-medium">{it.label}</div>
+              <div className="text-[11px] text-muted-foreground leading-snug">{it.desc}</div>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 
