@@ -116,7 +116,10 @@ function ThresholdsPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const activeMetric = METRIC_MAP[form.metric] ?? METRICS[0];
+
   return (
+    <TooltipProvider delayDuration={150}>
     <div className="min-h-screen max-w-2xl mx-auto px-4 py-6 space-y-6">
       <Link to="/settings" className="text-xs text-muted-foreground hover:text-accent inline-flex items-center gap-1.5 min-h-11 px-2">
         <ArrowLeft className="h-4 w-4" /> Settings
@@ -129,24 +132,69 @@ function ThresholdsPage() {
       <div className="rounded-xl border border-border bg-card p-4 space-y-3">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
           <div className="col-span-2">
-            <Label className="text-xs">Metric</Label>
+            <div className="flex items-center gap-1.5">
+              <Label className="text-xs">Metric</Label>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button type="button" aria-label="Metric help" className="text-muted-foreground hover:text-accent">
+                    <Info className="h-3 w-3" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs text-xs">{activeMetric.tip}</TooltipContent>
+              </Tooltip>
+            </div>
             <Select value={form.metric} onValueChange={(v) => setForm((f) => ({ ...f, metric: v as any }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>{METRICS.map((m) => <SelectItem key={m.id} value={m.id}>{m.label}</SelectItem>)}</SelectContent>
+              <SelectContent>{METRICS.map((m) => (
+                <SelectItem key={m.id} value={m.id}>{m.label}</SelectItem>
+              ))}</SelectContent>
             </Select>
           </div>
           <div>
-            <Label className="text-xs">Op</Label>
+            <div className="flex items-center gap-1.5">
+              <Label className="text-xs">Op</Label>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button type="button" aria-label="Operator help" className="text-muted-foreground hover:text-accent">
+                    <Info className="h-3 w-3" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs text-xs">{OP_TIPS[form.op] ?? "Comparison operator."}</TooltipContent>
+              </Tooltip>
+            </div>
             <Select value={form.op} onValueChange={(v) => setForm((f) => ({ ...f, op: v }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>{[">", "<", ">=", "<=", "="].map((o) => <SelectItem key={o} value={o}>{o}</SelectItem>)}</SelectContent>
             </Select>
           </div>
           <div>
-            <Label className="text-xs">Value</Label>
+            <div className="flex items-center gap-1.5">
+              <Label className="text-xs">Value</Label>
+              <span className="text-[10px] font-mono text-muted-foreground">{activeMetric.unit}</span>
+            </div>
             <Input type="number" value={form.value} onChange={(e) => setForm((f) => ({ ...f, value: Number(e.target.value) }))} />
           </div>
         </div>
+
+        {/* Suggested quick-pick thresholds */}
+        <div className="flex flex-wrap gap-1.5 pt-1">
+          <span className="text-[10px] font-mono uppercase tracking-wider text-muted-foreground self-center">Suggested:</span>
+          {activeMetric.suggested.map((s, i) => (
+            <Tooltip key={i}>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, op: s.op, value: s.value }))}
+                  className="text-[11px] font-mono px-2 py-1 rounded-md border border-border hover:border-accent hover:text-accent transition-colors"
+                >
+                  {activeMetric.short} {s.op} {s.value}{activeMetric.unit}
+                </button>
+              </TooltipTrigger>
+              <TooltipContent className="text-xs">{s.note}</TooltipContent>
+            </Tooltip>
+          ))}
+        </div>
+
         <Input
           placeholder='Label (optional, e.g. "Big wind warning")'
           value={form.label}
@@ -159,24 +207,41 @@ function ThresholdsPage() {
 
       <div className="rounded-xl border border-border bg-card divide-y divide-border">
         {list.data?.length === 0 && <p className="p-4 text-sm text-muted-foreground">No thresholds yet.</p>}
-        {list.data?.map((t: any) => (
-          <div key={t.id} className="flex items-center gap-3 p-3">
-            <Thermometer className="h-4 w-4 text-accent" />
-            <div className="flex-1">
-              <div className="text-sm font-medium">{t.label || t.metric.replace("_", " ")}</div>
-              <div className="text-[11px] text-muted-foreground font-mono">{t.metric} {t.op} {t.value}</div>
+        {list.data?.map((t: any) => {
+          const def = METRIC_MAP[t.metric];
+          return (
+            <div key={t.id} className="flex items-center gap-3 p-3">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="cursor-help">
+                    <Thermometer className="h-4 w-4 text-accent" />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs text-xs">
+                  <div className="font-semibold mb-1">{def?.short ?? t.metric}</div>
+                  <div className="mb-1">{def?.tip ?? "Custom metric."}</div>
+                  <div className="font-mono text-muted-foreground">
+                    Fires when {def?.short ?? t.metric} {OP_TIPS[t.op]?.toLowerCase().replace("trigger when the ", "").replace("measured value ", "").replace(" your threshold.", ` ${t.value}${def?.unit ?? ""}.`) ?? `${t.op} ${t.value}`}
+                  </div>
+                </TooltipContent>
+              </Tooltip>
+              <div className="flex-1">
+                <div className="text-sm font-medium">{t.label || def?.label || t.metric.replace("_", " ")}</div>
+                <div className="text-[11px] text-muted-foreground font-mono">{t.metric} {t.op} {t.value}{def?.unit ?? ""}</div>
+              </div>
+              <Switch
+                checked={t.enabled}
+                onCheckedChange={(v) => tog({ data: { id: t.id, enabled: v } }).then(() => qc.invalidateQueries({ queryKey: ["thresholds"] }))}
+              />
+              <Button size="icon" variant="ghost" onClick={() => rem({ data: { id: t.id } }).then(() => qc.invalidateQueries({ queryKey: ["thresholds"] }))}>
+                <Trash2 className="h-4 w-4 text-destructive" />
+              </Button>
             </div>
-            <Switch
-              checked={t.enabled}
-              onCheckedChange={(v) => tog({ data: { id: t.id, enabled: v } }).then(() => qc.invalidateQueries({ queryKey: ["thresholds"] }))}
-            />
-            <Button size="icon" variant="ghost" onClick={() => rem({ data: { id: t.id } }).then(() => qc.invalidateQueries({ queryKey: ["thresholds"] }))}>
-              <Trash2 className="h-4 w-4 text-destructive" />
-            </Button>
-          </div>
-        ))}
+          );
+        })}
       </div>
       <Toaster />
     </div>
+    </TooltipProvider>
   );
 }
