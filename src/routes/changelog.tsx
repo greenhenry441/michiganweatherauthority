@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
+import { PhosphorousBadge } from "@/components/PhosphorousBadge";
 
 export const Route = createFileRoute("/changelog")({
   head: () => ({
@@ -301,7 +302,10 @@ function ChangelogPage() {
 
       <footer className="border-t border-border/60 mt-10">
         <div className="max-w-4xl mx-auto px-6 py-4 text-[11px] text-muted-foreground flex items-center justify-between">
-          <span>© Michigan Weather Authority — Unofficial.</span>
+          <span className="flex items-center gap-2">
+            © Michigan Weather Service — Unofficial.
+            <PhosphorousBadge />
+          </span>
           <a href="https://mwa.instatus.com" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
             Status Page
           </a>
