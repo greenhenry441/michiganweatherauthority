@@ -7,6 +7,7 @@ import {
   Sun, Activity, UserCircle2, FileText, LogIn, Sunset, Cloud, Bell, BellOff, ShieldAlert,
 } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { PhosphorousBadge } from "@/components/PhosphorousBadge";
 
 import { MICHIGAN_CITIES, type MichiganCity } from "@/lib/michigan-cities";
 import { useGeolocation, nearestMichiganCity } from "@/lib/use-geolocation";

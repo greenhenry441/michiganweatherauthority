@@ -52,6 +52,17 @@ type Entry = {
 
 const ENTRIES: Entry[] = [
   {
+    version: "3.6.0",
+    date: "Sep 10, 2026",
+    status: "minor",
+    title: "Now part of the phosphorous family",
+    bullets: [
+      "Michigan Weather Service is now Michigan Weather Service by phosphorous — phosphorous is the parent company, owned by Henry Green.",
+      "Added the phosphorous wordmark and a link to phosphorous.surge.sh in the site footers, with a dark-mode-aware variant.",
+      "Header sub-line now reads PRISM · LIVE · BY PHOSPHOROUS.",
+    ],
+  },
+  {
     version: "3.5.0",
     date: "Jul 22, 2026",
     status: "revamp",
