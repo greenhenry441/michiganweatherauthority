@@ -7,6 +7,7 @@ import {
   Sun, Activity, UserCircle2, FileText, LogIn, Sunset, Cloud, Bell, BellOff, ShieldAlert,
 } from "lucide-react";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
+import { PhosphorousBadge } from "@/components/PhosphorousBadge";
 
 import { MICHIGAN_CITIES, type MichiganCity } from "@/lib/michigan-cities";
 import { useGeolocation, nearestMichiganCity } from "@/lib/use-geolocation";
@@ -331,7 +332,7 @@ function HomePage() {
                 <span className="sm:hidden text-aurora">MWS</span>
               </h1>
               <p className="text-[10px] md:text-[11px] text-muted-foreground tracking-[0.32em] uppercase truncate font-mono mt-1">
-                PRISM · LIVE
+                PRISM · LIVE · BY PHOSPHOROUS
               </p>
             </div>
           </Link>
@@ -567,7 +568,10 @@ function HomePage() {
 
       <footer className="border-t border-border/60 mt-6">
         <div className="max-w-7xl mx-auto px-4 py-3 text-[11px] text-muted-foreground flex flex-wrap items-center justify-between gap-3">
-          <span>© Michigan Weather Service — Unofficial. Source: NWS + Open-Meteo + MWS.</span>
+          <span className="flex items-center gap-2 flex-wrap">
+            © Michigan Weather Service — Unofficial. Source: NWS + Open-Meteo + MWS.
+            <PhosphorousBadge />
+          </span>
           <div className="flex items-center gap-4">
             <Link to="/changelog" className="text-accent hover:underline">
               Changelog

@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
+import { PhosphorousBadge } from "@/components/PhosphorousBadge";
 
 export const Route = createFileRoute("/changelog")({
   head: () => ({
@@ -50,6 +51,17 @@ type Entry = {
 };
 
 const ENTRIES: Entry[] = [
+  {
+    version: "3.6.0",
+    date: "Sep 10, 2026",
+    status: "minor",
+    title: "Now part of the phosphorous family",
+    bullets: [
+      "Michigan Weather Service is now Michigan Weather Service by phosphorous — phosphorous is the parent company, owned by Henry Green.",
+      "Added the phosphorous wordmark and a link to phosphorous.surge.sh in the site footers, with a dark-mode-aware variant.",
+      "Header sub-line now reads PRISM · LIVE · BY PHOSPHOROUS.",
+    ],
+  },
   {
     version: "3.5.0",
     date: "Jul 22, 2026",
@@ -301,7 +313,10 @@ function ChangelogPage() {
 
       <footer className="border-t border-border/60 mt-10">
         <div className="max-w-4xl mx-auto px-6 py-4 text-[11px] text-muted-foreground flex items-center justify-between">
-          <span>© Michigan Weather Authority — Unofficial.</span>
+          <span className="flex items-center gap-2">
+            © Michigan Weather Service — Unofficial.
+            <PhosphorousBadge />
+          </span>
           <a href="https://mwa.instatus.com" target="_blank" rel="noopener noreferrer" className="text-accent hover:underline">
             Status Page
           </a>
